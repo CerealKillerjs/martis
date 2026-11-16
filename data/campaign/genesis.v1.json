@@ -35,32 +35,73 @@
       "title": "Ciclo cerrado",
       "summary": "Un ecosistema microbiano: descomponedores, extremófilos en el frío y el primer oxígeno.",
       "grid": 128,
-      "missions": []
+      "missions": [],
+      "population_budget": "campaign.population_budget.grid_128"
     },
     {
       "id": "ch3",
       "title": "Cooperación",
       "summary": "Endosimbiosis y los primeros organismos multicelulares.",
       "grid": 128,
-      "missions": []
+      "missions": [],
+      "population_budget": "campaign.population_budget.grid_128"
     },
     {
       "id": "ch4",
       "title": "Cadenas tróficas",
       "summary": "Herbívoros, depredadores y el equilibrio de un ecosistema complejo.",
       "grid": 256,
-      "missions": []
+      "missions": [],
+      "population_budget": "campaign.population_budget.grid_256"
     },
     {
       "id": "ch5",
       "title": "Mente",
       "summary": "Sistemas nerviosos, sociedades y una especie inteligente que transforma su mundo.",
       "grid": 256,
-      "missions": []
+      "missions": [],
+      "population_budget": "campaign.population_budget.grid_256"
     }
   ],
   "location": {
     "site": "model"
   },
-  "parameters": []
+  "parameters": [
+    {
+      "id": "campaign.population_budget.grid_128",
+      "field": "population_budget",
+      "value": 20000.0,
+      "unit": "poblaciones",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Presupuesto de rendimiento propuesto para H-29 en mapas grandes; Dani/Ciencia deben confirmarlo.",
+      "rationale": "Máximo de poblaciones en las que una mutación puede fundar una variante nueva en un mapa de 128×128. TDD §7.4 dimensiona para 10 000 poblaciones.",
+      "range": [
+        1,
+        10000000.0
+      ]
+    },
+    {
+      "id": "campaign.population_budget.grid_256",
+      "field": "population_budget",
+      "value": 30000.0,
+      "unit": "poblaciones",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Presupuesto de rendimiento propuesto para H-29 en mapas grandes; Dani/Ciencia deben confirmarlo.",
+      "rationale": "Máximo de poblaciones en las que una mutación puede fundar una variante nueva en un mapa de 256×256. TDD §7.4 dimensiona para 10 000 poblaciones.",
+      "range": [
+        1,
+        10000000.0
+      ]
+    }
+  ]
 }

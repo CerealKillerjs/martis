@@ -21,7 +21,8 @@ public partial class CampaignMenu : Control
 
     public event Action<CampaignMission>? MissionChosen;
 
-    public event Action? FreePlayChosen;
+    /// <summary>Free play on a map of that many cells per side (H3).</summary>
+    public event Action<int>? FreePlayChosen;
 
     public event Action? LoadChosen;
 
@@ -73,7 +74,14 @@ public partial class CampaignMenu : Control
         _resume = Button("Volver a la partida", () => ResumeChosen?.Invoke());
         actions.AddChild(_resume);
         actions.AddChild(Button("Cargar partida", () => LoadChosen?.Invoke()));
-        actions.AddChild(Button("Exploración libre", () => FreePlayChosen?.Invoke()));
+        var size = new OptionButton { TooltipText = "Tamaño del mapa de la exploración libre", CustomMinimumSize = new Vector2(0, 36) };
+        foreach (var grid in new[] { 64, 128, 256 })
+        {
+            size.AddItem(string.Create(CultureInfo.InvariantCulture, $"{grid}×{grid}"), grid);
+        }
+
+        actions.AddChild(Button("Exploración libre", () => FreePlayChosen?.Invoke(size.GetItemId(size.Selected))));
+        actions.AddChild(size);
         column.AddChild(actions);
     }
 

@@ -116,6 +116,13 @@ public sealed class MetabolismWorkspace
 
     public BiologyCatalog Catalog { get; }
 
+    /// <summary>
+    /// Most populations a mutation may found a new variant into (H-29, ADR-021). Null means
+    /// no budget. It is a host setting, like the map size: the mutation draws are the same
+    /// with or without it, so a run that never reaches the budget is unchanged.
+    /// </summary>
+    public int? PopulationBudget { get; set; }
+
     private readonly Dictionary<string, PopulationParameters> _populationParameters = new(StringComparer.Ordinal);
     private readonly Dictionary<string, EvolutionParameters> _evolutionParameters = new(StringComparer.Ordinal);
 
@@ -233,10 +240,10 @@ public sealed class MetabolismWorkspace
 
         for (var cell = 0; cell < _cells; cell++)
         {
-            var quantities = state.Resources[cell].Quantities;
+            var pool = state.Resources[cell];
             for (var slot = 0; slot < Slots; slot++)
             {
-                StartPool[(cell * Slots) + slot] = quantities[slot].Value;
+                StartPool[(cell * Slots) + slot] = pool.ValueAt(slot);
             }
         }
 
@@ -253,6 +260,19 @@ public sealed class MetabolismWorkspace
     }
 
     public void Close() => AccountOpen = false;
+
+    private double[] _endElements = [];
+
+    /// <summary>Reused buffer for the end-of-tick element totals (H3: no 3 MB array per tick on 256×256).</summary>
+    public double[] EndElements(int cells)
+    {
+        if (_endElements.Length != cells * ElementCount)
+        {
+            _endElements = new double[cells * ElementCount];
+        }
+
+        return _endElements;
+    }
 
     public void Gain(long populationId, double joules)
         => ReserveGained[populationId] = (ReserveGained.TryGetValue(populationId, out var current) ? current : 0) + joules;
@@ -275,11 +295,11 @@ public sealed class MetabolismWorkspace
         var elements = ElementCount;
         for (var cell = 0; cell < state.CellCount; cell++)
         {
-            var quantities = state.Resources[cell].Quantities;
+            var pool = state.Resources[cell];
             for (var slot = 0; slot < Slots; slot++)
             {
                 var fractions = Catalog.PoolSpecies(slot).ElementMassFractions;
-                var mass = quantities[slot].Value;
+                var mass = pool.ValueAt(slot);
                 for (var e = 0; e < elements; e++)
                 {
                     target[(cell * elements) + e] += mass * fractions[e];

@@ -187,7 +187,8 @@ public sealed class MutationSystem(MetabolismWorkspace workspace) : ISimulationS
             var biomass = parameters.FounderFraction * newborns * organism.Kinetics.IndividualMassKg;
             if (EvolutionDraws.Distance(genome, parent.Genome) <= parameters.MergeTolerance
                 || biomass < organism.Kinetics.IndividualMassKg
-                || biomass >= parent.BiomassKg)
+                || biomass >= parent.BiomassKg
+                || state.Populations.Count >= (workspace.PopulationBudget ?? int.MaxValue))
             {
                 continue;
             }

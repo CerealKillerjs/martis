@@ -130,7 +130,7 @@ Cada hito va en una rama y un PR propios, apilados.
 
 - **H1, marco de campaña:** capítulos, desbloqueo en orden, guía paso a paso y progreso guardado (H-31). Capítulo 1 jugable (1.1 Despertar, 1.2 Primera colonia, 1.3 Presión selectiva).
 - **H2, economía ([ADR-020](ADR/ADR-020-economia.md)):** puntos de investigación para el árbol tecnológico y el inóculo del biorreactor, que limita los despliegues.
-- **H3, mapas grandes:** tamaño de rejilla por escenario (64, 128 y 256), presupuesto de poblaciones (H-29) y terreno 3D por bloques con LOD.
+- **H3, mapas grandes ([ADR-021](ADR/ADR-021-mapas-grandes.md)):** tamaño de rejilla por capítulo (64, 128 y 256), presupuesto de poblaciones (H-29) y terreno 3D por bloques. 256×256 va a 74 ms/tick.
 - **H4, capítulo 2 (Ciclo cerrado):** escenario con gradientes (H-30), descomponedores, extremófilos y O₂.
 - **H5, capítulo 3 (Cooperación):** transiciones evolutivas (eucariota y multicelular).
 - **H6, capítulo 4 (Cadenas tróficas):** herbivoría, depredación y dispersión activa.

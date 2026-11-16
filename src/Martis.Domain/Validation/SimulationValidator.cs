@@ -45,19 +45,27 @@ public static class SimulationValidator
                 violations.Add(Missing(InvariantIds.ScenarioScopeMissing, state.Tick, index, "Scope"));
             }
 
-            CollectQuantities(
-                violations,
-                InvariantIds.NoNegativeResource,
-                state.Tick,
-                index,
-                resources.Quantities);
+            // Fast path (H3, 256×256 maps): the named lists are only built when a value is bad.
+            if (!AllNonNegativeFinite(resources.ValueAt))
+            {
+                CollectQuantities(
+                    violations,
+                    InvariantIds.NoNegativeResource,
+                    state.Tick,
+                    index,
+                    resources.Quantities);
+            }
+
             CollectWater(violations, state.Tick, index, environment, resources, water);
-            CollectQuantities(
-                violations,
-                InvariantIds.AllocationNonNegative,
-                state.Tick,
-                index,
-                buffer.Quantities);
+            if (!AllNonNegativeFinite(buffer.ValueAt))
+            {
+                CollectQuantities(
+                    violations,
+                    InvariantIds.AllocationNonNegative,
+                    state.Tick,
+                    index,
+                    buffer.Quantities);
+            }
         }
 
         foreach (var population in state.Populations)
@@ -320,6 +328,19 @@ public static class SimulationValidator
                 gene.Expression,
                 quantity));
         }
+    }
+
+    private static bool AllNonNegativeFinite(Func<int, double> valueAt)
+    {
+        for (var slot = 0; slot < ResourcePool.SlotCount; slot++)
+        {
+            if (!QuantityRules.IsNonNegativeFinite(valueAt(slot)))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static void CollectQuantities(

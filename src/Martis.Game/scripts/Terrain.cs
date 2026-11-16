@@ -4,14 +4,16 @@ using Godot;
 namespace Martis.Game;
 
 /// <summary>
-/// Procedural relief for the 64×64 simulation grid (ADR-017). The relief is visual only:
+/// Procedural relief for the simulation grid (ADR-017; 64, 128 or 256 cells per side since H3,
+/// ADR-021). The relief is visual only:
 /// the simulation keeps its own per-cell environment. Dunes, mesas and craters come from
 /// the world seed, so the same save always shows the same landscape.
 /// </summary>
 public sealed class Terrain
 {
     public const float CellSize = 2f;
-    public const int Resolution = 4; // vertices per cell edge
+    /// <summary>Vertices per side of one mesh chunk (H3): small enough for frustum culling.</summary>
+    public const int ChunkVerts = 129;
 
     private readonly float[] _heights;
 
@@ -19,6 +21,10 @@ public sealed class Terrain
     {
         CellsX = cellsX;
         CellsY = cellsY;
+
+        // Vertices per cell edge: 4 up to 128×128 (513² vertices), 2 on 256×256 so the
+        // terrain stays at the same vertex budget (H3).
+        Resolution = Math.Max(cellsX, cellsY) <= 128 ? 4 : 2;
         SizeX = cellsX * CellSize;
         SizeZ = cellsY * CellSize;
         VertsX = (cellsX * Resolution) + 1;
@@ -28,6 +34,8 @@ public sealed class Terrain
     }
 
     public int CellsX { get; }
+
+    public int Resolution { get; }
 
     public int CellsY { get; }
 
@@ -79,7 +87,8 @@ public sealed class Terrain
         direction = direction.Normalized();
         var previous = origin;
         const float step = 0.4f;
-        for (var t = step; t < 900f; t += step)
+        var reach = 900f + MathF.Max(SizeX, SizeZ);
+        for (var t = step; t < reach; t += step)
         {
             var point = origin + (direction * t);
             if (point.Y < HeightAt(point.X, point.Z))
@@ -113,20 +122,38 @@ public sealed class Terrain
         return false;
     }
 
-    public ArrayMesh BuildMesh()
+    /// <summary>The terrain in chunks of at most <see cref="ChunkVerts"/>² vertices that share edges (H3).</summary>
+    public System.Collections.Generic.IEnumerable<ArrayMesh> BuildChunks()
+    {
+        for (var z0 = 0; z0 < VertsZ - 1; z0 += ChunkVerts - 1)
+        {
+            for (var x0 = 0; x0 < VertsX - 1; x0 += ChunkVerts - 1)
+            {
+                yield return BuildMesh(x0, z0, Math.Min(x0 + ChunkVerts, VertsX), Math.Min(z0 + ChunkVerts, VertsZ));
+            }
+        }
+    }
+
+    public ArrayMesh BuildMesh() => BuildMesh(0, 0, VertsX, VertsZ);
+
+    /// <summary>Mesh of the vertices [x0, x1) × [z0, z1); UVs are those of the whole map.</summary>
+    public ArrayMesh BuildMesh(int x0, int z0, int x1, int z1)
     {
         var step = CellSize / Resolution;
-        var count = VertsX * VertsZ;
+        var width = x1 - x0;
+        var depth = z1 - z0;
+        var count = width * depth;
         var vertices = new Vector3[count];
         var normals = new Vector3[count];
         var uvs = new Vector2[count];
         var tangents = new float[count * 4];
-        for (var z = 0; z < VertsZ; z++)
+        for (var z = z0; z < z1; z++)
         {
-            for (var x = 0; x < VertsX; x++)
+            for (var x = x0; x < x1; x++)
             {
-                var i = (z * VertsX) + x;
-                vertices[i] = new Vector3((x * step) - (SizeX / 2f), _heights[i], (z * step) - (SizeZ / 2f));
+                var i = ((z - z0) * width) + (x - x0);
+                var h = (z * VertsX) + x;
+                vertices[i] = new Vector3((x * step) - (SizeX / 2f), _heights[h], (z * step) - (SizeZ / 2f));
                 uvs[i] = new Vector2(x / (float)(VertsX - 1), z / (float)(VertsZ - 1));
                 var left = _heights[(z * VertsX) + Math.Max(x - 1, 0)];
                 var right = _heights[(z * VertsX) + Math.Min(x + 1, VertsX - 1)];
@@ -141,15 +168,15 @@ public sealed class Terrain
             }
         }
 
-        var indices = new int[(VertsX - 1) * (VertsZ - 1) * 6];
+        var indices = new int[(width - 1) * (depth - 1) * 6];
         var k = 0;
-        for (var z = 0; z < VertsZ - 1; z++)
+        for (var z = 0; z < depth - 1; z++)
         {
-            for (var x = 0; x < VertsX - 1; x++)
+            for (var x = 0; x < width - 1; x++)
             {
-                var a = (z * VertsX) + x;
+                var a = (z * width) + x;
                 var b = a + 1;
-                var c = a + VertsX;
+                var c = a + width;
                 var d = c + 1;
                 indices[k++] = a;
                 indices[k++] = b;
@@ -252,7 +279,7 @@ public sealed class Terrain
             FractalOctaves = 3,
         };
         var state = seed ^ 0x3C6EUL;
-        var craters = new (float X, float Z, float R, float D)[9];
+        var craters = new (float X, float Z, float R, float D)[Math.Max(9, 9 * CellsX * CellsY / 4096)];
         for (var i = 0; i < craters.Length; i++)
         {
             craters[i] = (

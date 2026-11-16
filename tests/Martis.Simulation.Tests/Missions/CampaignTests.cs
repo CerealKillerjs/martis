@@ -89,7 +89,7 @@ public sealed class CampaignTests
     public void AChapterOnAnUnsupportedMapSizeIsRefused()
     {
         const string json = """
-            {"metadata":{"schema":"martis.campaign","id":"x","name":"X"},
+            {"metadata":{"schema":"martis.campaign","id":"x","name":"X"},"location":{"site":"model"},"parameters":[],
              "chapters":[{"id":"c","title":"T","summary":"S","grid":100,"missions":[]}]}
             """;
 
@@ -100,7 +100,7 @@ public sealed class CampaignTests
     public void AMissionListedTwiceIsRefused()
     {
         const string json = """
-            {"metadata":{"schema":"martis.campaign","id":"x","name":"X"},
+            {"metadata":{"schema":"martis.campaign","id":"x","name":"X"},"location":{"site":"model"},"parameters":[],
              "chapters":[{"id":"c","title":"T","summary":"S","grid":64,"missions":[{"id":"a","file":"a.json"},{"id":"a","file":"b.json"}]}]}
             """;
 

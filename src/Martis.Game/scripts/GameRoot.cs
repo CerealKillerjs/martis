@@ -64,7 +64,8 @@ public partial class GameRoot : Node
         _saves = new SaveService(_dataRoot, _options.TryGetValue("db", out var db) ? db : null);
         var seed = _options.TryGetValue("seed", out var text) && ulong.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var parsed) ? parsed : 5UL;
         _campaign = LoadCampaign();
-        StartSession(GameSession.NewGame(_dataRoot, seed));
+        var startGrid = _options.TryGetValue("grid", out var gridText) ? int.Parse(gridText, CultureInfo.InvariantCulture) : 64;
+        StartSession(GameSession.NewGame(_dataRoot, seed, true, _campaign.Campaign.WorldFor(startGrid) ?? WorldOptions.Default));
 
         if (_options.ContainsKey("smoke"))
         {
@@ -180,7 +181,7 @@ public partial class GameRoot : Node
         _mission = mission;
         _saves.CurrentId = null;
         _hud.ClearEvents();
-        var session = GameSession.NewGame(_dataRoot, seed ?? _session.Seed, mission.File);
+        var session = GameSession.NewGame(_dataRoot, seed ?? _session.Seed, mission.File, _campaign.Campaign.ChapterOf(mission.Id).World);
         session.AttachEconomy(_campaign.Research!);
         StartSession(session);
         _playing = true;
@@ -195,12 +196,14 @@ public partial class GameRoot : Node
             ("Empezar", () => _hud.Toast(definition.Objectives[0].Hint ?? definition.Objectives[0].Title)));
     }
 
-    private void FreePlay()
+    private void FreePlay() => FreePlay(_options.TryGetValue("grid", out var grid) ? int.Parse(grid, CultureInfo.InvariantCulture) : 64);
+
+    private void FreePlay(int gridSize)
     {
         _mission = null;
         _saves.CurrentId = null;
         _hud.ClearEvents();
-        StartSession(GameSession.NewGame(_dataRoot, _session.Seed, withMission: false));
+        StartSession(GameSession.NewGame(_dataRoot, _session.Seed, withMission: false, _campaign.Campaign.WorldFor(gridSize) ?? WorldOptions.Default));
         _playing = true;
         CloseMenu();
         SetSpeed(1);
@@ -300,16 +303,34 @@ public partial class GameRoot : Node
         }
     }
 
+    private World3D BuildWorld(GameSession session)
+    {
+        var world = new World3D { Name = "World" };
+        AddChild(world);
+        world.Build(session.Width, session.Height, session.Seed);
+        world.Camera.Used += Act;
+        return world;
+    }
+
     private void StartSession(GameSession session)
     {
         _session = session;
         _seenEvents = 0;
         _celebrated = session.Mission?.IsComplete ?? false;
+        if (_world is not null && (_world.Ground.CellsX != session.Width || _world.Ground.CellsY != session.Height))
+        {
+            // A chapter on another map size (H3): the 3D world is built again for it.
+            var overlay = _world.Overlay;
+            RemoveChild(_world);
+            _world.QueueFree();
+            _world = BuildWorld(session);
+            MoveChild(_world, 0);
+            _world.SetOverlay(overlay);
+        }
+
         if (_world is null)
         {
-            _world = new World3D { Name = "World" };
-            AddChild(_world);
-            _world.Build(session.Width, session.Height, session.Seed);
+            _world = BuildWorld(session);
             var layer = new CanvasLayer { Name = "UI" };
             AddChild(layer);
             _hud = new Hud { Name = "Hud" };
@@ -322,7 +343,6 @@ public partial class GameRoot : Node
             _hud.MenuRequested += OpenMenu;
             _hud.ResearchRequested += () => _hud.ToggleResearch(_session.Research);
             _hud.ResearchChosen += Research;
-            _world.Camera.Used += Act;
             _menu = new CampaignMenu { Name = "CampaignMenu", Visible = false };
             layer.AddChild(_menu);
             _menu.MissionChosen += mission => StartMission(mission);
@@ -543,7 +563,7 @@ public partial class GameRoot : Node
     {
         try
         {
-            var loaded = _saves.LoadLatest(out var message, out var record);
+            var loaded = _saves.LoadLatest(out var message, out var record, _campaign.Campaign.WorldFor);
             if (loaded is not null)
             {
                 _mission = _campaign.Campaign.Missions.FirstOrDefault(item => item.File == record?.MissionFile);
@@ -578,7 +598,7 @@ public partial class GameRoot : Node
 
         _saves.CurrentId = null;
         _hud.ClearEvents();
-        StartSession(GameSession.NewGame(_dataRoot, NextSeed(), withMission: false));
+        StartSession(GameSession.NewGame(_dataRoot, NextSeed(), withMission: false, _session.World));
         _hud.Toast($"Nueva partida, semilla {_session.Seed}.");
     }
 
@@ -628,20 +648,28 @@ public partial class GameRoot : Node
         _celebrated = !_options.ContainsKey("banner");
         var design = new Dictionary<string, double>(StringComparer.Ordinal) { ["UV_PROTECTION"] = 0.85 };
         _session.RecordAction("analyze-region");
-        _session.Experiment("phototroph_a01", 32, 32, 0.5, design, 20);
-        foreach (var (x, y) in new[] { (32, 32), (30, 35), (35, 30), (27, 29), (38, 36) })
+        _session.Experiment("phototroph_a01", 32 + ((_session.Width / 2) - 32), 32 + ((_session.Width / 2) - 32), 0.5, design, 20);
+        // Centred on the map whatever its size (H3); on a big map a few more colonies.
+        var o = (_session.Width / 2) - 32;
+        var sites = new List<(int X, int Y)> { (32, 32), (30, 35), (35, 30), (27, 29), (38, 36) };
+        if (_session.Width > 64)
         {
-            _session.Introduce("phototroph_a01", x, y, 0.5, design, out _);
-            _session.Introduce("decomposer_d01", x, y, 0.05, null, out _);
+            sites.AddRange([(10, 12), (58, 50), (-20, 40), (70, -10), (45, 80)]);
         }
 
-        _session.Introduce("extremophile_e01", 24, 38, 0.2, null, out _);
+        foreach (var (x, y) in sites)
+        {
+            _session.Introduce("phototroph_a01", x + o, y + o, 0.5, design, out _);
+            _session.Introduce("decomposer_d01", x + o, y + o, 0.05, null, out _);
+        }
+
+        _session.Introduce("extremophile_e01", 24 + o, 38 + o, 0.2, null, out _);
         var sols = _options.TryGetValue("sols", out var text) ? int.Parse(text, CultureInfo.InvariantCulture) : 220;
         _session.Advance(sols);
-        _world.PlaceLander(32, 32);
-        Select(32, 32);
+        _world.PlaceLander(32 + o, 32 + o);
+        Select(32 + o, 32 + o);
         Refresh();
-        _hud.ShowForecast(_session.Experiment("phototroph_a01", 32, 32, 0.5, design, 40));
+        _hud.ShowForecast(_session.Experiment("phototroph_a01", 32 + o, 32 + o, 0.5, design, 40));
         if (_options.TryGetValue("overlay", out var overlay))
         {
             SetOverlay((Overlay)int.Parse(overlay, CultureInfo.InvariantCulture));
@@ -650,7 +678,7 @@ public partial class GameRoot : Node
 
         var hour = _options.TryGetValue("hour", out var h) ? float.Parse(h, CultureInfo.InvariantCulture) : 0.7f;
         _solProgress = (hour - 0.25 + 1.0) % 1.0;
-        var centre = _world.Ground.CellCenter(32, 32);
+        var centre = _world.Ground.CellCenter(32 + o, 32 + o);
         var distance = _options.TryGetValue("distance", out var d) ? float.Parse(d, CultureInfo.InvariantCulture) : 48f;
         var yaw = _options.TryGetValue("yaw", out var w) ? float.Parse(w, CultureInfo.InvariantCulture) : 0.9f;
         var pitch = _options.TryGetValue("pitch", out var p) ? float.Parse(p, CultureInfo.InvariantCulture) : 0.42f;

@@ -57,6 +57,15 @@ public sealed record ExperimentForecast(string OrganismId, int Sols, IReadOnlyLi
 /// <summary>A line for the event feed: mutation, extinction, mission objective or failure. <see cref="Cell"/> is -1 when the event has no place.</summary>
 public sealed record SessionEvent(long Tick, string Kind, string Text, int Cell = -1);
 
+/// <summary>
+/// Size of the map and population budget of a run (H3, ADR-021). The campaign gives each
+/// chapter its own: 64, 128 or 256 cells per side.
+/// </summary>
+public sealed record WorldOptions(int GridSize = 64, int? PopulationBudget = null)
+{
+    public static readonly WorldOptions Default = new();
+}
+
 /// <summary>An organism the laboratory offers, with its base genome (genes in [0, 1]).</summary>
 public sealed record OrganismInfo(string Id, string Name, string Category, IReadOnlyList<KeyValuePair<string, double>> BaseGenome);
 
@@ -72,12 +81,18 @@ public sealed class GameSession
     private readonly HashSet<string> _reportedObjectives = new(StringComparer.Ordinal);
     private readonly Dictionary<string, int> _organismIndex;
 
-    private GameSession(MarsBaselineScenario scenario, BiologyCatalog biology, MissionDefinition? mission, ulong seed, StateSnapshot? resume, MissionProgress? progress = null)
+    private GameSession(MarsBaselineScenario scenario, BiologyCatalog biology, MissionDefinition? mission, ulong seed, StateSnapshot? resume, MissionProgress? progress = null, WorldOptions? world = null)
     {
+        world ??= WorldOptions.Default;
+        var width = resume?.Configuration.MapWidth ?? world.GridSize;
+        var height = resume?.Configuration.MapHeight ?? world.GridSize;
+        ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(world.PopulationBudget ?? 1, 1);
+        World = world with { GridSize = width };
         Scenario = scenario;
         Biology = biology;
         Seed = seed;
-        (Engine, Workspace) = MarsBaselineWorld.CreateWithBiology(scenario, biology, seed);
+        (Engine, Workspace) = MarsBaselineWorld.CreateWithBiology(scenario, biology, seed, width, height, world.PopulationBudget);
         if (resume is not null)
         {
             resume.Restore(Engine);
@@ -114,6 +129,9 @@ public sealed class GameSession
     }
 
     public MarsBaselineScenario Scenario { get; }
+
+    /// <summary>Map size (taken from the snapshot when resuming) and population budget of this run.</summary>
+    public WorldOptions World { get; }
 
     public BiologyCatalog Biology { get; }
 
@@ -184,16 +202,18 @@ public sealed class GameSession
     /// <summary>Events ever added, including those dropped from <see cref="Events"/>; lets a host find the new ones.</summary>
     public long TotalEvents { get; private set; }
 
-    public static GameSession NewGame(string repositoryRoot, ulong seed, bool withMission = true)
+    public static GameSession NewGame(string repositoryRoot, ulong seed, bool withMission = true, WorldOptions? world = null)
         => new(
             MarsBaselineScenario.LoadPublished(repositoryRoot),
             BiologyCatalog.LoadPublished(repositoryRoot),
             withMission ? MissionDefinition.LoadPublished(repositoryRoot) : null,
             seed,
-            null);
+            null,
+            null,
+            world);
 
     /// <summary>A new game of one campaign mission (<c>data/missions/<paramref name="missionFile"/></c>).</summary>
-    public static GameSession NewGame(string repositoryRoot, ulong seed, string missionFile)
+    public static GameSession NewGame(string repositoryRoot, ulong seed, string missionFile, WorldOptions? world = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(missionFile);
         return new(
@@ -201,14 +221,16 @@ public sealed class GameSession
             BiologyCatalog.LoadPublished(repositoryRoot),
             MissionDefinition.LoadPublished(repositoryRoot, missionFile),
             seed,
-            null);
+            null,
+            null,
+            world);
     }
 
     /// <summary>
     /// Resumes a campaign mission from a snapshot and, when the save has it, the mission
     /// progress at that tick (H-31). Without progress the mission starts over.
     /// </summary>
-    public static GameSession Resume(string repositoryRoot, StateSnapshot snapshot, string missionFile, MissionProgress? progress)
+    public static GameSession Resume(string repositoryRoot, StateSnapshot snapshot, string missionFile, MissionProgress? progress, WorldOptions? world = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentException.ThrowIfNullOrWhiteSpace(missionFile);
@@ -218,10 +240,11 @@ public sealed class GameSession
             MissionDefinition.LoadPublished(repositoryRoot, missionFile),
             snapshot.Configuration.WorldSeed,
             snapshot,
-            progress);
+            progress,
+            world);
     }
 
-    public static GameSession Resume(string repositoryRoot, StateSnapshot snapshot, bool withMission = true)
+    public static GameSession Resume(string repositoryRoot, StateSnapshot snapshot, bool withMission = true, WorldOptions? world = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         return new(
@@ -229,7 +252,9 @@ public sealed class GameSession
             BiologyCatalog.LoadPublished(repositoryRoot),
             withMission ? MissionDefinition.LoadPublished(repositoryRoot) : null,
             snapshot.Configuration.WorldSeed,
-            snapshot);
+            snapshot,
+            null,
+            world);
     }
 
     public int CellIndex(int x, int y) => Engine.State.ToLinearIndex(x, y);
@@ -423,7 +448,7 @@ public sealed class GameSession
             return new ExperimentForecast(organismId, 0, [], false, "Hay un despliegue pendiente: avanza un sol antes de experimentar");
         }
 
-        var (lab, _) = MarsBaselineWorld.CreateWithBiology(Scenario, Biology, Seed);
+        var (lab, _) = MarsBaselineWorld.CreateWithBiology(Scenario, Biology, Seed, Width, Height, World.PopulationBudget);
         Capture().Restore(lab);
         var cell = CellIndex(x, y);
         lab.ApplyCommand(new IntroducePopulationCommand(organismId, cell, biomassKg, genes));

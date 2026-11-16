@@ -428,7 +428,7 @@ public sealed class ConservationSystem(MetabolismWorkspace workspace) : ISimulat
         }
 
         var elements = workspace.ElementCount;
-        var end = new double[state.CellCount * elements];
+        var end = workspace.EndElements(state.CellCount);
         workspace.ElementTotals(state, end);
         var worst = 0.0;
         for (var cell = 0; cell < state.CellCount; cell++)

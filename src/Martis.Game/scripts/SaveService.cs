@@ -69,7 +69,7 @@ public sealed class SaveService
     /// <paramref name="mission"/> is the campaign mission the save belongs to, with its progress
     /// and economy, or null for an older save or free play, which load as before.
     /// </summary>
-    public GameSession? LoadLatest(out string message, out MissionSaveRecord? mission)
+    public GameSession? LoadLatest(out string message, out MissionSaveRecord? mission, Func<int, WorldOptions?>? worldFor = null)
     {
         mission = null;
         using var store = SaveGameStore.Open(_path);
@@ -91,6 +91,7 @@ public sealed class SaveService
         CurrentId = save.Id;
         var skipped = recovery.RejectedTicks.Count == 0 ? string.Empty : $" ({recovery.RejectedTicks.Count} instantáneas dañadas descartadas)";
         message = $"Cargada «{save.Name}», sol {snapshot.Tick}{skipped}.";
+        var world = worldFor?.Invoke(snapshot.Configuration.MapWidth);
         var saved = store.Events(save.Id, snapshot.Tick - 1)
             .LastOrDefault(item => item.Tick == snapshot.Tick && item.EventType == MissionSaveRecord.EventType);
         if (saved is not null)
@@ -99,7 +100,7 @@ public sealed class SaveService
             {
                 var record = MissionSaveRecord.FromJson(saved.Payload);
                 mission = record;
-                return GameSession.Resume(_dataRoot, snapshot, record.MissionFile, record.Progress);
+                return GameSession.Resume(_dataRoot, snapshot, record.MissionFile, record.Progress, world);
             }
             catch (System.IO.InvalidDataException exception)
             {
@@ -107,7 +108,7 @@ public sealed class SaveService
             }
         }
 
-        return GameSession.Resume(_dataRoot, snapshot);
+        return GameSession.Resume(_dataRoot, snapshot, withMission: true, world);
     }
 
     private static StateSnapshot? TryRead(byte[] payload)

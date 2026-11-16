@@ -22,6 +22,9 @@ public partial class OrbitCamera : Camera3D
 
     public Terrain? Ground { get; set; }
 
+    /// <summary>Farthest zoom; grows with the map (H3).</summary>
+    public float MaxDistance { get; set; } = 260f;
+
     /// <summary>Raised when the player orbits (<c>orbit-camera</c>) or zooms (<c>zoom-camera</c>); the tutorial listens.</summary>
     public event Action<string>? Used;
 
@@ -66,7 +69,7 @@ public partial class OrbitCamera : Camera3D
                 }
                 else if (button.Pressed && button.ButtonIndex == MouseButton.WheelDown)
                 {
-                    _goalDistance = Math.Min(260f, _goalDistance * 1.12f);
+                    _goalDistance = Math.Min(MaxDistance, _goalDistance * 1.12f);
                     Used?.Invoke("zoom-camera");
                 }
 

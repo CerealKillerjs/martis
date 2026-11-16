@@ -61,9 +61,11 @@ public partial class World3D : Node3D
         BuildDust();
         _pulseShaderTemplate = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/pulse.gdshader") };
 
-        Camera = new OrbitCamera { Ground = Ground, Fov = 50f, Far = 2000f, Near = 0.2f };
+        // Bigger maps (H3) open further out and let the camera pull back to see all of it.
+        var scale = MathF.Sqrt(Ground.CellsX / 64f);
+        Camera = new OrbitCamera { Ground = Ground, Fov = 50f, Far = 2000f + Ground.SizeX, Near = 0.2f, MaxDistance = MathF.Max(260f, Ground.SizeX * 1.1f) };
         AddChild(Camera);
-        Camera.Frame(new Vector3(0, Ground.HeightAt(0, 0), 0), 110f, 0.75f, 0.68f, snap: true);
+        Camera.Frame(new Vector3(0, Ground.HeightAt(0, 0), 0), 110f * scale, 0.75f, 0.68f, snap: true);
         Camera.MakeCurrent();
     }
 
@@ -261,7 +263,7 @@ public partial class World3D : Node3D
         _sun = new DirectionalLight3D
         {
             ShadowEnabled = true,
-            DirectionalShadowMaxDistance = 260f,
+            DirectionalShadowMaxDistance = 320f,
             LightAngularDistance = 0.4f,
         };
         AddChild(_sun);
@@ -282,14 +284,19 @@ public partial class World3D : Node3D
         _terrainMaterial.SetShaderParameter("world_size", Ground.SizeX);
         _terrainMaterial.SetShaderParameter("cells", (float)Ground.CellsX);
         _terrainMaterial.SetShaderParameter("highlight_cell", new Vector2(-1, -1));
-        AddChild(new MeshInstance3D { Mesh = Ground.BuildMesh(), MaterialOverride = _terrainMaterial, Name = "Terrain" });
+        var terrain = new Node3D { Name = "Terrain" };
+        AddChild(terrain);
+        foreach (var chunk in Ground.BuildChunks())
+        {
+            terrain.AddChild(new MeshInstance3D { Mesh = chunk, MaterialOverride = _terrainMaterial });
+        }
 
         var skirtMaterial = new StandardMaterial3D
         {
             AlbedoColor = new Color(0.55f, 0.28f, 0.16f),
             Roughness = 1f,
         };
-        AddChild(new MeshInstance3D { Mesh = Ground.BuildSkirt(700f, 240, seed), MaterialOverride = skirtMaterial, Name = "Skirt", Position = new Vector3(0, -0.02f, 0) });
+        AddChild(new MeshInstance3D { Mesh = Ground.BuildSkirt(MathF.Max(700f, Ground.SizeX * 1.4f), 240, seed), MaterialOverride = skirtMaterial, Name = "Skirt", Position = new Vector3(0, -0.02f, 0) });
     }
 
     private void BuildDomes(int cells)

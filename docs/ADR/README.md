@@ -20,5 +20,6 @@
 - [ADR-017 — Juego 3D en Godot 4.7.2 sobre `GameSession` (T08)](ADR-017-juego-3d-godot.md) (Propuesto)
 - [ADR-019 — Modo historia: campaña «Génesis» (H1)](ADR-019-modo-historia.md) (Propuesto)
 - [ADR-020 — Economía: investigación y carga del módulo (H2)](ADR-020-economia.md) (Propuesto)
+- [ADR-021 — Mapas grandes: 64, 128 y 256 casillas (H3)](ADR-021-mapas-grandes.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).

@@ -48,7 +48,8 @@ public static class MarsBaselineWorld
         Biology.BiologyCatalog catalog,
         ulong worldSeed,
         int width = Width,
-        int height = Height)
+        int height = Height,
+        int? populationBudget = null)
     {
         ArgumentNullException.ThrowIfNull(scenario);
         ArgumentNullException.ThrowIfNull(catalog);
@@ -61,7 +62,7 @@ public static class MarsBaselineWorld
             worldSeed,
             SimulationConfiguration.DefaultMaxVariantsPerSpeciesPerCell,
             true);
-        var workspace = new Biology.MetabolismWorkspace(catalog);
+        var workspace = new Biology.MetabolismWorkspace(catalog) { PopulationBudget = populationBudget };
         var engine = new SimulationEngine(
             state,
             configuration,

@@ -52,6 +52,21 @@ public sealed class AllocationBuffer
         new(nameof(MineralCarbon), MineralCarbon),
     ];
 
+    /// <summary>The request at a <see cref="Quantities"/> position, without building the list (H3).</summary>
+    public double ValueAt(int slot) => slot switch
+    {
+        0 => CarbonDioxide,
+        1 => Water,
+        2 => Oxygen,
+        3 => Nitrogen,
+        4 => Phosphorus,
+        5 => Sulfur,
+        6 => Iron,
+        7 => OrganicCarbon,
+        8 => MineralCarbon,
+        _ => throw new ArgumentOutOfRangeException(nameof(slot), slot, "A buffer has nine slots."),
+    };
+
     /// <summary>
     /// Throws <see cref="ArgumentOutOfRangeException"/> for the first request that
     /// is negative or not finite.

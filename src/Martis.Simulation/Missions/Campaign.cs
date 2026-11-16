@@ -1,5 +1,7 @@
 using System.Text.Json;
+using Martis.Domain.Parameters;
 using Martis.Simulation.Economy;
+using Martis.Simulation.Sessions;
 
 namespace Martis.Simulation.Missions;
 
@@ -10,9 +12,12 @@ public sealed record CampaignMission(string Id, string File, string ChapterId, i
 /// One chapter. <see cref="GridSize"/> is the side of the map its missions use (64, 128 or
 /// 256, Daniel 2026-11-16). A chapter with no missions is announced but not playable yet.
 /// </summary>
-public sealed record CampaignChapter(string Id, int Number, string Title, string Summary, int GridSize, IReadOnlyList<CampaignMission> Missions)
+public sealed record CampaignChapter(string Id, int Number, string Title, string Summary, int GridSize, IReadOnlyList<CampaignMission> Missions, int? PopulationBudget = null)
 {
     public bool Playable => Missions.Count > 0;
+
+    /// <summary>Map size and population budget of this chapter's missions (H3).</summary>
+    public WorldOptions World => new(GridSize, PopulationBudget);
 }
 
 /// <summary>
@@ -29,6 +34,10 @@ public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<Ca
     /// <summary>Every playable mission, in play order.</summary>
     public IReadOnlyList<CampaignMission> Missions => [.. Chapters.SelectMany(chapter => chapter.Missions)];
 
+    /// <summary>World of the first chapter with that map size, for free play on a big map; null for an unknown size.</summary>
+    public WorldOptions? WorldFor(int gridSize)
+        => Chapters.FirstOrDefault(chapter => chapter.GridSize == gridSize)?.World;
+
     public CampaignChapter ChapterOf(string missionId)
         => Chapters.First(chapter => chapter.Missions.Any(mission => mission.Id == missionId));
 
@@ -44,6 +53,7 @@ public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<Ca
 
     public static CampaignDefinition Load(string json)
     {
+        var parameters = ParameterCatalog.Load(json);
         using var document = JsonDocument.Parse(json);
         var meta = document.RootElement.GetProperty("metadata");
         if (meta.GetProperty("schema").GetString() != "martis.campaign")
@@ -82,7 +92,8 @@ public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<Ca
                 item.GetProperty("title").GetString()!,
                 item.GetProperty("summary").GetString()!,
                 grid,
-                missions));
+                missions,
+                item.TryGetProperty("population_budget", out var budget) ? (int)parameters.RequireNumber(budget.GetString()!).Value : null));
         }
 
         return new CampaignDefinition(meta.GetProperty("id").GetString()!, meta.GetProperty("name").GetString()!, chapters);
