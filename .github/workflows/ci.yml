@@ -11,6 +11,8 @@ on:
 
 permissions:
   contents: read
+  # setup-dotnet cache: true reads and writes the Actions cache.
+  actions: write
 
 jobs:
   build-test:
@@ -33,12 +35,16 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
+          # The action only auto-detects packages.lock.json in the repo root.
+          # Per-project lock files are the cache key.
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
 
       - name: Mostrar la versión del SDK
         run: dotnet --version
 
       - name: Restaurar
-        run: dotnet restore MARTIS.sln
+        run: dotnet restore MARTIS.sln --locked-mode
 
       - name: Compilar
         run: dotnet build MARTIS.sln -c Release --no-restore

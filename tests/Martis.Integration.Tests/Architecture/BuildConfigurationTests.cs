@@ -83,6 +83,61 @@ public sealed class BuildConfigurationTests
         }
     }
 
+    [Fact]
+    public void CiRestoreIsLockedAndNuGetCacheHasALockFileKey()
+    {
+        var workflow = File.ReadAllText(Path.Combine(RepoLayout.Root, ".github", "workflows", "ci.yml"));
+        Assert.Contains("cache: true", workflow, StringComparison.Ordinal);
+        Assert.Contains("**/packages.lock.json", workflow, StringComparison.Ordinal);
+        Assert.Contains("--locked-mode", workflow, StringComparison.Ordinal);
+        Assert.Contains("actions: write", workflow, StringComparison.Ordinal);
+
+        var props = XDocument.Load(Path.Combine(RepoLayout.Root, "Directory.Build.props"));
+        var lockFileSwitch = props
+            .Descendants()
+            .Single(element => element.Name.LocalName == "RestorePackagesWithLockFile");
+        Assert.Equal("true", lockFileSwitch.Value.Trim());
+        var fallback = props
+            .Descendants()
+            .Single(element => element.Name.LocalName == "DisableImplicitNuGetFallbackFolder");
+        Assert.Equal("true", fallback.Value.Trim());
+
+        var locked = props
+            .Descendants()
+            .Where(element => element.Name.LocalName == "RestoreLockedMode")
+            .ToArray();
+        Assert.Contains(locked, element => element.Value.Trim() == "true");
+        Assert.Contains(
+            locked,
+            element => (element.Attribute("Condition")?.Value ?? string.Empty).Contains("CI", StringComparison.Ordinal));
+
+        var projects = Directory
+            .EnumerateFiles(RepoLayout.Root, "*.csproj", SearchOption.AllDirectories)
+            .Where(path => !IsBuildOutput(path))
+            .ToArray();
+        Assert.NotEmpty(projects);
+        foreach (var project in projects)
+        {
+            var lockPath = Path.Combine(Path.GetDirectoryName(project)!, "packages.lock.json");
+            Assert.True(File.Exists(lockPath), $"Missing lock file next to {Path.GetFileName(project)}.");
+            var json = JsonNode.Parse(File.ReadAllText(lockPath))!.AsObject();
+            Assert.True(json.ContainsKey("version"));
+            Assert.True(json.ContainsKey("dependencies"));
+        }
+
+        var persistenceLock = File.ReadAllText(
+            Path.Combine(RepoLayout.Root, "src", "Martis.Persistence", "packages.lock.json"));
+        Assert.Contains("Microsoft.Data.Sqlite", persistenceLock, StringComparison.Ordinal);
+        Assert.Contains("11.0.0", persistenceLock, StringComparison.Ordinal);
+    }
+
+    private static bool IsBuildOutput(string path)
+    {
+        var parts = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return parts.Contains("bin", StringComparer.OrdinalIgnoreCase)
+            || parts.Contains("obj", StringComparer.OrdinalIgnoreCase);
+    }
+
     private static void AssertSameMap(Dictionary<string, string> expected, Dictionary<string, string> actual)
     {
         var expectedText = string.Join(", ", expected.OrderBy(pair => pair.Key, StringComparer.Ordinal).Select(pair => $"{pair.Key} {pair.Value}"));
