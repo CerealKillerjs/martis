@@ -1,3 +1,4 @@
+using System.Reflection;
 using Martis.Domain.Common;
 
 namespace Martis.Domain.Tests;
@@ -50,6 +51,33 @@ public sealed class TypedIdTests
     public void ReactionIdStoresItsValueAndComparesByValue()
     {
         AssertStringId(static value => new ReactionId(value), static id => id.Value);
+    }
+
+    [Fact]
+    public void DefaultOrganismIdValueIsEmptyString()
+    {
+        AssertDefaultContentIdentifier(
+            default(OrganismId),
+            static value => new OrganismId(value),
+            static id => id.Value);
+    }
+
+    [Fact]
+    public void DefaultGeneIdValueIsEmptyString()
+    {
+        AssertDefaultContentIdentifier(
+            default(GeneId),
+            static value => new GeneId(value),
+            static id => id.Value);
+    }
+
+    [Fact]
+    public void DefaultReactionIdValueIsEmptyString()
+    {
+        AssertDefaultContentIdentifier(
+            default(ReactionId),
+            static value => new ReactionId(value),
+            static id => id.Value);
     }
 
     [Fact]
@@ -110,5 +138,37 @@ public sealed class TypedIdTests
         Assert.NotEqual(lower, other);
         Assert.NotEqual(lower, upper);
         Assert.NotEqual(lower, empty);
+    }
+
+    private static void AssertDefaultContentIdentifier<T>(
+        T omitted,
+        Func<string, T> create,
+        Func<T, string> read)
+        where T : struct, IEquatable<T>
+    {
+        var value = read(omitted);
+        Assert.NotNull(value);
+        Assert.Equal(string.Empty, value);
+
+        var empty = create(string.Empty);
+        var lower = create("a");
+        var upper = create("A");
+        Assert.Equal(string.Empty, read(empty));
+        Assert.Equal("a", read(lower));
+        Assert.Equal(omitted, empty);
+        Assert.True(omitted.Equals(empty));
+        Assert.Equal(omitted.GetHashCode(), empty.GetHashCode());
+        Assert.Equal(lower, create("a"));
+        Assert.NotEqual(omitted, lower);
+        Assert.NotEqual(lower, upper);
+
+        Assert.True(typeof(T).IsValueType);
+        var equals = typeof(T).GetMethod("op_Equality");
+        Assert.NotNull(equals);
+        Assert.True((bool)equals!.Invoke(null, [omitted, empty])!);
+        Assert.False((bool)equals.Invoke(null, [omitted, lower])!);
+        var instanceFields = typeof(T).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        Assert.NotEmpty(instanceFields);
+        Assert.All(instanceFields, static field => Assert.True(field.IsInitOnly));
     }
 }

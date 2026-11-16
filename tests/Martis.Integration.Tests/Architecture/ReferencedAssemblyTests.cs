@@ -91,6 +91,40 @@ public sealed class ReferencedAssemblyTests
         AssertTargetFramework(Assembly.LoadFrom(RepoLayout.FindCliDll()));
     }
 
+    [Fact]
+    public void SqliteOrGodotNamesAreRejectedBeforeTheFrameworkFilter()
+    {
+        var names = new[]
+        {
+            "System.Runtime",
+            "System.Data.SQLite",
+            "System.Godot.Native",
+            "System.Data.sqlite",
+        };
+
+        // These names match IsFramework, so the old filter would let them through.
+        Assert.True(IsFramework("System.Data.SQLite"));
+        Assert.True(IsFramework("System.Godot.Native"));
+        Assert.True(IsFramework("System.Data.sqlite"));
+        Assert.False(IsFramework("Custom.sqlite"));
+
+        var unexpected = UnexpectedReferences(names, []);
+        Assert.Contains("System.Data.SQLite", unexpected);
+        Assert.Contains("System.Godot.Native", unexpected);
+        Assert.Contains("System.Data.sqlite", unexpected);
+        Assert.DoesNotContain("System.Runtime", unexpected);
+
+        var withExplicitSqlite = UnexpectedReferences(
+            ["System.Runtime", "Microsoft.Data.Sqlite", "SQLitePCLRaw.core", "System.Data.SQLite", "System.Godot.Native"],
+            ["Martis.Domain", "Martis.Contracts"],
+            AllowSqlite);
+        Assert.DoesNotContain("System.Runtime", withExplicitSqlite);
+        Assert.DoesNotContain("Microsoft.Data.Sqlite", withExplicitSqlite);
+        Assert.DoesNotContain("SQLitePCLRaw.core", withExplicitSqlite);
+        Assert.Contains("System.Data.SQLite", withExplicitSqlite);
+        Assert.Contains("System.Godot.Native", withExplicitSqlite);
+    }
+
     private static void AssertTargetFramework(Assembly assembly)
     {
         var framework = assembly
@@ -140,13 +174,42 @@ public sealed class ReferencedAssemblyTests
         string owner,
         Func<string, bool>? extraAllowed = null)
     {
-        var allowed = new HashSet<string>(allowedExtras, StringComparer.Ordinal);
-        var unexpected = names
-            .Where(name => !IsFramework(name) && !allowed.Contains(name) && extraAllowed?.Invoke(name) != true)
-            .ToArray();
+        var unexpected = UnexpectedReferences(names, allowedExtras, extraAllowed);
         Assert.True(
             unexpected.Length == 0,
             $"{owner} has unexpected assembly references: {string.Join(", ", unexpected)}. Full set: {string.Join(", ", names)}.");
+    }
+
+    private static string[] UnexpectedReferences(
+        IReadOnlyCollection<string> names,
+        IEnumerable<string> allowedExtras,
+        Func<string, bool>? extraAllowed = null)
+    {
+        var allowed = new HashSet<string>(allowedExtras, StringComparer.Ordinal);
+        return names
+            .Where(name => !IsPermittedReference(name, allowed, extraAllowed))
+            .ToArray();
+    }
+
+    /// <summary>
+    /// Names containing Sqlite or Godot are decided before <see cref="IsFramework"/>.
+    /// Otherwise <c>System.Data.SQLite</c> would pass just because it starts with <c>System</c>.
+    /// The explicit callback is the only way through, so Persistence can keep its SQLite packages.
+    /// </summary>
+    private static bool IsPermittedReference(
+        string name,
+        HashSet<string> allowed,
+        Func<string, bool>? extraAllowed)
+    {
+        if (name.Contains("Sqlite", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("Godot", StringComparison.OrdinalIgnoreCase))
+        {
+            return extraAllowed?.Invoke(name) == true;
+        }
+
+        return IsFramework(name)
+            || allowed.Contains(name)
+            || extraAllowed?.Invoke(name) == true;
     }
 
     private static bool AllowSqlite(string name)

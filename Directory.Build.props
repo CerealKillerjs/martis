@@ -16,6 +16,16 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' Or '$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <!--
+      packages.lock.json is the cache key for actions/setup-dotnet. CI restores
+      in locked mode so that file cannot drift. The implicit NuGet fallback
+      folder is disabled because the action caches only the global packages
+      folder; leaving the fallback on makes a cache hit fail with NU1403.
+    -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestoreLockedMode>false</RestoreLockedMode>
+    <RestoreLockedMode Condition="'$(CI)' == 'true' Or '$(GITHUB_ACTIONS)' == 'true'">true</RestoreLockedMode>
+    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
     <Version>0.1.0</Version>
     <Product>MARTIS</Product>
   </PropertyGroup>

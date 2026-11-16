@@ -13,6 +13,7 @@ public sealed class ForbiddenApiTests
     private static readonly (string Label, Regex Pattern)[] Patterns =
     [
         ("System.Random", Compile(@"\bSystem\.Random\b")),
+        ("Random.Shared", Compile(@"\bRandom\.Shared\b")),
         ("new Random", Compile(@"\bnew\s+Random\s*\(")),
         ("GetHashCode", Compile(@"\bGetHashCode\s*\(")),
         ("Parallel.", Compile(@"\bParallel\.")),
@@ -43,6 +44,29 @@ public sealed class ForbiddenApiTests
     }
 
     [Fact]
+    public void RandomSharedIsDetectedInSampleCodeAndLookalikesAreNot()
+    {
+        const string usage = """
+            var roll = Random.Shared.Next();
+            """;
+
+        // Comments may name the API. Identifiers that only look similar are not calls.
+        const string lookalikes = """
+            // Random.Shared
+            /* Random.Shared */
+            var joined = RandomShared;
+            var prefixed = MyRandom.Shared;
+            var longer = Random.SharedState;
+            var split = Random . Shared;
+            var lower = random.Shared;
+            """;
+
+        Assert.Contains("Random.Shared", LabelsIn(usage));
+        Assert.DoesNotContain("Random.Shared", LabelsIn(lookalikes));
+        Assert.Empty(LabelsIn(lookalikes));
+    }
+
+    [Fact]
     public void SourceDoesNotCallNondeterministicApis()
     {
         var root = RepoLayout.Root;
@@ -59,20 +83,30 @@ public sealed class ForbiddenApiTests
         var violations = new List<string>();
         foreach (var file in files)
         {
-            var stripped = CSharpText.WithoutComments(File.ReadAllText(file));
-            foreach (var (label, pattern) in Patterns)
+            foreach (var label in LabelsIn(File.ReadAllText(file)))
             {
-                var match = pattern.Match(stripped);
-                if (match.Success)
-                {
-                    violations.Add($"{Path.GetRelativePath(root, file)}: {label}");
-                }
+                violations.Add($"{Path.GetRelativePath(root, file)}: {label}");
             }
         }
 
         Assert.True(
             violations.Count == 0,
             "Forbidden API use: " + string.Join("; ", violations));
+    }
+
+    private static List<string> LabelsIn(string source)
+    {
+        var stripped = CSharpText.WithoutComments(source);
+        var labels = new List<string>();
+        foreach (var (label, pattern) in Patterns)
+        {
+            if (pattern.IsMatch(stripped))
+            {
+                labels.Add(label);
+            }
+        }
+
+        return labels;
     }
 
     private static Regex Compile(string pattern)
