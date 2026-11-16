@@ -70,6 +70,8 @@ jobs:
       - name: Probar
         run: dotnet test MARTIS.sln -c Release --no-build
 
+      # Debug es la configuración del editor de Godot: incluye GodotSharpEditor y es la que
+      # fija packages.lock.json. Release restaura otro grafo y rompería el restore bloqueado.
       - name: Compilar el juego Godot (Godot.NET.Sdk, sin editor)
         if: runner.os == 'Linux'
-        run: dotnet build src/Martis.Game/Martis.Game.csproj -c Release
+        run: dotnet build src/Martis.Game/Martis.Game.csproj -c Debug
