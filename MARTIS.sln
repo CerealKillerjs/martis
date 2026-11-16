@@ -25,6 +25,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Martis.Persistence.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Martis.Integration.Tests", "tests\Martis.Integration.Tests\Martis.Integration.Tests.csproj", "{DFD61C34-0512-4AE6-92B9-EDA142DCE2D1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{66320409-64EC-F7C5-3DEF-65E7510DAAD1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Martis.Benchmarks", "benchmarks\Martis.Benchmarks\Martis.Benchmarks.csproj", "{574C159E-C38E-452C-A203-0626D1247A52}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -143,6 +147,18 @@ Global
 		{DFD61C34-0512-4AE6-92B9-EDA142DCE2D1}.Release|x64.Build.0 = Release|Any CPU
 		{DFD61C34-0512-4AE6-92B9-EDA142DCE2D1}.Release|x86.ActiveCfg = Release|Any CPU
 		{DFD61C34-0512-4AE6-92B9-EDA142DCE2D1}.Release|x86.Build.0 = Release|Any CPU
+		{574C159E-C38E-452C-A203-0626D1247A52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{574C159E-C38E-452C-A203-0626D1247A52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{574C159E-C38E-452C-A203-0626D1247A52}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{574C159E-C38E-452C-A203-0626D1247A52}.Debug|x64.Build.0 = Debug|Any CPU
+		{574C159E-C38E-452C-A203-0626D1247A52}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{574C159E-C38E-452C-A203-0626D1247A52}.Debug|x86.Build.0 = Debug|Any CPU
+		{574C159E-C38E-452C-A203-0626D1247A52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{574C159E-C38E-452C-A203-0626D1247A52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{574C159E-C38E-452C-A203-0626D1247A52}.Release|x64.ActiveCfg = Release|Any CPU
+		{574C159E-C38E-452C-A203-0626D1247A52}.Release|x64.Build.0 = Release|Any CPU
+		{574C159E-C38E-452C-A203-0626D1247A52}.Release|x86.ActiveCfg = Release|Any CPU
+		{574C159E-C38E-452C-A203-0626D1247A52}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -157,5 +173,6 @@ Global
 		{8471C429-A422-48B1-93BE-875644059C3C} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{4BDDA8B4-D657-452E-A04C-EDAA2603BE55} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{DFD61C34-0512-4AE6-92B9-EDA142DCE2D1} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{574C159E-C38E-452C-A203-0626D1247A52} = {66320409-64EC-F7C5-3DEF-65E7510DAAD1}
 	EndGlobalSection
 EndGlobal

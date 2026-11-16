@@ -90,4 +90,25 @@ public sealed class SimulationStateTests
         Assert.DoesNotContain("64", source, StringComparison.Ordinal);
         Assert.DoesNotContain("4096", source, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void AllocatedIdsStayAboveEveryPopulationAfterAppendsRemovalsAndExternalAdds()
+    {
+        var state = new SimulationState(2, 2);
+        state.Populations.Add(Samples.Population(0, id: 5));
+        Assert.Equal(6, state.AllocatePopulationId());
+        state.Populations.Add(Samples.Population(0, id: 6));
+        state.Populations.Add(Samples.Population(1, id: 40));
+        Assert.Equal(41, state.AllocatePopulationId());
+
+        // A removal shortens the list: the next call scans everything again.
+        state.Populations.RemoveAt(0);
+        state.Populations.Add(Samples.Population(2, id: 90));
+        Assert.Equal(91, state.AllocatePopulationId());
+
+        // Lowering the counter (a restore) also forces a full scan.
+        state.NextPopulationId = 1;
+        Assert.Equal(91, state.AllocatePopulationId());
+        Assert.Equal(92, state.NextPopulationId);
+    }
 }

@@ -41,6 +41,9 @@ public sealed class ProjectGraphTests
 
         // T08: the Godot game sits on the same layer as the CLI (ADR-017).
         ["Martis.Game"] = ["Martis.Simulation", "Martis.Persistence"],
+
+        // T10 / S1-35: BenchmarkDotNet suite, in the solution under benchmarks/.
+        ["Martis.Benchmarks"] = ["Martis.Simulation", "Martis.Contracts"],
     };
 
     [Fact]
@@ -88,6 +91,7 @@ public sealed class ProjectGraphTests
             ["Martis.Persistence.Tests"] = TestPackages,
             ["Martis.Integration.Tests"] = TestPackages,
             ["Martis.Game"] = [],
+            ["Martis.Benchmarks"] = ["BenchmarkDotNet"],
         };
 
         foreach (var (name, document) in LoadProjects())

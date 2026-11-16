@@ -132,7 +132,7 @@ public sealed class MortalitySystem(MetabolismWorkspace workspace) : ISimulation
         foreach (var population in state.Populations)
         {
             var organism = catalog.Organism(population.OrganismId.Value);
-            var parameters = PopulationParameters.From(organism);
+            var parameters = workspace.PopulationParametersOf(organism);
             var phenotype = PhenotypeCalculator.Calculate(population.Genome, catalog.Binding);
             var cell = population.CellIndex;
             var environment = state.Environment[cell];

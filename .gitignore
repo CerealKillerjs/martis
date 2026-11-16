@@ -40,3 +40,6 @@ results/
 
 # Godot (src/Martis.Game)
 .godot/
+
+# BenchmarkDotNet output
+BenchmarkDotNet.Artifacts/

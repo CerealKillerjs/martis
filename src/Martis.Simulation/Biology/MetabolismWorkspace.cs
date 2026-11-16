@@ -116,6 +116,35 @@ public sealed class MetabolismWorkspace
 
     public BiologyCatalog Catalog { get; }
 
+    private readonly Dictionary<string, PopulationParameters> _populationParameters = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, EvolutionParameters> _evolutionParameters = new(StringComparer.Ordinal);
+
+    /// <summary>T05 parameters of an organism, read once per workspace (T10: they were read per population and tick).</summary>
+    public PopulationParameters PopulationParametersOf(OrganismModel organism)
+    {
+        ArgumentNullException.ThrowIfNull(organism);
+        if (!_populationParameters.TryGetValue(organism.Id, out var parameters))
+        {
+            parameters = PopulationParameters.From(organism);
+            _populationParameters[organism.Id] = parameters;
+        }
+
+        return parameters;
+    }
+
+    /// <summary>T06 parameters of an organism, read once per workspace.</summary>
+    public EvolutionParameters EvolutionParametersOf(OrganismModel organism)
+    {
+        ArgumentNullException.ThrowIfNull(organism);
+        if (!_evolutionParameters.TryGetValue(organism.Id, out var parameters))
+        {
+            parameters = EvolutionParameters.From(organism);
+            _evolutionParameters[organism.Id] = parameters;
+        }
+
+        return parameters;
+    }
+
     public int Slots => ResourceColumns.Names.Count;
 
     public int ElementCount => Catalog.Elements.Count;

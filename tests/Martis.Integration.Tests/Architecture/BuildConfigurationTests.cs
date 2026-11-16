@@ -56,6 +56,7 @@ public sealed class BuildConfigurationTests
     {
         var expected = new Dictionary<string, string>(StringComparer.Ordinal)
         {
+            ["BenchmarkDotNet"] = "0.15.8",
             ["coverlet.collector"] = "10.1.1",
             ["CsCheck"] = "5.0.1",
             ["Microsoft.Data.Sqlite"] = "11.0.0",

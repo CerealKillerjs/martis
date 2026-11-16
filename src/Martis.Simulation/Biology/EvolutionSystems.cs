@@ -155,7 +155,7 @@ public sealed class MutationSystem(MetabolismWorkspace workspace) : ISimulationS
             }
 
             var organism = workspace.Catalog.Organism(parent.OrganismId.Value);
-            var parameters = EvolutionParameters.From(organism);
+            var parameters = workspace.EvolutionParametersOf(organism);
             var share = Math.Min(1.0, newborns / parent.Abundance);
             var chance = -double.ExpM1(-parameters.MutationEventRate * share);
             if (!random.NextBool(Math.Clamp(chance, 0.0, 1.0)))
@@ -238,7 +238,7 @@ public sealed class SelectionDriftSystem(MetabolismWorkspace workspace) : ISimul
         foreach (var group in Groups(state))
         {
             var organism = workspace.Catalog.Organism(group[0].OrganismId.Value);
-            var parameters = EvolutionParameters.From(organism);
+            var parameters = workspace.EvolutionParametersOf(organism);
             Drift(group, parameters, random, organism.Kinetics.IndividualMassKg, removed);
             var live = group.Where(population => !removed.Contains(population.Id.Value)).ToList();
             MergeClose(live, parameters.MergeTolerance, removed);
