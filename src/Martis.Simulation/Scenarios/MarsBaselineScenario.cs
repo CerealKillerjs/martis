@@ -232,8 +232,8 @@ public sealed class MarsBaselineScenario
             environment.IonizingAbsorbedDoseGyPerSol = _environment.IonizingAbsorbedDoseGyPerSol;
             environment.IonizingEquivalentDoseSvPerSol = _environment.IonizingEquivalentDoseSvPerSol;
             environment.SolarIrradiance = _environment.SolarIrradiance;
-            environment.PerchlorateWtPercent = _environment.PerchlorateWtPercent;
-            environment.WaterIceWtPercent = _environment.WaterIceWtPercent;
+            environment.PerchlorateWtPercent = AssignedDouble.Set(_environment.PerchlorateWtPercent);
+            environment.WaterIceWtPercent = AssignedDouble.Set(_environment.WaterIceWtPercent);
             AssignDeposits(resources, environment);
             environment.CheckInvariants();
             resources.CheckInvariants();

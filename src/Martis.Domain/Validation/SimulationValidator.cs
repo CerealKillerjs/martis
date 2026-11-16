@@ -149,6 +149,8 @@ public static class SimulationValidator
             else if (quantity.Name is nameof(EnvironmentState.PerchlorateWtPercent)
                 or nameof(EnvironmentState.WaterIceWtPercent))
             {
+                // Unset weight percents are absent from Quantities. An assigned
+                // value, including the closed ends 0 and 100, is DOM-VAL-016.
                 CollectOne(
                     violations,
                     InvariantIds.WeightPercentInterval,
