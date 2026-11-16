@@ -16,7 +16,7 @@ public static class MassBalanceTolerances
 
     /// <summary>
     /// Absolute term, in kg. MODEL_ASSUMPTION.
-    /// The figure is pending; zero leaves only the relative term in force.
+    /// Review this figure when H-07 (metres per cell) is closed.
     /// </summary>
-    public const double MassBalanceAbsoluteToleranceKg = 0;
+    public const double MassBalanceAbsoluteToleranceKg = 1e-12;
 }

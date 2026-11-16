@@ -14,7 +14,7 @@ VAL-006, VAL-007 y VAL-008 no se comprueban: no hay consumo, balance elemental n
 | --- | --- | --- | --- | --- |
 | MartianTime.SecondsPerSol | int | s por sol | 88 775, una sola copia en `src/` | 1 tick = 1 sol. El entero es un redondeo de modelo (`MODEL_ASSUMPTION`) de una medición |
 
-1 tick = 1 sol. `SecondsPerSol` = 88 775 s es un redondeo de modelo (`MODEL_ASSUMPTION`) del día solar medio de Marte. La medición (`SCIENTIFIC_MEASURED`) es D. R. Williams, NASA NSSDCA, Mars Fact Sheet, tabla «Orbital parameters», fila «Length of day (hrs)» 24,6597 h ≈ 88 774,92 s (https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html; consultado el 2026-11-16; la página no tiene fecha de actualización). Contraste: Allison & McEwen (2000), 88 775,244 s (NASA GISS Mars24, https://www.giss.nasa.gov/tools/mars24/help/notes.html). La diferencia es ≤ 0,25 s por sol (< 3·10⁻⁶). No es el periodo sideral (24,6229 h ≈ 88 642,4 s).
+1 tick = 1 sol. `SecondsPerSol` = 88 775 s es un redondeo de modelo (`MODEL_ASSUMPTION`) del día solar medio de Marte. La medición (`SCIENTIFIC_MEASURED`) es D. R. Williams, NASA NSSDCA, Mars Fact Sheet, tabla «Orbital parameters», fila «Length of day (hrs)» 24,6597 h ≈ 88 774,92 s (https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html; consultado el 2026-11-16; la página no tiene fecha de actualización). Contraste: Allison & McEwen (2000), Planet. Space Sci. 48, 215–235, doi:10.1016/S0032-0633(99)00092-6, 88 775,244 s (NASA GISS Mars24, https://www.giss.nasa.gov/tools/mars24/help/notes.html). La diferencia es ≤ 0,25 s por sol (< 3·10⁻⁶). No es el periodo sideral (24,6229 h ≈ 88 642,4 s).
 
 No hay `DeltaTimeDays` en el código. La edad de la población va en soles.
 
@@ -49,7 +49,7 @@ Masa en kg por celda. Cada depósito finito y ≥ 0 es **VAL-001** («ningún re
 | CarbonDioxide, Oxygen, Nitrogen, Phosphorus, Sulfur, Iron, OrganicCarbon, MineralCarbon | double | kg por celda | finito y ≥ 0 | VAL-001 |
 | Water | double | kg por celda | finito y ≥ 0 | Solo el líquido accesible para la biología. No es hielo ni vapor. VAL-001 |
 
-La matriz A guarda recuentos de átomos por especie, adimensionales. La masa molar no se almacena: se deriva como `M_j = Σ_i A_ij · m_i`, con `m_i` de IUPAC/CIAAW (`SCIENTIFIC_MEASURED`, sin cifras en este diccionario), y `n_j = m_j / M_j`. La especie de cada depósito es `MODEL_ASSUMPTION` y está pendiente de Ciencia para T04 (véase la tabla del ADR-011). `BiomassKg` tiene pendiente decir si es masa seca o húmeda.
+La matriz A guarda recuentos de átomos por especie, adimensionales. La masa molar no se almacena: `M_j` va en kg/mol y se deriva como `M_j = Σ_i A_ij · m_i`. Las masas atómicas de IUPAC/CIAAW (`SCIENTIFIC_MEASURED`) se publican en g/mol y se multiplican por 1e-3; este diccionario no copia esas cifras. `n_j = m_j / M_j`, con `m_j` en kg. La especie de cada depósito es `MODEL_ASSUMPTION` y está pendiente de Ciencia para T04 (véase la tabla del ADR-011). `BiomassKg` tiene pendiente decir si es masa seca o húmeda.
 
 Hasta cerrar H-07, el dato de fuente es intensivo (kg/m² o fracción másica). El kg por celda lo obtiene el cargador de T03 con la geometría del escenario.
 
@@ -63,7 +63,7 @@ Misma lista y la misma unidad (kg por celda) que el depósito. Anota demanda y n
 
 `ResourcePool.Water + EnvironmentState.WaterIce + EnvironmentState.WaterVapor`
 
-sumados en ese orden. Cada término y el total son finitos y ≥ 0. El error absoluto tiene que cumplir `ε ≤ MassBalanceAbsoluteToleranceKg + MassBalanceRelativeTolerance · |total|`. La relativa es `1e-9` y la absoluta es 0 kg; las dos son `MODEL_ASSUMPTION` y la absoluta sigue pendiente de una cifra distinta de cero. Si no cabe, **DOM-VAL-012**. Se parece a la tolerancia de TDD §10.1, no a VAL-007, que sigue sin implementarse.
+sumados en ese orden. Cada término y el total son finitos y ≥ 0. El error absoluto tiene que cumplir `ε ≤ MassBalanceAbsoluteToleranceKg + MassBalanceRelativeTolerance · |total|`. La relativa es `1e-9` y la absoluta es `1e-12` kg. Las dos son `MODEL_ASSUMPTION`. La absoluta se revisa cuando se cierre H-07. Si no cabe, **DOM-VAL-012**. Se parece a la tolerancia de TDD §10.1, no a VAL-007, que sigue sin implementarse.
 
 Contar la misma masa en el líquido y en el hielo sin aumentar el total hace que el error no quepa. Si el total se infla para absorber ese doble conteo, esta regla no lo ve. El agua adsorbida o hidratada queda fuera de v0. La conservación entre ticks se comprueba en T04.
 
@@ -79,12 +79,12 @@ El genoma no repite `GeneId` y se enumera en orden ordinal.
 
 ## Phenotype
 
-No se guarda en la población ni en el estado. Cada componente es finito y ≥ 0. No hay máximo.
+No se guarda en la población ni en el estado. Cada componente es finito y ≥ 0.
 
 | Campo | Unidad | Clasificación |
 | --- | --- | --- |
-| MaintenanceCost | fracción de EnergyReserveJ por sol, en [0, 1] | MODEL_ASSUMPTION (la escala puede ser GAME_BALANCE). DOM-VAL-014 |
-| ReproductionRate | factor de crecimiento por individuo y por sol, finito y ≥ 0, sin máximo | MODEL_ASSUMPTION (la escala puede ser GAME_BALANCE) |
+| MaintenanceCost | fracción de EnergyReserveJ por sol, en [0, 1]. Al ser una fracción de la reserva, el coste tiende a 0 cuando la reserva se agota, y no hay inanición (`MODEL_ASSUMPTION`) | MODEL_ASSUMPTION (la escala puede ser GAME_BALANCE). DOM-VAL-014. Lo lanza el constructor de Phenotype; SimulationValidator no lo emite |
+| ReproductionRate | tasa per cápita por tick, en [0, 1]. 0 significa que no se reproduce. No es un factor multiplicativo | MODEL_ASSUMPTION (la escala puede ser GAME_BALANCE). DOM-VAL-015. Lo lanza el constructor de Phenotype; SimulationValidator no lo emite. Se calibran en T05/T06 |
 | UvResistance, ThermalTolerance, DesiccationTolerance, PhotosyntheticEfficiency, BiofilmProduction | pendiente de MARTIS Ciencia | pendiente de MARTIS Ciencia |
 
 El calculador copia la expresión del gen enlazado, sin coeficiente. Sin gen, el componente vale 0 (extremo de VAL-005, no una constante medida).
@@ -113,7 +113,7 @@ H-07: el prototipo habla de una rejilla de 64×64 celdas. Eso es un tamaño de p
 
 | Campo | Significado |
 | --- | --- |
-| InvariantId | `VAL-001`, `VAL-002`, `VAL-003`, `VAL-005` o `DOM-VAL-001`..`DOM-VAL-014`. VAL-004 no lo emite este validador |
+| InvariantId | `VAL-001`, `VAL-002`, `VAL-003`, `VAL-005` o `DOM-VAL-001`..`DOM-VAL-015`. VAL-004 no lo emite este validador. DOM-VAL-014 y DOM-VAL-015 solo los lanza el constructor de `Phenotype`; `SimulationValidator` no los emite |
 | Tick | el tick del estado |
 | CellIndex | índice lineal |
 | Population | la población, o null |

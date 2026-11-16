@@ -31,6 +31,11 @@ public sealed class CellWaterBudget
     /// </summary>
     public static bool WithinTolerance(double componentSum, double recordedTotalKg)
     {
+        if (!double.IsFinite(componentSum) || !double.IsFinite(recordedTotalKg))
+        {
+            return false;
+        }
+
         var error = Math.Abs(componentSum - recordedTotalKg);
         var allowance = MassBalanceTolerances.MassBalanceAbsoluteToleranceKg
             + (MassBalanceTolerances.MassBalanceRelativeTolerance * Math.Abs(recordedTotalKg));

@@ -8,7 +8,7 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 | H-02 | A | §5.1, §8, §12.2 | El TDD pone `ISimulationCommand.Apply(SimulationState)` en Contracts y no asigna proyecto a `SimulationState`. Si el estado viviera en Simulation, Contracts→Simulation cerraría un ciclo. | **Cerrado** (2026-11-16) en [ADR-000](ADR/ADR-000-reglas-de-arquitectura.md): `SimulationState` en Domain; los comandos son datos en Contracts; un handler en Simulation los aplica sobre ese estado. Contracts no contiene `Apply`. | MARTIS Lead |
 | H-03 | A | §8.1 vs §9.3 | «Snapshot» significa dos cosas: vista agregada para UI (`SimulationSnapshot`, sin genomas ni RNG) y estado completo de guardado (con genomas y estado PRNG). `Restore(SimulationSnapshot)` y VAL-009 requieren estado completo. | Dos tipos: `SimulationSnapshot` (vista, Contracts) y `StateSnapshot`/`SaveSnapshot` (completo, Persistence/Simulation). | Dani |
 | H-04 | A | §5.3, §5.5, §6 | El contexto y el motor reciben **un** `SimulationRandom`, pero §6 exige 5 flujos independientes. No se define cómo derivar cada flujo de `WorldSeed`; `Restore` solo restaura `State`, no el RNG. | Un `RngStreams` (5 flujos) en el contexto; derivación documentada (ADR-003); su estado forma parte del snapshot completo. | Motor/Dani |
-| H-05 | A | §3.1, §12.1, §2.5 | Δt inicial = 1 **sol** (~88.775 s) pero la configuración usa `DeltaTimeDays` y `AgeDistributionMeanDays` («días»). Un sol no es un día terrestre. B.4 pide escalas «desde horas», imposible con Δt = 1 sol sin subpasos. | **Cerrado** (2026-11-16) en [ADR-011](ADR/ADR-011-unidades-del-modelo.md) (Propuesto, lo valida MARTIS Ciencia): 1 tick = 1 sol = 88 775 s; la edad es `AgeDistributionMeanSols`. No hay `DeltaTimeDays` en el código. | MARTIS Lead |
+| H-05 | A | §3.1, §12.1, §2.5 | Δt inicial = 1 **sol** (~88.775 s) pero la configuración usa `DeltaTimeDays` y `AgeDistributionMeanDays` («días»). Un sol no es un día terrestre. B.4 pide escalas «desde horas», imposible con Δt = 1 sol sin subpasos. | **Parcial:** 1 tick = 1 sol; SecondsPerSol ≈ 88 775 s (redondeo, MODEL_ASSUMPTION; ver [ADR-011](ADR/ADR-011-unidades-del-modelo.md)). | MARTIS Lead |
 | H-06 | M | §4.4 vs §12.1 | Límite «por especie y celda» vs `MaxVariantsPerCell`. | **Cerrado** (2026-11-16) en [ADR-006](ADR/ADR-006-variantes-por-celda.md): el nombre es `MaxVariantsPerSpeciesPerCell`. | MARTIS Lead |
 | H-07 | A | §7, §7.3 | Tamaño físico de celda sin fijar; imprescindible para difusión (`D·Δt/Δx²`), radiación y calibración regional. | Fijar escala en el escenario como `MODEL_ASSUMPTION`; no usar hasta decidirlo. Para el prototipo, ninguna difusión. | Dani/Ciencia |
 | H-08 | M | §7.3 | Condiciones de contorno de la difusión no definidas. | **Cerrado** (2026-11-16) en [ADR-008](ADR/ADR-008-difusion.md): borde cerrado, sin flujo. | MARTIS Lead |
@@ -48,7 +48,17 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 ## Deuda de modelo (ronda 2)
 
 - R2-10. Solo temperatura y presión distinguen «sin asignar». El resto de campos ambientales nace en 0. El cargador de T03 tiene que rellenarlos todos de forma explícita.
+- R2-11. `MaintenanceCost` y `ReproductionRate` están en [0, 1]: el primero es una fracción de `EnergyReserveJ` por sol y el segundo una tasa per cápita por tick (0 significa que no se reproduce). Se calibran en T05/T06.
 - R2-12. El agua adsorbida o hidratada queda fuera de v0. DOM-VAL-012 comprueba la contabilidad contra el total registrado y no un doble conteo cuyo total se haya inflado. La conservación entre ticks se comprueba en T04.
 - R2-13. `BiomassKg` tiene pendiente declarar si es masa seca o húmeda, junto a la tabla de especies de los depósitos.
 - R2-14. PAR queda para T05/T06.
 - R2-15. La atenuación exponencial de la dosis es `MODEL_ASSUMPTION` y se decide en T05.
+
+## Obligaciones del cargador de T03
+
+- Rechazar valores sin `classification` o sin `source`.
+- Avisar si una celda `Regional` lleva un valor `planetary_mean`.
+- Convertir datos intensivos a kg por celda con la geometría del escenario.
+- Rellenar explícitamente todos los campos de `EnvironmentState` (R2-10).
+- Guardar el valor nativo de la fuente con su clasificación (p. ej. Hassler 0,210 mGy/día, `SCIENTIFIC_MEASURED`) y el valor por sol aparte, como derivado, con la conversión `MODEL_ASSUMPTION` (R3-07). En este PR solo queda anotado.
+- Citar el UV de REMS con Viúdez-Moreiras et al. 2025, doi:10.1073/pnas.2426611122 (R3-09). En este PR solo queda anotado.

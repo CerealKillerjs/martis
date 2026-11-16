@@ -6,10 +6,12 @@ namespace Martis.Domain.Biology;
 /// <summary>
 /// Derived traits of a population (TDD §2.4). This value is calculated. It is not
 /// stored on <see cref="Population"/> and it is not a source of truth.
-/// Each component must be finite and at least 0. No upper bound is declared.
+/// Each component must be finite and at least 0.
 /// <see cref="MaintenanceCost"/> is the fraction of <see cref="Population.EnergyReserveJ"/>
-/// removed per sol, in [0, 1] (DOM-VAL-014).
-/// <see cref="ReproductionRate"/> is a per-individual growth factor per sol, finite and at least 0.
+/// removed per sol, in [0, 1] (DOM-VAL-014). Because it is a fraction of the reserve,
+/// the cost tends to 0 as the reserve is exhausted, and there is no starvation (MODEL_ASSUMPTION).
+/// <see cref="ReproductionRate"/> is a per-capita rate per tick in [0, 1] (DOM-VAL-015).
+/// Zero means the population does not reproduce. It is not a multiplicative factor.
 /// Both scales are MODEL_ASSUMPTION and may later be classified GAME_BALANCE (ADR-011).
 /// The other components still have no unit.
 /// TODO: pendiente MARTIS Ciencia.
@@ -80,13 +82,16 @@ public sealed record Phenotype
     }
 
     /// <summary>
-    /// Growth factor per individual per sol. Finite and at least 0. No upper bound is declared.
-    /// Classification of the scale: MODEL_ASSUMPTION (ADR-011).
+    /// Per-capita reproduction rate per tick, in [0, 1] (DOM-VAL-015).
+    /// Zero means no reproduction. Classification of the scale: MODEL_ASSUMPTION (ADR-011).
     /// </summary>
     public double ReproductionRate
     {
         get => _reproductionRate;
-        init => _reproductionRate = QuantityRules.ReturnNonNegativeFinite(value, nameof(ReproductionRate));
+        init => _reproductionRate = QuantityRules.ReturnUnitInterval(
+            value,
+            nameof(ReproductionRate),
+            InvariantIds.ReproductionRatePerCapita);
     }
 
     public double BiofilmProduction

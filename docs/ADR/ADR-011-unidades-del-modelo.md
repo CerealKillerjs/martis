@@ -1,7 +1,7 @@
 # ADR-011 — Unidades del modelo
 
-- **Estado:** Propuesto. MARTIS Lead lo pasa a Aceptado al fusionar este PR. Hasta entonces lo valida MARTIS Ciencia.
-- **Cierra en parte:** [H-05](../TDD_HUECOS.md). [H-18](../TDD_HUECOS.md) queda parcial.
+- **Estado:** Aceptado: decisión de MARTIS Lead tras la validación científica de MARTIS Ciencia (rondas 1-3 del PR #4), 2026-11-16.
+- **H-05:** parcial. 1 tick = 1 sol; SecondsPerSol ≈ 88 775 s (redondeo, MODEL_ASSUMPTION). [H-18](../TDD_HUECOS.md) queda parcial.
 - **Fuente:** TDD v1.0 §2.2, §2.3, §2.5, §3.1, §3.2, §10.1, §10.2.
 
 ## Contexto
@@ -14,7 +14,7 @@ La elección de unidad de un campo es `MODEL_ASSUMPTION`. La clasificación (`SC
 
 ### Tiempo
 
-1 tick = 1 sol. `SecondsPerSol` = 88 775 s es un redondeo de modelo (`MODEL_ASSUMPTION`) del día solar medio de Marte. Fuente de la medición (`SCIENTIFIC_MEASURED`): D. R. Williams, NASA NSSDCA, Mars Fact Sheet, tabla «Orbital parameters», fila «Length of day (hrs)» 24,6597 h ≈ 88 774,92 s (https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html; consultado el 2026-11-16; la página no tiene fecha de actualización). Contraste: Allison & McEwen (2000), 88 775,244 s (NASA GISS Mars24, https://www.giss.nasa.gov/tools/mars24/help/notes.html). La diferencia es ≤ 0,25 s por sol (< 3·10⁻⁶). No es el periodo sideral (24,6229 h ≈ 88 642,4 s).
+1 tick = 1 sol. `SecondsPerSol` = 88 775 s es un redondeo de modelo (`MODEL_ASSUMPTION`) del día solar medio de Marte. Fuente de la medición (`SCIENTIFIC_MEASURED`): D. R. Williams, NASA NSSDCA, Mars Fact Sheet, tabla «Orbital parameters», fila «Length of day (hrs)» 24,6597 h ≈ 88 774,92 s (https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html; consultado el 2026-11-16; la página no tiene fecha de actualización). Contraste: Allison & McEwen (2000), Planet. Space Sci. 48, 215–235, doi:10.1016/S0032-0633(99)00092-6, 88 775,244 s (NASA GISS Mars24, https://www.giss.nasa.gov/tools/mars24/help/notes.html). La diferencia es ≤ 0,25 s por sol (< 3·10⁻⁶). No es el periodo sideral (24,6229 h ≈ 88 642,4 s).
 
 La cifra entera está solo en `MartianTime.SecondsPerSol`. En el código no existe `DeltaTimeDays`. La edad media de la población es `AgeDistributionMeanSols`, en soles. Cuando llegue la configuración, su paso también irá en soles.
 
@@ -22,13 +22,13 @@ La cifra entera está solo en `MartianTime.SecondsPerSol`. En el código no exis
 
 Los nueve campos de `ResourcePool` son la masa del modelo en kg por celda, **después** de que el cargador convierta el dato de fuente. Hasta que se cierre H-07 no hay metros por celda: los datos de fuente se guardan intensivos (kg/m² o fracción másica) y el cargador de T03 los pasa a kg por celda con la geometría del escenario.
 
-La matriz A guarda recuentos de átomos por especie. Esos recuentos son adimensionales. Las masas atómicas se citan de IUPAC/CIAAW (`SCIENTIFIC_MEASURED`); este ADR no copia cifras. La masa molar se deriva, no se guarda como constante:
+La matriz A guarda recuentos de átomos por especie. Esos recuentos son adimensionales. Las masas atómicas se citan de IUPAC/CIAAW (`SCIENTIFIC_MEASURED`) y se publican en g/mol; en el modelo se multiplican por 1e-3 para pasarlas a kg/mol. Este ADR no copia esas cifras. `M_j` va en kg/mol y se deriva, no se guarda como constante:
 
 `M_j = Σ_i A_ij · m_i`
 
 `n_j = m_j / M_j`
 
-`m_i` es la masa atómica del elemento i y `m_j` la masa del depósito j. La especie de cada depósito es `MODEL_ASSUMPTION` y queda pendiente de Ciencia para T04. Sin coeficientes inventados:
+`m_i` es la masa atómica del elemento i, en kg/mol, y `m_j` la masa del depósito j, en kg. La especie de cada depósito es `MODEL_ASSUMPTION` y queda pendiente de Ciencia para T04. Sin coeficientes inventados:
 
 | Depósito | Especie pendiente | Fórmula posible |
 | --- | --- | --- |
@@ -56,11 +56,11 @@ El buffer de asignación usa kg por celda y no consume el depósito.
 
 No hay un segundo campo de líquido en el ambiente ni de hielo o vapor en el depósito. El agua adsorbida o hidratada queda fuera de v0.
 
-`CellWaterBudget.RecordedTotalKg` no es un cuarto stock. El error es el valor absoluto de la diferencia entre `Water + WaterIce + WaterVapor` (en ese orden) y el total registrado. Pasa si el error es menor o igual que `MassBalanceAbsoluteToleranceKg + MassBalanceRelativeTolerance · |total|`. Las dos constantes son `MODEL_ASSUMPTION`. Lead fija la relativa en `1e-9`. La absoluta, en kg, es 0 y la cifra queda pendiente. Si la misma masa se anota en el líquido y en el hielo y el total no crece, el error supera esa cota y el validador emite **DOM-VAL-012**. Si el total se infla para absorber el doble conteo, esta regla no lo ve. La conservación de un tick al siguiente se comprueba en T04. Transferir agua conservando la masa es un proceso de T03/T04 y no está implementado.
+`CellWaterBudget.RecordedTotalKg` no es un cuarto stock. El error es el valor absoluto de la diferencia entre `Water + WaterIce + WaterVapor` (en ese orden) y el total registrado. Pasa si el error es menor o igual que `MassBalanceAbsoluteToleranceKg + MassBalanceRelativeTolerance · |total|`. Las dos constantes son `MODEL_ASSUMPTION`. Lead fija la relativa en `1e-9`. La absoluta es `1e-12` kg, `MODEL_ASSUMPTION`, y se revisa cuando se cierre H-07. Si la misma masa se anota en el líquido y en el hielo y el total no crece, el error supera esa cota y el validador emite **DOM-VAL-012**. Si el total se infla para absorber el doble conteo, esta regla no lo ve. La conservación de un tick al siguiente se comprueba en T04. Transferir agua conservando la masa es un proceso de T03/T04 y no está implementado.
 
 ### Fenotipo
 
-`MaintenanceCost` es la fracción de `EnergyReserveJ` que se retira por sol, en [0, 1] (DOM-VAL-014). `ReproductionRate` es un factor de crecimiento por individuo y por sol, finito y ≥ 0, sin máximo declarado. Las dos escalas son `MODEL_ASSUMPTION` y pueden acabar en `GAME_BALANCE`. El resto de componentes del fenotipo no tiene unidad.
+`MaintenanceCost` es la fracción de `EnergyReserveJ` que se retira por sol, en [0, 1] (DOM-VAL-014). Como es una fracción de la reserva, el coste tiende a 0 cuando la reserva se agota, y no hay inanición (`MODEL_ASSUMPTION`). `ReproductionRate` es una tasa per cápita por tick en [0, 1] (DOM-VAL-015): 0 significa que no se reproduce, y no es un factor multiplicativo. Las dos escalas son `MODEL_ASSUMPTION` y pueden acabar en `GAME_BALANCE`. Se calibran en T05/T06. El resto de componentes del fenotipo no tiene unidad. DOM-VAL-014 y DOM-VAL-015 los lanza el constructor de `Phenotype`; `SimulationValidator` no los emite.
 
 ### Ambiente
 
@@ -98,8 +98,9 @@ El ejemplo del prototipo es 64×64 celdas. `GridIndex` no fija ese tamaño. H-07
 - 0 K asignado se rechaza. Unset no es un cero asignado.
 - DOM-VAL-012: 2 + 3 + 4 con total 9 pasa. 5 en líquido y 5 en hielo con total 5 falla. El valor cuya diferencia cabe en la tolerancia pasa; el `double` siguiente falla.
 - Las dos dosis rechazan negativo, NaN e infinito por separado y no se suman.
-- `MaintenanceCost` por encima de 1 lanza DOM-VAL-014. Un factor de reproducción mayor que 1 sigue siendo válido.
+- `MaintenanceCost` y `ReproductionRate` por encima de 1 lanzan DOM-VAL-014 y DOM-VAL-015. 0 y 1 pasan.
+- Con total registrado 0, una suma de 5,55e-17 kg pasa y una de 2e-12 kg no. Un lado no finito no pasa.
 
 ## Pendiente
 
-Ciencia valida este ADR antes de que Lead lo acepte al fusionar. Siguen abiertos la especie de cada depósito, la masa seca o húmeda, la fluencia UV diaria, la tolerancia absoluta en kg y la cita numérica de IUPAC/CIAAW dentro del código de la matriz.
+Siguen abiertos la especie de cada depósito, la masa seca o húmeda, la fluencia UV diaria y la cita numérica de IUPAC/CIAAW dentro del código de la matriz. La tolerancia absoluta de masa, `1e-12` kg, se revisa cuando se cierre H-07.

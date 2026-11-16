@@ -367,7 +367,7 @@ public sealed class SimulationValidatorTests
 
         var finite = new SimulationState(1, 1);
         finite.Environment[0].IonizingAbsorbedDoseGyPerSol = 1;
-        finite.Environment[0].IonizingEquivalentDoseSvPerSol = 40;
+        finite.Environment[0].IonizingEquivalentDoseSvPerSol = 5e-4;
         Assert.Empty(SimulationValidator.Validate(finite));
     }
 
@@ -377,10 +377,10 @@ public sealed class SimulationValidatorTests
         const double recorded = 1.0;
         var allowance = MassBalanceTolerances.MassBalanceAbsoluteToleranceKg
             + (MassBalanceTolerances.MassBalanceRelativeTolerance * Math.Abs(recorded));
-        // Adding the allowance to 1 rounds to a double whose gap is just past the allowance.
-        // The previous representable value is the last one still inside.
-        var pastBoundary = recorded + allowance;
-        var onBoundary = Math.BitDecrement(pastBoundary);
+        // With the absolute term included, recorded + allowance still sits inside.
+        // The next representable value is the first one outside.
+        var onBoundary = recorded + allowance;
+        var pastBoundary = Math.BitIncrement(onBoundary);
 
         Assert.True(CellWaterBudget.WithinTolerance(CellWaterBudget.ComponentSum(onBoundary, 0, 0), recorded));
         Assert.False(CellWaterBudget.WithinTolerance(CellWaterBudget.ComponentSum(pastBoundary, 0, 0), recorded));
@@ -395,6 +395,44 @@ public sealed class SimulationValidatorTests
         outside.WaterBudgets[0].RecordedTotalKg = recorded;
         var violation = Assert.Single(SimulationValidator.Validate(outside));
         Assert.Equal(InvariantIds.WaterPartition, violation.InvariantId);
+    }
+
+    [Fact]
+    public void ZeroRecordedTotalAcceptsASumInsideTheAbsoluteTolerance()
+    {
+        var state = new SimulationState(1, 1);
+        state.Resources[0].Water = 5.55e-17;
+        state.WaterBudgets[0].RecordedTotalKg = 0;
+        Assert.Empty(SimulationValidator.Validate(state));
+    }
+
+    [Fact]
+    public void ZeroRecordedTotalRejectsASumOfTwoPicogramsPerCell()
+    {
+        var state = new SimulationState(1, 1);
+        state.Resources[0].Water = 2e-12;
+        state.WaterBudgets[0].RecordedTotalKg = 0;
+        var violation = Assert.Single(SimulationValidator.Validate(state));
+        Assert.Equal(InvariantIds.WaterPartition, violation.InvariantId);
+        DoubleBits.Equal(0, violation.Value);
+    }
+
+    public static IEnumerable<object[]> NonFiniteWaterBalances()
+    {
+        yield return [double.PositiveInfinity, 1.0];
+        yield return [double.NegativeInfinity, 1.0];
+        yield return [double.NaN, 1.0];
+        yield return [1.0, double.PositiveInfinity];
+        yield return [1.0, double.NegativeInfinity];
+        yield return [1.0, double.NaN];
+        yield return [double.NaN, double.PositiveInfinity];
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteWaterBalances))]
+    public void WithinToleranceRejectsANonFiniteSumOrTotal(double sum, double recorded)
+    {
+        Assert.False(CellWaterBudget.WithinTolerance(sum, recorded));
     }
 
     [Fact]

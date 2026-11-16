@@ -67,13 +67,40 @@ public sealed class PhenotypeTests
     public void MaintenanceCostRejectsAFractionAboveOne()
     {
         var above = Math.BitIncrement(1.0);
-        var error = Assert.Throws<ArgumentOutOfRangeException>(() => new Phenotype(0, 0, 0, 0, above, 2, 0));
+        var error = Assert.Throws<ArgumentOutOfRangeException>(() => new Phenotype(0, 0, 0, 0, above, 1, 0));
         Assert.Equal(nameof(Phenotype.MaintenanceCost), error.ParamName);
         Assert.Contains(InvariantIds.MaintenanceCostFraction, error.Message, StringComparison.Ordinal);
 
-        var atOne = new Phenotype(0, 0, 0, 0, 1, 2, 0);
+        var atOne = new Phenotype(0, 0, 0, 0, 1, 1, 0);
         DoubleBits.Equal(1, atOne.MaintenanceCost);
-        DoubleBits.Equal(2, atOne.ReproductionRate);
+        DoubleBits.Equal(1, atOne.ReproductionRate);
+    }
+
+    public static IEnumerable<object[]> RejectedReproductionRates()
+    {
+        yield return [Math.BitIncrement(1.0)];
+        yield return [-0.01];
+        yield return [double.NaN];
+        yield return [double.PositiveInfinity];
+        yield return [double.NegativeInfinity];
+    }
+
+    [Theory]
+    [MemberData(nameof(RejectedReproductionRates))]
+    public void ReproductionRateRejectsValuesOutsideTheUnitInterval(double value)
+    {
+        var error = Assert.Throws<ArgumentOutOfRangeException>(() => new Phenotype(0, 0, 0, 0, 0, value, 0));
+        Assert.Equal(nameof(Phenotype.ReproductionRate), error.ParamName);
+        Assert.Contains(InvariantIds.ReproductionRatePerCapita, error.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(1.0)]
+    public void ReproductionRateAcceptsZeroAndOne(double value)
+    {
+        var phenotype = new Phenotype(0, 0, 0, 0, 0, value, 0);
+        DoubleBits.Equal(value, phenotype.ReproductionRate);
     }
 
     [Fact]

@@ -58,22 +58,22 @@ public sealed class EnvironmentState
 
     /// <summary>
     /// Physical ice reserve in this cell. Biology does not consume it.
-    /// Unit: kg per cell, classified MODEL_ASSUMPTION (ADR-011). It is not
+    /// Unit: kg per cell. Unit choice: MODEL_ASSUMPTION (ADR-011). It is not
     /// <see cref="ResourcePool.Water"/>. Finite and at least 0 (DOM-VAL-004).
     /// </summary>
     public double WaterIce { get; set; }
 
     /// <summary>
     /// Physical vapor reserve in this cell. Biology does not consume it.
-    /// Unit: kg per cell, classified MODEL_ASSUMPTION (ADR-011). It is not
+    /// Unit: kg per cell. Unit choice: MODEL_ASSUMPTION (ADR-011). It is not
     /// <see cref="ResourcePool.Water"/>. Finite and at least 0 (DOM-VAL-004).
     /// </summary>
     public double WaterVapor { get; set; }
 
     /// <summary>
     /// Soil porosity as a volume fraction.
-    /// Unit: dimensionless, classified MODEL_ASSUMPTION (ADR-011).
-    /// Finite and inside [0, 1] (DOM-VAL-003).
+    /// [0, 1] is the definition of a volume fraction.
+    /// Finite and inside that interval (DOM-VAL-003).
     /// </summary>
     public double SoilPorosity { get; set; }
 
