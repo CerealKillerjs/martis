@@ -16,7 +16,7 @@ public sealed class BuildConfigurationTests
         var sdk = JsonNode.Parse(File.ReadAllText(path))!["sdk"]!.AsObject();
 
         Assert.Equal("10.0.404", sdk["version"]!.GetValue<string>());
-        Assert.Equal("latestFeature", sdk["rollForward"]!.GetValue<string>());
+        Assert.Equal("latestPatch", sdk["rollForward"]!.GetValue<string>());
         Assert.False(sdk["allowPrerelease"]!.GetValue<bool>());
     }
 

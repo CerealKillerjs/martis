@@ -8,9 +8,10 @@ namespace Martis.Simulation.Tests;
 public sealed class EngineAssemblyTests
 {
     [Fact]
-    public void NamesTheEngineAndTheDomainAssembly()
+    public void NamesTheEngineAndItsAllowedAssemblies()
     {
         Assert.Equal("Martis.Simulation", EngineAssembly.Name);
         Assert.Equal("Martis.Domain", EngineAssembly.DomainAssemblyName);
+        Assert.Equal("Martis.Contracts", EngineAssembly.ContractsAssemblyName);
     }
 }

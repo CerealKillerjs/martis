@@ -25,16 +25,16 @@ public sealed class ReferencedAssemblyTests
     }
 
     [Fact]
-    public void SimulationReferencesDomainAndNotTheHostOrOtherMartisProjects()
+    public void SimulationReferencesDomainAndContractsAndNotTheHost()
     {
         var names = ReferencedNames(typeof(EngineAssembly).Assembly);
         Assert.Contains("Martis.Domain", names);
+        Assert.Contains("Martis.Contracts", names);
         AssertNoHostAssemblies(names, "Martis.Simulation");
         Assert.DoesNotContain("Martis.Persistence", names);
         Assert.DoesNotContain("Martis.Cli", names);
-        Assert.DoesNotContain("Martis.Contracts", names);
         Assert.DoesNotContain("Martis.Game", names);
-        AssertOnlyFramework(names, ["Martis.Domain"], "Martis.Simulation");
+        AssertOnlyFramework(names, ["Martis.Domain", "Martis.Contracts"], "Martis.Simulation");
     }
 
     [Fact]

@@ -7,11 +7,11 @@ Este árbol corresponde al hito **T01 Infrastructure** del TDD v1.0 (§1.2 y §1
 ## Requisitos
 
 - **.NET SDK 10.0.404** (LTS, runtime 10.0.15), fijado en [`global.json`](global.json).
-- `rollForward`: `latestFeature` (banda 10.0; no salta a .NET 11).
+- `rollForward`: `latestPatch` (misma banda 10.0.4xx; no salta de feature band ni a .NET 11). Decisión del lead, alineada con ADR-002.
 - `allowPrerelease`: `false`.
 - TFM de todos los proyectos: **net10.0** (`Directory.Build.props`).
 
-El 2026-11-15, 10.0.404 es el SDK más alto publicado en el canal 10.0 ([descargas de .NET 10](https://dotnet.microsoft.com/download/dotnet/10.0), metadatos `10.0/releases.json`: `latest-sdk` = `10.0.404`). Con esa política, `latestFeature` resuelve a **10.0.404**.
+El 2026-11-15, 10.0.404 es el SDK más alto publicado en el canal 10.0 ([descargas de .NET 10](https://dotnet.microsoft.com/download/dotnet/10.0), metadatos `10.0/releases.json`: `latest-sdk` = `10.0.404`). Con `latestPatch` el SDK activo sigue siendo **10.0.404** mientras no exista un parche posterior de la banda 10.0.4xx.
 
 Instalación del SDK exacto:
 
@@ -45,12 +45,12 @@ Salida esperada: `MARTIS 0.1.0` y código de salida 0. Cualquier otro argumento 
 
 ## Grafo de dependencias
 
-Canónico según la tabla del TDD §1.2. No se usa la arista extra del diagrama `image1.png`.
+La tabla del TDD §1.2 más la arista **Simulation → Contracts**, aprobada por el lead (H-01). Contracts no referencia Simulation.
 
 | Proyecto | Referencias |
 | --- | --- |
 | Martis.Domain | ninguna (solo BCL, sin paquetes) |
-| Martis.Simulation | Domain |
+| Martis.Simulation | Domain, Contracts |
 | Martis.Contracts | Domain |
 | Martis.Persistence | Domain, Contracts, paquete Microsoft.Data.Sqlite |
 | Martis.Cli | Simulation, Persistence |
@@ -64,6 +64,7 @@ graph TD
   Cli[Martis.Cli] --> Simulation[Martis.Simulation]
   Cli --> Persistence[Martis.Persistence]
   Simulation --> Domain[Martis.Domain]
+  Simulation --> Contracts
   Contracts[Martis.Contracts] --> Domain
   Persistence --> Contracts
   Persistence --> Domain
@@ -111,7 +112,7 @@ El id `xunit` 2.9.3 es la última versión estable de ese paquete (xUnit v2). El
 
 En `tests/Martis.Integration.Tests`, con el rasgo `Category=Architecture`:
 
-- Por reflexión (`Assembly.GetReferencedAssemblies`): `Martis.Domain` no referencia ensamblados `Godot*`, `Microsoft.Data.Sqlite*`, `SQLitePCL*` ni `Martis.*`. Simulation y Contracts tampoco referencian Godot ni SQLite. Simulation no referencia Persistence, Cli ni Contracts. Contracts no referencia Simulation.
+- Por reflexión (`Assembly.GetReferencedAssemblies`): `Martis.Domain` no referencia ensamblados `Godot*`, `Microsoft.Data.Sqlite*`, `SQLitePCL*` ni `Martis.*`. Simulation referencia Domain y Contracts, y no referencia Persistence, Cli, Godot ni SQLite. Contracts referencia solo Domain: nunca Simulation, Persistence, Cli, SQLite ni Godot.
 - Por los `.csproj` (BCL, sin paquetes extra): el grafo de arriba, sin ciclos. La reflexión no ve una referencia de proyecto que ningún método usa; el examen del `.csproj` sí.
 - El código de `src/` no llama a `System.Random`, `GetHashCode()`, `Parallel.*`, `AsParallel()`, `Task.Run`, `DateTime.Now`, `DateTime.UtcNow` ni `Guid.NewGuid()`. Los comentarios pueden nombrarlas; el escáner los quita antes de buscar.
 
@@ -129,10 +130,14 @@ GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest
 - Esquema SQLite, migraciones y partidas guardadas (T07). El proyecto de persistencia solo abre una base en memoria para comprobar el paquete.
 - `metadata.json` con la versión del runtime y del SDK (lo pide ADR-002 para cada ejecución; no hay ejecución de escenario todavía).
 
-## Decisiones pendientes
+## Regla de Contracts
 
-- **H-01.** La tabla §1.2 no incluye Simulation → Contracts, aunque `CreateSnapshot()` devolverá tipos de Contracts. ADR-000 (propuesto) añade esa arista. **T01 no la añade**: manda el brief de T01. Hace falta la decisión de Dani antes de T02/T03.
-- **H-02.** `ISimulationCommand.Apply(SimulationState)` en Contracts ciclaría si `SimulationState` vive en Simulation. T01 no declara comandos ni estado. La estructura actual no obliga a ese ciclo.
-- **H-17.** `Martis.Game` queda fuera de `MARTIS.sln`. La CI no depende de Godot.
-- **H-27.** No hay `Martis.Contracts.Tests` ni `Martis.Cli.Tests`. El brief fija cuatro proyectos de test; Contracts y el CLI se cubren desde `Martis.Integration.Tests`.
-- **ADR-002** acepta el SDK 10 y pone como ejemplo un `rollForward` solo de parches. El brief de T01 fija `latestFeature`. Se usa `latestFeature`. Hoy coincide con 10.0.404 porque no hay un SDK 10.0 más alto.
+`Martis.Contracts` solo contiene datos: comandos como records sin `Apply`, snapshots y eventos. Los handlers que aplican un comando sobre `SimulationState` vivirán en `Martis.Simulation`. T01 no implementa comandos ni handlers. Contracts referencia únicamente Domain: nunca Simulation, Persistence, Cli, SQLite ni Godot.
+
+## Decisiones del lead en este PR
+
+- **H-01.** Simulation referencia Contracts, además de Domain.
+- **H-02.** El ciclo se evita dejando los datos en Contracts y la aplicación en Simulation. Sin tipos de comando en este hito.
+- **Roll-forward.** `global.json` usa `latestPatch` con la versión 10.0.404, como indica ADR-002. En la revisión el lead lo nombra H-27.
+- **H-17.** `Martis.Game` sigue fuera de `MARTIS.sln`. La CI no depende de Godot.
+- Los cuatro proyectos de test del brief se mantienen. Contracts y el CLI se cubren desde `Martis.Integration.Tests`. ADR-000 lo actualiza el lead; este PR no lo modifica.

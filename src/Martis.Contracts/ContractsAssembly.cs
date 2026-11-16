@@ -1,10 +1,10 @@
 namespace Martis.Contracts;
 
 /// <summary>
-/// Names this assembly and records its reference to the domain.
-/// Command, snapshot and event types are intentionally absent. An
-/// <c>Apply</c> method that took a state type owned by the simulation
-/// would create the cycle described as H-02, so T01 does not declare it.
+/// Names this assembly and records its only project reference, <c>Martis.Domain</c>.
+/// Contracts hold data: commands as records without an apply method, snapshots and events.
+/// Handlers that apply a command to simulation state live in <c>Martis.Simulation</c>.
+/// T01 does not declare those types or handlers.
 /// </summary>
 public static class ContractsAssembly
 {

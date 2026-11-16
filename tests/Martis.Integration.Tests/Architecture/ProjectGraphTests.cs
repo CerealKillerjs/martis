@@ -5,7 +5,7 @@ namespace Martis.Integration.Tests.Architecture;
 /// <summary>
 /// The project-reference graph of TDD §1.2. Reflection cannot see an unused
 /// reference, so this test reads the project files with the BCL XML reader.
-/// H-01 (Simulation to Contracts) is deliberately not an edge.
+/// Simulation may reference Domain and Contracts. Contracts may reference only Domain.
 /// </summary>
 [Trait("Category", "Architecture")]
 public sealed class ProjectGraphTests
@@ -21,7 +21,7 @@ public sealed class ProjectGraphTests
     private static readonly Dictionary<string, string[]> ExpectedProjectReferences = new(StringComparer.Ordinal)
     {
         ["Martis.Domain"] = [],
-        ["Martis.Simulation"] = ["Martis.Domain"],
+        ["Martis.Simulation"] = ["Martis.Domain", "Martis.Contracts"],
         ["Martis.Contracts"] = ["Martis.Domain"],
         ["Martis.Persistence"] = ["Martis.Domain", "Martis.Contracts"],
         ["Martis.Cli"] = ["Martis.Simulation", "Martis.Persistence"],

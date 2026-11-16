@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\Martis.Domain\Martis.Domain.csproj" />
+    <ProjectReference Include="..\Martis.Contracts\Martis.Contracts.csproj" />
   </ItemGroup>
 </Project>

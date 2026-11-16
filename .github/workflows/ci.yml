@@ -1,5 +1,5 @@
 # T01: compile and test the engine on Linux and Windows.
-# The SDK comes from global.json (10.0.404, rollForward latestFeature).
+# The SDK comes from global.json (10.0.404, rollForward latestPatch).
 # Godot is not installed. Martis.Game is not part of the solution.
 
 name: CI
