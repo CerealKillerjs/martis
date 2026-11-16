@@ -11,7 +11,8 @@ Uso: MARTIS QA copia esta lista en la revisión de **cada** PR y marca cada punt
 
 ## 1. Reglas de arquitectura (ADR-000 R1–R2, R6)
 - [ ] `Martis.Domain` sin `using Godot*`, sin `Microsoft.Data.Sqlite`/SQLite, sin `PackageReference`.
-- [ ] Referencias de proyecto dentro del grafo permitido; sin ciclos (el test `Category=Architecture` está en verde).
+- [ ] Grafo de compilación, sin ciclos (el test `Category=Architecture` está en verde): Domain sin dependencias de proyecto; Contracts → Domain; Simulation → Domain y Contracts; Persistence → Domain y Contracts; Cli → Simulation y Persistence. `Martis.Game` no está en `MARTIS.sln`.
+- [ ] Contracts no declara `Apply`. El test de arquitectura falla si aparece. Los comandos son datos; el handler que los aplica vive en Simulation (ADR-000).
 - [ ] El motor (`Simulation`) no conoce escenas, nodos ni controles de Godot; Godot solo consume comandos, snapshots inmutables y eventos (nunca estado mutable).
 - [ ] Sin individuos como objetos de simulación (solo poblaciones agregadas).
 - [ ] Nada de acceso a disco/SQLite/red desde `Domain` ni lógica de dominio dentro de `Persistence`/`Game`.
@@ -29,10 +30,11 @@ Uso: MARTIS QA copia esta lista en la revisión de **cada** PR y marca cada punt
 - [ ] Hay tests nuevos para cada comportamiento nuevo; cada test **ejecuta código de `src/`** (no tautologías tipo `Math.Clamp` sobre literales; H-11).
 - [ ] Casos de borde: 0, 1, negativos, `NaN`, `±∞`, vacío, tamaño máximo.
 - [ ] Los fallos esperados son excepciones o violaciones **concretas** (mensaje con VAL-id, tick, celda/población cuando aplique).
-- [ ] Invariantes VAL-001..010 afectados por el PR: tests actualizados y `VALIDATION_STATUS.md` al día.
+- [ ] Invariantes VAL-001..010 afectados por el PR: tests actualizados. Si S1-34 ya añadió el registro de invariantes a `docs/`, ese registro también se actualiza.
 - [ ] Sin tests dependientes de la hora, del orden de ejecución, de la cultura ni de ficheros fuera del repo.
 - [ ] Tests de regresión con semilla y versión fijadas cuando se toca un sistema; si se cambia un resultado de referencia, el PR lo justifica explícitamente.
-- [ ] Propiedades (property-based) añadidas si el cambio introduce un invariante nuevo (§13), cuando exista la herramienta acordada.
+- [ ] Si el PR toca genoma, consumo, snapshot, abundancia o reacciones, hay tests de propiedad según §13 (genomas válidos, consumo limitado, snapshot recuperable, abundancia no negativa, reacciones elementales balanceadas). Si aún no hay herramienta de propiedades, hay ejemplos con semilla fija que cubren el mismo invariante.
+- [ ] Si el PR toca un sistema o cita cifras de rendimiento, hay un benchmark BenchmarkDotNet (§13) con hardware, runtime, media, memoria asignada y GC. Las cifras de §7.4 (4.096 celdas, 10.000 poblaciones, 3 organismos, como máximo 32 variantes, 1.000 ticks en menos de 10 s, snapshot en menos de 1 s, memoria de simulación menor de 256 MB) van rotuladas como objetivo. No se optimiza sin esa medición.
 
 ## 4. Determinismo y reproducibilidad (ADR-000 R4)
 - [ ] Sin `System.Random`, sin `GetHashCode()` para semillas/órdenes, sin `Guid.NewGuid()`, `DateTime.Now`/`UtcNow`, variables de entorno ni cultura en el estado.

@@ -17,7 +17,7 @@ Huecos propios de esta decisión: no se define el tamaño de celda Δx (H-07), n
 
 ## Decisión recomendada
 
-Opción 1, aplicada solo a las variables que el hito T03 incluya (agua superficial conceptual y nutrientes seleccionados). Formulación **en flujos simétricos entre celdas vecinas** para conservar la cantidad total (ADR-000 R3). Si `D·Δt/Δx² > 1/4` el motor usa subpasos (o falla de forma explícita), nunca avanza silenciosamente. Condiciones de contorno propuestas: borde cerrado (sin flujo) hasta decisión de Dani. `D`, `Δx` y su clasificación son parámetros etiquetados; mientras no haya fuente científica son `MODEL_ASSUMPTION` o `GAME_BALANCE`, nunca `SCIENTIFIC_*`.
+Opción 1, aplicada solo a las variables que el hito T03 incluya (agua superficial conceptual y nutrientes seleccionados). Formulación **en flujos simétricos entre celdas vecinas** para conservar la cantidad total (ADR-000 R3). Si `D·Δt/Δx² > 1/4` el motor usa subpasos (o falla de forma explícita), nunca avanza silenciosamente. Condiciones de contorno: borde cerrado (sin flujo). H-08 queda cerrado con esta decisión. `D`, `Δx` y su clasificación son parámetros etiquetados; mientras no haya fuente científica son `MODEL_ASSUMPTION` o `GAME_BALANCE`, nunca `SCIENTIFIC_*`.
 
 ## Consecuencias
 

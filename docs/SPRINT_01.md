@@ -12,16 +12,16 @@ Fuente: TDD v1.0 §18 (cinco jornadas), §18.1 (checklist), §19 (definición de
 - Sin datos científicos inventados: todo número del escenario lleva clasificación; sin fuente ⇒ `MODEL_ASSUMPTION`/`GAME_BALANCE`/`SPECULATIVE` y marcado como ilustrativo. Los objetivos de §7.4 no se tratan como mediciones.
 - Convención del CLI propuesta: exit 0 = éxito; exit 2 = argumentos inválidos; exit 1 = violación de invariante o error de ejecución.
 
-## Prerrequisitos (visto bueno de Dani)
+## Prerrequisitos
 
-1. ADR-002: SDK .NET 10 LTS y TFM `net10.0` para librerías/CLI (bloquea S1-02). Si Dani prefiere otra cosa, solo cambia S1-02.
-2. H-01/H-02/H-03 (grafo, ubicación de `SimulationState`, tipos de snapshot): se asume la propuesta de `TDD_HUECOS.md` salvo que Dani decida otra cosa.
+1. ADR-002 está aceptado: SDK 10.0.404, `rollForward` `latestPatch`, `allowPrerelease` false y TFM `net10.0` para librerías y CLI (bloquea S1-02).
+2. H-01 y H-02 están cerrados en [ADR-000](ADR/ADR-000-reglas-de-arquitectura.md) (grafo y comandos como datos). H-03 (tipos de snapshot) sigue abierto en [TDD_HUECOS.md](TDD_HUECOS.md).
 3. H-16: ids de escenario (`mars_baseline`) y salidas mínimas del prototipo.
 4. El repo remoto lo crea Dani/lead cuando decida; hasta entonces todo es local.
 
 ## Camino crítico hacia el CLI
 
-`S1-01 → S1-02 → S1-03 → S1-04 (CLI esqueleto) → S1-09..S1-13 (dominio) → S1-18 → S1-19 → S1-20 → S1-22 → S1-23 (CLI avanza ticks) → S1-25..S1-27 (escenario + ambiente) → S1-31 → S1-32 (CLI flujo completo §19)`.
+`S1-01 → S1-02 → S1-03 → S1-04 (CLI esqueleto) → S1-09..S1-13 (dominio) → S1-14 → S1-15 (validador) → S1-18 → S1-19 → S1-20 → S1-22 → S1-23 (CLI avanza ticks) → S1-25..S1-27 (escenario + ambiente) → S1-31 → S1-32 (CLI flujo completo §19)`.
 
 Fuera del camino crítico (si el sprint se retrasa se mueven al Sprint 2, en este orden de sacrificio): S1-35 (benchmark), S1-08, S1-07, S1-06.
 
@@ -30,7 +30,7 @@ Fuera del camino crítico (si el sprint se retrasa se mueven al Sprint 2, en est
 ## Día 1 — Infraestructura
 
 ### S1-01 · Repositorio, README y .gitignore — *Motor*
-Crear repo Git (local o remoto según Dani), `README.md` (qué es MARTIS, requisitos, comandos de build/test/CLI), `.gitignore` .NET/Godot, copiar `docs/` (TDD, ADR, ROADMAP, SPRINT_01, PR_CHECKLIST).
+Crear repo Git (local o remoto según Dani), `README.md` (qué es MARTIS, requisitos, comandos de build/test/CLI), `.gitignore` .NET/Godot, y dejar en el repo [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt), los ADR, [ROADMAP.md](ROADMAP.md), este sprint y [PR_CHECKLIST.md](PR_CHECKLIST.md).
 **Aceptación:** `git status` limpio tras el primer commit; `git ls-files docs/ADR | wc -l` ≥ 12; el README contiene los comandos exactos de `dotnet build`, `dotnet test` y `dotnet run --project src/Martis.Cli`.
 
 ### S1-02 · global.json y propiedades de build — *Motor*
@@ -54,12 +54,12 @@ Workflow que ejecuta restore, build Release, test y el CLI de S1-04 en Ubuntu, s
 **Aceptación:** pipeline verde en el PR; ejecuta exactamente `dotnet build MARTIS.sln -c Release` y `dotnet test MARTIS.sln`.
 
 ### S1-07 · Spike Godot .NET + registro de versión (paralela, no bloquea) — *Motor*
-Instalar la versión de ADR-001 (provisional 4.7.2 .NET), crear un proyecto mínimo en `src/Martis.Game` con un script C# que escribe en consola, y documentar versiones y URL oficial de descarga en `docs/SETUP.md`.
-**Aceptación:** `dotnet build src/Martis.Game` exit 0 en la máquina de desarrollo; `docs/SETUP.md` lista versión de Godot, `Godot.NET.Sdk`, SDK .NET y sistema operativo.
+Instalar la versión de ADR-001 (provisional 4.7.2 .NET), crear un proyecto mínimo en `src/Martis.Game` con un script C# que escribe en consola, y dejar en la nota de esta tarea la versión, `Godot.NET.Sdk`, el SDK .NET, el sistema operativo y la URL oficial de descarga.
+**Aceptación:** `dotnet build src/Martis.Game` exit 0 en la máquina de desarrollo; la nota de la tarea lista versión de Godot, `Godot.NET.Sdk`, SDK .NET y sistema operativo.
 
 ### S1-08 · Spike de TFM Game ↔ librerías (paralela, no bloquea) — *Motor*
 Comprobar y documentar si el proyecto Godot elegido puede referenciar `Martis.Contracts`/`Martis.Simulation` según el TFM de ADR-002 (pendiente de verificar en ADR-001/002).
-**Aceptación:** informe en `docs/SETUP.md` con resultado (compila / no compila) y comando usado; si no compila, propuesta de multi-target (ADR-002, opción B).
+**Aceptación:** el informe de esta tarea dice si compila o no, y el comando usado; si no compila, propuesta de multi-target (ADR-002, opción B). El TFM de Game sigue pendiente de este spike.
 
 ---
 
@@ -93,9 +93,21 @@ Validador (H-15) que devuelve una lista de violaciones `{VAL-id, tick, celda, po
 Batería adicional independiente de S1-14: un test nominal y uno de borde por invariante, incluyendo `NaN`, `+∞`, `−0`, 0 exacto y 1 exacto para genes. Revisa que ningún test sea tautológico (H-11).
 **Aceptación:** `dotnet test --filter Category=Invariants` pasa; cada test llama a código de `src/`, no solo a `Math.*`.
 
-### S1-16 · Diccionario de parámetros y SCIENCE_MODEL inicial — *Ciencia*
-`docs/DATA_DICTIONARY.md` (esquema `id/value/unit/classification/source/version`, reglas por clasificación: `SCIENTIFIC_*` exige `source` con URL o DOI y fecha de consulta) y `docs/SCIENCE_MODEL.md` con las 5 categorías, la lista pendiente de §10.3 y la advertencia «una media planetaria no sustituye una medición regional».
-**Aceptación:** ambos ficheros existen y un revisor QA confirma que no contienen valores numéricos de Marte sin fuente enlazada; lista de §10.3 completa (9 filas).
+### S1-16 · Diccionario de parámetros y modelo científico inicial — *Ciencia*
+Esta tarea añade en `docs/` el diccionario de parámetros (esquema `id/value/unit/classification/source/version`; `SCIENTIFIC_*` exige `source` con URL o DOI y fecha de consulta) y el modelo científico, con las 5 categorías, la advertencia «una media planetaria no sustituye una medición regional» y las 10 filas de §10.3 de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt):
+
+1. Temperatura regional — datos de estaciones y modelos climáticos.
+2. Radiación UV — mediciones instrumentales y modelos espectrales.
+3. Radiación ionizante — datos RAD y modelos de transporte.
+4. Agua accesible — cartografía de hielo y propiedades del suelo.
+5. Percloratos — mediciones locales y caracterización química.
+6. Nutrientes disponibles — análisis mineralógico.
+7. Difusión de gases — modelo físico y condiciones locales.
+8. Presión regional — altitud y datos atmosféricos.
+9. Pérdidas atmosféricas — modelos de escape atmosférico.
+10. Tasas metabólicas — bibliografía experimental y calibración.
+
+**Aceptación:** los dos documentos están en `docs/` y un revisor QA confirma que no contienen valores numéricos de Marte sin fuente enlazada; la lista de §10.3 tiene estas 10 filas.
 
 ### S1-17 · ParameterDefinition + cargador JSON — *Motor*
 Registro `ParameterDefinition` y cargador/validador JSON (BCL) que rechaza: sin `classification`, clasificación desconocida, `SCIENTIFIC_*` sin `source`, `unit` vacía, `version` no positiva.
@@ -122,7 +134,7 @@ Revisión y tests adversariales: semillas 0, 1, `ulong.MaxValue`; semillas disti
 **Aceptación:** `dotnet test --filter Category=Random` pasa; el PR documenta la tolerancia usada y su justificación.
 
 ### S1-22 · ISimulationSystem, SimulationContext, ISimulationEngine y SimulationEngine — *Motor*
-Contratos de §5.1–5.5 con `RngStreams` en el contexto, registro **ordenado y fijo** de sistemas (H-28) y `Advance(steps)`; sistemas stub para los pasos de §5.4 (sin lógica).
+Contratos de §5.1–5.5 con `RngStreams` en el contexto. Los comandos son datos: un handler en Martis.Simulation aplica el comando sobre `SimulationState` (ADR-000). Registro **ordenado y fijo** de sistemas (H-28) y `Advance(steps)`; sistemas stub para los pasos de §5.4 (sin lógica).
 **Aceptación:** tests: `Advance(0)` no cambia el tick; `Advance(-1)` lanza `ArgumentOutOfRangeException`; tras `Advance(1000)` el tick es 1000; el orden de ejecución de los sistemas coincide con el registro (sistema de prueba que anota su paso).
 
 ### S1-23 · CLI ejecuta el motor — *Motor* (**el CLI llega primero**)
@@ -139,14 +151,14 @@ Sistema de prueba que modifica estado con el flujo Environment; dos motores con 
 
 ### S1-25 · Parámetros de MarsBaseline con clasificación — *Ciencia*
 `data/scenarios/mars_baseline.json` con los parámetros iniciales (temperatura, presión, radiación UV e ionizante, irradiancia solar, agua/hielo/vapor, porosidad, perclorato, recursos, amplitudes/periodos del modelo diurno y estacional de §3.2). Cada parámetro con `unit`, `classification` y `source`/`version`; **cada valor con fuente enlazable (p. ej. NASA NSSDC Mars Fact Sheet, a verificar y citar con fecha) o clasificado como `MODEL_ASSUMPTION`/`GAME_BALANCE`/`SPECULATIVE` y marcado ilustrativo**; ningún valor presentado como medición regional si es media planetaria (§10.3). Tamaño de celda (H-07) como supuesto etiquetado.
-**Aceptación:** el cargador de S1-17 acepta el fichero; QA ejecuta la auditoría de S1-30; una lista en `SCIENCE_MODEL.md` enlaza cada valor `SCIENTIFIC_*` a su fuente.
+**Aceptación:** el cargador de S1-17 acepta el fichero; QA ejecuta la auditoría de S1-30; una lista en el modelo científico de S1-16 enlaza cada valor `SCIENTIFIC_*` a su fuente.
 
 ### S1-26 · Escenario MarsBaseline: carga e inicialización — *Motor*
 Cargador de escenario y `MarsBaseline` inicializan temperatura, presión, radiación y recursos de las 4.096 celdas **solo desde el JSON** (ningún valor numérico de modelo en C#).
 **Aceptación:** test: tras cargar, las 4.096 celdas tienen los valores del fichero y el validador reporta 0 violaciones; borrar un parámetro obligatorio del JSON hace fallar la carga con mensaje claro.
 
 ### S1-27 · EnvironmentSystem v0 — *Motor*
-Sistema de ambiente mínimo: `T(x,y,t) = T_base + D(t) (+ ε opcional con flujo Environment)` de §3.2 con parámetros del escenario; sin difusión (H-07/H-08).
+Sistema de ambiente mínimo. La v0 usa `T(x,y,t) = T_base(x,y) + D(t) + ε` y omite `S(t)` de la fórmula de §3.2. ε es opcional y, si se usa, sale del flujo Environment. Parámetros del escenario; sin difusión (H-07/H-08).
 **Aceptación:** tests: con amplitud y σ = 0 el estado permanece constante tras 100 ticks; con σ > 0 y la misma semilla el resultado es idéntico bit a bit; el validador no reporta violaciones.
 
 ### S1-28 · SimulationSnapshot (vista) y estadísticas — *Motor*
@@ -178,12 +190,12 @@ Ejecutar el CLI dos veces con la misma semilla y comparar la salida; con otra se
 **Aceptación:** `sha256sum results/a/* results/b/*` coincide fichero a fichero para la misma semilla (misma plataforma y runtime, §6); test automatizado equivalente en `Martis.Integration.Tests`; el PR documenta explícitamente la limitación entre plataformas.
 
 ### S1-34 · Matriz de invariantes VAL-001..010 — *QA*
-`docs/VALIDATION_STATUS.md`: por cada VAL, estado (implementado/probado/pendiente), test que lo cubre y por qué no aplica aún (VAL-006/007/008 hasta T04).
+El registro de invariantes de esta tarea, en `docs/`: por cada VAL, estado (implementado/probado/pendiente), test que lo cubre y por qué no aplica aún (VAL-006/007/008 hasta T04).
 **Aceptación:** las 10 filas existen; los enlaces a test son nombres reales ejecutables; VAL-001..005, 009, 010 marcados como cubiertos solo si su test está en verde.
 
 ### S1-35 · Benchmark inicial (menor prioridad) — *Motor*
 `benchmarks/Martis.Benchmarks` con BenchmarkDotNet (paquete y versión consultados en NuGet) para `FullSimulation` de 1000 ticks y `SnapshotCreation`.
-**Aceptación:** `dotnet run -c Release --project benchmarks/Martis.Benchmarks` genera el informe; `docs/BENCHMARKS.md` registra hardware, SO, runtime y los números **medidos** sin compararlos aún con §7.4 (el modelo actual no es el modelo completo, H-20).
+**Aceptación:** `dotnet run -c Release --project benchmarks/Martis.Benchmarks` genera el informe; el informe de esta tarea, en `docs/`, registra hardware, SO, runtime y los números **medidos** sin tratarlos aún como el objetivo de §7.4 (el modelo actual no es el modelo completo, H-20).
 
 ### S1-36 · Cierre del sprint — *QA*
 Recorrer el checklist 18.1 y la definición de terminado §19 sobre un **clon limpio**.
@@ -196,7 +208,7 @@ Recorrer el checklist 18.1 y la definición de terminado §19 sobre un **clon li
 | # | Ítem del TDD (§18.1) | Tareas | Evidencia de cierre |
 |---|---|---|---|
 | 1 | Crear repositorio MARTIS — Git inicial y README | S1-01 | `git ls-files`, README con comandos |
-| 2 | Configurar Godot .NET y SDK — editor y compilación C# funcionales | S1-02 (SDK), S1-07 (Godot), S1-08 (TFM) | `dotnet --version`; `docs/SETUP.md`; `dotnet build src/Martis.Game` (S1-07, paralela) |
+| 2 | Configurar Godot .NET y SDK — editor y compilación C# funcionales | S1-02 (SDK), S1-07 (Godot), S1-08 (TFM) | `dotnet --version`; nota de puesta en marcha de S1-07; `dotnet build src/Martis.Game` (S1-07, paralela) |
 | 3 | Crear MARTIS.sln — solución con proyectos independientes | S1-03, S1-05, S1-06 | `dotnet build MARTIS.sln`; test de arquitectura |
 | 4 | Implementar Martis.Domain — entidades básicas y validaciones | S1-09, S1-10, S1-11, S1-12, S1-14, S1-15, S1-16, S1-17 | tests de dominio e invariantes |
 | 5 | Implementar SimulationState — mundo 64×64 | S1-13 | test 4.096 celdas |

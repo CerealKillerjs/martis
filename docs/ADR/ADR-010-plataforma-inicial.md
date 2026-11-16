@@ -25,7 +25,7 @@ Nota: la documentación «stable» corresponde hoy a Godot 4.7; el aviso de Web 
 
 ## Decisión recomendada
 
-Opción 1. La simulación y el CLI (`Martis.Simulation`, `Martis.Cli`) son multiplataforma por construcción (sin Godot) y se prueban en Linux y Windows; `Martis.Game` se exporta a escritorio. Web/móvil quedan fuera de alcance y se revisan si cambia la documentación oficial. macOS: decisión de Dani (H-12), no asumida.
+Opción 1. La simulación y el CLI (`Martis.Simulation`, `Martis.Cli`) son multiplataforma por construcción (sin Godot) y se prueban en Linux y Windows; `Martis.Game` se exporta a escritorio. Web/móvil quedan fuera de alcance y se revisan si cambia la documentación oficial. macOS queda fuera de alcance (H-12 cerrado en este ADR); incluirlo exige una decisión posterior.
 
 ## Consecuencias
 

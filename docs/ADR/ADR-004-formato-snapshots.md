@@ -17,7 +17,7 @@ Además el TDD usa «snapshot» para dos cosas distintas (hueco H-03): el **snap
 
 ## Decisión recomendada
 
-**Opción 1 para guardado** (BLOB en `Snapshot.Payload`) y **JSON canónico (orden estable, cultura invariante) solo para exportes del CLI** (`final_snapshot.json`) y depuración. Checksum propuesto: SHA-256 de la BCL sobre el cuerpo. La compresión queda **condicionada a medición** (hueco H-10: §9.3 dice «si el benchmark lo justifica», §17 dice «+ compresión»).
+**Opción 1 para guardado** (BLOB en `Snapshot.Payload`) y **JSON canónico (orden estable, cultura invariante) solo para la exportación del CLI** (`final_snapshot.json`) y la depuración. Los JSON de definiciones de §9 no cambian. El checksum es SHA-256 sobre el cuerpo sin comprimir. La compresión queda **condicionada a medición** (H-10 cerrado: §9.3 dice «si el benchmark lo justifica»; §17 dice «+ compresión»).
 
 ## Consecuencias
 
@@ -35,4 +35,4 @@ Además el TDD usa «snapshot» para dos cosas distintas (hueco H-03): el **snap
 - Tamaño y tiempo de snapshot completo se **miden** (BenchmarkDotNet); el objetivo «< 1 s» de §7.4 es objetivo, no medición.
 
 ## Nota de aprobación (2026-11-16)
-Dani aprueba binario versionado con cabecera para guardado y JSON solo para exportes y depuración. La compresión forma parte del formato objetivo; se activa cuando el benchmark inicial la mida.
+Dani aprueba binario versionado con cabecera para el guardado, y JSON solo para la exportación del CLI y la depuración. Los JSON de definiciones de §9 no cambian. El checksum es SHA-256 sobre el cuerpo sin comprimir. La compresión forma parte del formato objetivo; se activa cuando el benchmark inicial la mida.

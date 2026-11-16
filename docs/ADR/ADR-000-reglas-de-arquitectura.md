@@ -1,7 +1,7 @@
 # ADR-000 — Reglas de arquitectura de MARTIS
 
-- **Estado:** Propuesto. El TDD v1.0 (§0, §1.2–1.3, §3.1, §6, §21) ya lo da por cerrado; queda pendiente el visto bueno de Dani para fijarlo como ADR aceptado.
-- **Fuente:** `docs/MARTIS_TDD_v1.0.txt` (ARC-001, ARC-006, ARC-007, ARC-008, §1.2, §6, §10, §21).
+- **Estado:** Aceptado. Decisión de MARTIS Lead, 2026-11-16.
+- **Fuente:** [docs/tdd/MARTIS_TDD_v1.0.txt](../tdd/MARTIS_TDD_v1.0.txt) (ARC-001, ARC-006, ARC-007, ARC-008, §1.2, §6, §10, §21).
 - **Fecha:** 2026-11-16
 
 ## Contexto
@@ -19,7 +19,7 @@ Aristas permitidas (A → B = «A referencia a B»):
 | Proyecto | Puede referenciar |
 |---|---|
 | Martis.Domain | (nada) |
-| Martis.Simulation | Domain |
+| Martis.Simulation | Domain, Contracts |
 | Martis.Contracts | Domain |
 | Martis.Persistence | Domain, Contracts |
 | Martis.Game | Simulation, Contracts, Persistence |
@@ -32,7 +32,9 @@ graph TD
   Game --> Contracts[Martis.Contracts]
   Game --> Persistence[Martis.Persistence]
   Cli[Martis.Cli] --> Simulation
+  Cli --> Persistence
   Simulation --> Domain[Martis.Domain]
+  Simulation --> Contracts
   Contracts --> Domain
   Persistence --> Contracts
   Persistence --> Domain
@@ -40,7 +42,7 @@ graph TD
 
 Reglas derivadas: el motor no conoce escenas, nodos ni controles de Godot (§1.3); Godot nunca accede a estructuras mutables internas, solo a comandos, snapshots inmutables y eventos (§8).
 
-> **Discrepancia pendiente (H-01 en `TDD_HUECOS.md`)**: el diagrama `image1.png` dibuja además la arista *Simulation → Contracts* (necesaria para que `ISimulationEngine.CreateSnapshot()` devuelva tipos de Contracts), y no dibuja *Cli → Persistence*, que sí aparece en la tabla de §1.2. Este ADR toma como canónica la tabla de §1.2 **más** *Simulation → Contracts* hasta que Dani confirme. Cualquier cambio de aristas requiere un ADR nuevo.
+> **Grafo canónico ([H-01](../TDD_HUECOS.md), decisión de MARTIS Lead, 2026-11-16):** la tabla y el diagrama de esta sección son la norma. `Martis.Domain` no referencia otros proyectos. `Martis.Contracts` referencia solo Domain. `Martis.Simulation` referencia Domain y Contracts. `Martis.Persistence` referencia Domain y Contracts. `Martis.Cli` referencia Simulation y Persistence. `Martis.Game` no forma parte de `MARTIS.sln`. Cualquier cambio de aristas requiere un ADR nuevo.
 
 ### R3. Nunca recursos gratis (ARC-007, §3.1, §10, §21)
 - Ninguna cantidad física es negativa; el consumo nunca supera lo disponible; la biomasa no aparece sin fuente de materia; la energía no se crea.
@@ -67,7 +69,7 @@ No hay individuos como objetos de simulación; solo poblaciones agregadas con va
 
 ## Consecuencias
 
-- Los PR se revisan con `docs/PR_CHECKLIST.md`, que operacionaliza estas reglas.
+- Los PR se revisan con [docs/PR_CHECKLIST.md](../PR_CHECKLIST.md), que operacionaliza estas reglas.
 - Se necesitan tests de arquitectura automáticos (S1-05) en vez de depender de revisión visual.
 - Algunas reglas añaden fricción (por ejemplo, ordenar siempre las colecciones) a cambio de reproducibilidad.
 
@@ -78,8 +80,8 @@ No hay individuos como objetos de simulación; solo poblaciones agregadas con va
 - Tests de reproducibilidad (VAL-010) y de invariantes (VAL-001..009) en cada hito.
 - Auditoría de parámetros: ningún JSON de `data/` sin `classification`; todo `SCIENTIFIC_*` con `source`.
 
-## Enmienda 2026-11-16 (H-01, H-02), decisión del lead
+## Enmienda 2026-11-16 (H-01, H-02), decisión de MARTIS Lead, 2026-11-16
 - Se permite la dependencia **Martis.Simulation → Martis.Contracts**.
-- **Martis.Contracts** contiene solo datos (comandos como records sin lógica, snapshots y eventos) y depende únicamente de Martis.Domain.
-- La aplicación de comandos sobre `SimulationState` (handlers) vive en **Martis.Simulation**. Así no hay ciclo Contracts ↔ Simulation.
-- El test de arquitectura verifica esta arista y la ausencia de ciclos.
+- **Martis.Contracts** contiene solo datos (comandos como records, snapshots y eventos) y depende únicamente de Martis.Domain.
+- Norma que sustituye a `ISimulationCommand.Apply` del TDD §5.5 y §8: los comandos son datos. Un handler en **Martis.Simulation** aplica cada comando sobre `SimulationState`. **Martis.Contracts** no contiene `Apply`.
+- El test de arquitectura verifica la arista Simulation → Contracts, la ausencia de ciclos y que Contracts no declara `Apply`.

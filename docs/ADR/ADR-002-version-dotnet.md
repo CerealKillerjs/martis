@@ -31,7 +31,7 @@ Fuente: <https://dotnet.microsoft.com/en-us/download/dotnet>.
 
 ## Decisión recomendada
 
-**Opción A**: instalar un **.NET SDK 10.0.x** y fijarlo en `global.json` el día de la instalación (S1-02) con la versión vigente en <https://dotnet.microsoft.com/en-us/download/dotnet/10.0> (última verificada: SDK 10.0.404; elegir política `rollForward` explícita, por ejemplo solo parches). `Martis.*` (excepto Game) con `<TargetFramework>net10.0</TargetFramework>` en `Directory.Build.props`. La compatibilidad con el TFM de Godot 4.7.x se decide en T08 (opción B si hace falta). El spike S1-08 mide el riesgo temprano.
+**Opción A, decidida.** `global.json` en `main` (`62d5257`) fija el SDK **10.0.404**, `rollForward` en **latestPatch** y `allowPrerelease` en **false** (banda 4xx, no la 1xx). `Martis.*` (excepto Game) usa `<TargetFramework>net10.0</TargetFramework>` en `Directory.Build.props`. El TFM del proyecto Game sigue pendiente del spike S1-08; si en T08 hace falta Godot 4.7.x, se reabre la opción B.
 
 ## Consecuencias
 
@@ -41,8 +41,7 @@ Fuente: <https://dotnet.microsoft.com/en-us/download/dotnet>.
 ## Pendiente de verificar
 
 - Versiones de `Microsoft.Data.Sqlite`, xUnit y BenchmarkDotNet compatibles con .NET 10.
-- Que Godot 4.7.2 pueda compilar y referenciar bibliotecas `net10.0` (S1-08).
-- Política `rollForward` y banda de SDK (1xx vs 4xx) a usar en `global.json`.
+- Que Godot 4.7.2 pueda compilar y referenciar bibliotecas `net10.0` (S1-08). El SDK, `rollForward` y `allowPrerelease` ya están fijados arriba.
 
 ## Cómo se verifica
 
