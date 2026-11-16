@@ -60,30 +60,56 @@ public sealed class ParameterCatalog
     }
 
     /// <summary>
-    /// Records that a regional cell would use <paramref name="parameterId"/>.
-    /// A <c>planetary_mean</c> value produces a warning and is not rewritten.
+    /// Records that the regional cell at <paramref name="cellSite"/> would use
+    /// <paramref name="parameterId"/> (R5-07). The value is not rewritten.
+    /// A warning is stored once per id and cell site when the parameter is
+    /// <c>planetary_mean</c>, when it is <c>regional:A</c> and the cell site is
+    /// not A, or when it is <c>analog:</c> on a regional cell.
+    /// A matching <c>regional:</c> site produces no warning.
     /// The method does not return the number. A missing id is an error.
+    /// An empty cell site is an error: the site is not invented.
     /// </summary>
-    public void NoteRegionalCellUse(string parameterId)
+    public void NoteRegionalCellUse(string parameterId, string cellSite)
     {
+        if (string.IsNullOrWhiteSpace(cellSite))
+        {
+            throw new ArgumentException("A regional cell needs a site.", nameof(cellSite));
+        }
+
         if (!_byId.TryGetValue(parameterId, out var definition))
         {
             throw new ParameterUnavailableException(parameterId, ParameterUnavailableReason.Missing);
         }
 
-        if (definition.Scope is not ParameterScope.PlanetaryMean)
+        var message = DescribeScopeMismatch(parameterId, definition.Scope, cellSite);
+        if (message is null)
         {
             return;
         }
 
-        if (_warnings.Exists(warning => string.Equals(warning.ParameterId, parameterId, StringComparison.Ordinal)))
+        if (_warnings.Exists(warning =>
+                string.Equals(warning.ParameterId, parameterId, StringComparison.Ordinal)
+                && string.Equals(warning.CellSite, cellSite, StringComparison.Ordinal)))
         {
             return;
         }
 
-        _warnings.Add(new ParameterWarning(
-            parameterId,
-            $"Parameter '{parameterId}' has scope planetary_mean and does not replace a regional measurement."));
+        _warnings.Add(new ParameterWarning(parameterId, message, cellSite));
+    }
+
+    private static string? DescribeScopeMismatch(string parameterId, ParameterScope scope, string cellSite)
+    {
+        switch (scope)
+        {
+            case ParameterScope.PlanetaryMean:
+                return $"Parameter '{parameterId}' has scope planetary_mean and does not replace a regional measurement. Cell site: '{cellSite}'.";
+            case ParameterScope.Regional regional when !string.Equals(regional.Site, cellSite, StringComparison.Ordinal):
+                return $"Parameter '{parameterId}' has scope regional:{regional.Site} and the cell site is '{cellSite}'.";
+            case ParameterScope.Analog analog:
+                return $"Parameter '{parameterId}' has scope analog:{analog.Name} and does not apply to regional cell '{cellSite}'.";
+            default:
+                return null;
+        }
     }
 
     public SourcedValue<double> RequireNumber(string id)
@@ -181,7 +207,9 @@ public sealed class ParameterCatalog
             definition.DerivedFrom,
             definition.Conversion,
             definition.Uncertainty,
-            definition.Range);
+            definition.Range,
+            definition.Note,
+            definition.Rationale);
     }
 
     private static ParameterUnavailableException WrongKind(string id, string expected)
@@ -377,7 +405,12 @@ public sealed class ParameterCatalog
                 id);
         }
 
-        if (range is ParameterRange.Interval accepted && !LiesInside(value, accepted, id))
+        // A pending null is not a number yet. The range is kept and checked only
+        // when a value exists (R6-02). Reading the entry still fails.
+        var pendingNull = value is ParameterLiteral.None
+            && (string.Equals(status, "PENDING", StringComparison.Ordinal)
+                || classification == ParameterClassification.UnclassifiedPending);
+        if (range is ParameterRange.Interval accepted && !pendingNull && !LiesInside(value, accepted, id))
         {
             throw new ParameterLoadException(
                 $"Parameter '{id}' is outside its range.",

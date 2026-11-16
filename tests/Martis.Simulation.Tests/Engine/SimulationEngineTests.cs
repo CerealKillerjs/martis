@@ -111,6 +111,38 @@ public sealed class SimulationEngineTests
         var broken = Assert.Throws<SimulationInvariantException>(() => balance.Advance(1));
         Assert.Contains(broken.Violations, violation => violation.InvariantId == InvariantIds.WaterPartition);
         Assert.Equal(0, balance.CurrentTick);
+        Assert.Equal(-1, engine.State.Resources[0].Water);
+    }
+
+    [Fact]
+    public void EnableValidationFalseLetsANegativeDepositThrough()
+    {
+        var engine = Engine();
+        engine.Initialize(new SimulationConfiguration(4, 4, 1.0, 11UL, 32, false));
+        engine.State.Resources[0].Water = -1;
+        engine.Advance(1);
+        Assert.Equal(1, engine.CurrentTick);
+        Assert.Equal(-1, engine.State.Resources[0].Water);
+    }
+
+    [Fact]
+    public void AFailedTickRestoresTheWorldTheGeneratorAndTheTick()
+    {
+        var engine = Engine([new CorruptingSystem(armAtTick: 2, throwAfter: false)]);
+        engine.Advance(2);
+        var before = CanonicalFingerprint.Hash(engine);
+        var error = Assert.Throws<SimulationInvariantException>(() => engine.Advance(1));
+        Assert.Contains("VAL-001", error.Message, StringComparison.Ordinal);
+        Assert.Equal(2, engine.CurrentTick);
+        Assert.Equal(before, CanonicalFingerprint.Hash(engine));
+
+        var throwing = Engine([new CorruptingSystem(armAtTick: 1, throwAfter: true)]);
+        throwing.Advance(1);
+        var prior = CanonicalFingerprint.Hash(throwing);
+        var boom = Assert.Throws<InvalidOperationException>(() => throwing.Advance(1));
+        Assert.Contains("boom", boom.Message, StringComparison.Ordinal);
+        Assert.Equal(1, throwing.CurrentTick);
+        Assert.Equal(prior, CanonicalFingerprint.Hash(throwing));
     }
 
     [Fact]
@@ -139,6 +171,36 @@ public sealed class SimulationEngineTests
             RngStreams.Create(11UL),
             systems ?? SimulationPipeline.CreateStubs(),
             handlers);
+    }
+
+    private sealed class CorruptingSystem : ISimulationSystem
+    {
+        private readonly long _armAtTick;
+        private readonly bool _throwAfter;
+
+        public CorruptingSystem(int armAtTick, bool throwAfter)
+        {
+            _armAtTick = armAtTick;
+            _throwAfter = throwAfter;
+        }
+
+        public string Name => "corrupt";
+
+        public void Execute(SimulationContext context, double deltaTimeSols)
+        {
+            if (context.State.Tick < _armAtTick)
+            {
+                return;
+            }
+
+            context.State.Resources[0].Water = -4;
+            context.State.Tick = 50;
+            _ = context.Random.Environment.NextUInt64();
+            if (_throwAfter)
+            {
+                throw new InvalidOperationException("boom");
+            }
+        }
     }
 
     private sealed class RecordingSystem : ISimulationSystem

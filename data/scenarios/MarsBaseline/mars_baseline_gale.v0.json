@@ -1,0 +1,1566 @@
+{
+  "metadata": {
+    "schema": "martis.environment_baseline",
+    "name": "MarsBaseline-Gale",
+    "version": "0.4",
+    "status": "FINAL",
+    "date": "2026-11-16",
+    "author": "MARTIS Ciencia",
+    "scope": "regional:gale (cráter Gale, MSL Curiosity, ~4,6°S 137,4°E). Entradas con scope planetary_mean o analog:* son solo fallback/análogo y no deben usarse como dato regional (TDD §10.3).",
+    "tick": {
+      "unit": "sol",
+      "seconds": 88775
+    },
+    "decisions_applied": [
+      "GCR: valor nativo 0,210 mGy/día SCIENTIFIC_MEASURED; conversión 2,158e-4 Gy/sol SCIENTIFIC_ESTIMATED derivada (×88775/86400, día RAD = 24 h); escenario constante sin ciclo solar ni SEP = GAME_BALANCE; rango de ciclo solar 0,10–0,39 mGy/día como variación futura; SEP desactivados; dosis equivalente Guo 5,03e-4 Sv/sol.",
+      "T de aire de referencia 222,0 K y P de referencia 841,8 Pa (SCIENTIFIC_ESTIMATED, REMS MY32); T de suelo 223,5 ±2 K como campo aparte. Los provisionales 231,3 K y 812,5 Pa quedan como HISTORICAL sin uso.",
+      "Irradiancia: potencia media 113–180 W/m²/sol MODEL_ASSUMPTION; valor fijo 146,5 W/m² GAME_BALANCE; UV y PAR de mediodía como referencia.",
+      "Perclorato: solo el rango de Sutter 2017 (0,05–1,05 wt % ClO4); valor de simulación v0 0,55 wt % (punto medio, MODEL_ASSUMPTION)."
+    ],
+    "rems": {
+      "dataset_id": "MSL-M-REMS-5-MODRDR-V1.0",
+      "volume": "mslrem_1001",
+      "url": "https://atmos.nmsu.edu/PDS/data/mslrem_1001/DATA/",
+      "coverage": "MY32, soles impares 351–1017",
+      "air_K": 222.01,
+      "ground_K": 223.48,
+      "pressure_Pa": 841.8,
+      "reproduce": "cd rems && python3 fetch_reduce.py 351 1018 --step 2 --workers 10 && python3 aggregate.py && cd .. && python3 gale-src/build_v0.py"
+    },
+    "previous_version_file": "mars_baseline_gale.v0.3.json",
+    "v0_temporal_policy": "T y P constantes en v0 (MODEL_ASSUMPTION); ciclos D(t)/S(t) en T03c.",
+    "v0_field_map": {
+      "TemperatureKelvin": {
+        "id": "env.gale.air_temperature.reference",
+        "unit": "K"
+      },
+      "PressurePascal": {
+        "id": "env.gale.pressure.reference",
+        "unit": "Pa"
+      },
+      "IonizingAbsorbedDoseGyPerSol": {
+        "id": "env.gale.radiation.gcr_absorbed_dose_rate_v0",
+        "unit": "Gy/sol"
+      },
+      "IonizingEquivalentDoseSvPerSol": {
+        "id": "env.gale.radiation.gcr_dose_equivalent_rate",
+        "unit": "Sv/sol"
+      },
+      "SolarIrradiance": {
+        "id": "env.gale.solar.surface_irradiance_fixed_v0",
+        "unit": "W/m2",
+        "note": "Media por sol en superficie (W/m²), misma semántica que surface_irradiance_fixed_v0."
+      },
+      "PerchlorateWtPercent": {
+        "id": "env.gale.regolith.perchlorate_default_v0",
+        "unit": "wt% ClO4",
+        "note": "Campo nuevo de EnvironmentState que crea T03b (wt % ClO4, en [0,100])."
+      },
+      "WaterIceWtPercent": {
+        "id": "env.gale.water_ice.surface_present",
+        "unit": "wt%",
+        "note": "Campo nuevo de EnvironmentState que crea T03b (wt %). EnvironmentState.WaterIce (kg por celda) es otro campo: depósito GAME_BALANCE de Motor."
+      },
+      "SepEnabled": {
+        "id": "env.gale.radiation.sep_enabled",
+        "unit": "bool",
+        "note": "No es campo de EnvironmentState: configuración de radiación del escenario (bool)."
+      },
+      "PerchlorateMassKg": {
+        "id": null,
+        "status": "UNASSIGNED",
+        "note": "Sin asignar hasta H-07/T04. Los depósitos iniciales en kg serán GAME_BALANCE de Motor, no ciencia."
+      },
+      "UvRadiation": {
+        "id": null,
+        "status": "UNASSIGNED",
+        "note": "Decisión de Lead: la UV no entra en v0. Entra en T04/T05 con 33,8 W/m² de mediodía (env.gale.uv.irradiance_noon_avg) y factor de escala MODEL_ASSUMPTION explícito; no usar como media diaria."
+      },
+      "SoilPorosity": {
+        "id": null,
+        "status": "UNASSIGNED",
+        "note": "env.gale.regolith.porosity está PENDING (sin fuente verificada). Sin asignar en v0; el cargador falla si un sistema la lee."
+      },
+      "WaterVapor": {
+        "id": null,
+        "status": "UNASSIGNED",
+        "note": "Depósito en kg por celda: GAME_BALANCE de Motor o sin asignar (depende de H-07). Las referencias de vapor (ppm, HR) del JSON no son un valor en kg."
+      }
+    },
+    "v0_field_map_keys": "Claves = nombre exacto de la propiedad C# de EnvironmentState en main (confirmado por MARTIS Motor 2026-11-16), salvo SepEnabled (configuración de escenario) y los dos campos nuevos PerchlorateWtPercent y WaterIceWtPercent (los crea T03b). El mapa cubre todos los campos de EnvironmentState EXCEPTO WaterIce (kg por celda: depósito GAME_BALANCE de Motor, no es dato de Ciencia) y Scope (sale de metadata.scope / metadata.scope_id, no de un parámetro).",
+    "scope_id": "regional:gale",
+    "changelog_v0_4": [
+      "R6-01 (revisión del PR #6, head 7f2fb77): el cargador real rechaza un `value` de texto cuando `range` es un intervalo numérico. Cuatro entradas pasan de texto a `value: [min, max]` numérico, con los mismos números y la misma unidad: air_temperature.diurnal_amplitude [45, 75] K, ground_temperature.diurnal_amplitude [55, 100] K, gcr_absorbed_dose_rate_cycle_range [0.1, 0.39] mGy/día (nativo), sep_dose_per_event [17, 445] µGy/evento. Nada más cambia (clasificaciones, fuentes, v0_field_map); `version` de metadata y de las entradas pasa a 0.4."
+    ],
+    "changelog_v0_3": [
+      "R5-02: `derivation` (objeto libre) pasa a `conversion` = {expression, factor, factor_classification = MODEL_ASSUMPTION, assumptions[]}; el valor derivado sigue siendo SCIENTIFIC_ESTIMATED y apunta a su nativo con `derived_from`. Entradas: gcr_absorbed_dose_rate_v0 y gcr_dose_equivalent_rate.",
+      "Nueva entrada nativa env.gale.radiation.gcr_dose_equivalent_rate_native (Guo 2021 Tabla 2, 0,49 ± 0,08 mSv/día, SCIENTIFIC_ESTIMATED) para que el equivalente de dosis por sol tenga a qué apuntar con derived_from. Las dos entradas derivadas llevan la incertidumbre nativa propagada (σ × factor).",
+      "R5-03b: las 3 entradas con `source` sin citation/accessed (air_temperature.midrange, pressure.midrange, solar.surface_irradiance_daily_mean_power) citan ahora la fuente de las entradas nativas que alimentan el cálculo (Ruíz 2025; Vicente-Retortillo 2016), con `where` que dice que son entradas del cálculo y no la fuente del valor.",
+      "R5-03c: env.gale.regolith.porosity pasa a UNCLASSIFIED_PENDING (PENDING, value null, sin source; rationale).",
+      "R5-04: used_in_v0 = false en las entradas SUPERADO (Hassler 2014 0,64 mSv/día) y HISTORICAL.",
+      "R5-06: ninguna entrada no científica queda con fuente de relleno (`ver note`); sin fuente => `source: []` con `rationale` o `note` no vacíos.",
+      "v0_field_map sin cambios (nombres C#, cuatro UNASSIGNED); se anota que WaterIce (kg) y Scope quedan fuera del mapa. Se añade metadata.scope_id = regional:gale (legible por máquina; metadata.scope sigue siendo texto)."
+    ],
+    "v0_not_used": {
+      "env.gale.uv.irradiance_noon_avg": "entra en T04/T05 con factor de escala MODEL_ASSUMPTION; no usar como media diaria",
+      "env.gale.regolith.porosity": "PENDING: el cargador falla si un sistema v0 la lee"
+    },
+    "loader_rule_T03": "PENDING solo se acepta en campos que ningún sistema v0 lea. Si un sistema v0 necesita un campo con status PENDING (value = null), el cargador debe fallar con un error claro que nombre el id del campo; nunca debe inventar, rellenar ni inferir un valor por defecto.",
+    "pending": [
+      "env.gale.solar.surface_noon_irradiance",
+      "env.gale.uv.daily_irradiation",
+      "env.analog.phoenix.perchlorate",
+      "env.gale.regolith.porosity"
+    ],
+    "pending_notes": {
+      "env.analog.phoenix.perchlorate": "Cifra de Hecht 2009 no verificada (solo resumen editorial); análogo, no dato regional",
+      "env.gale.regolith.porosity": "Sin fuente verificada de regolito",
+      "env.gale.solar.surface_noon_irradiance": "Flujo de mediodía en banda total sin fuente",
+      "env.gale.uv.daily_irradiation": "Solo en figura"
+    },
+    "verification_level_flags": {
+      "abstract_or_summary_only": [
+        "env.gale.water_vapor.vmr_surface_layer",
+        "env.gale.water_vapor.precipitable_water",
+        "env.gale.regolith.soil_water_content_sam_rocknest",
+        "env.gale.regolith.dan_water_equivalent",
+        "env.gale.regolith.perchlorate_gale_range",
+        "env.gale.regolith.perchlorate_default_v0",
+        "env.analog.phoenix.perchlorate",
+        "env.gale.regolith.thermal_inertia_soil",
+        "env.gale.bedrock.bulk_density"
+      ],
+      "notes": [
+        "env.gale.water_vapor.vmr_surface_layer: abstract (30–75 ppm) vs Key Points (30–140 ppm) de la misma fuente, sin resolver",
+        "env.gale.bedrock.bulk_density: cifra vista citada en otro abstract, no en el artículo de Lewis 2019"
+      ]
+    },
+    "adr011_found": false
+  },
+  "location": {
+    "site": "Gale crater (MSL Curiosity)",
+    "lat_deg": "≈ −4,5 a −4,6 (según fuente)",
+    "lon_deg_east": "≈ 137,4",
+    "elevation_m": "−4501 (aterrizaje, Ruíz 2025) … −4520 a −4336 en 1526 sols (Martínez 2017)"
+  },
+  "parameters": [
+    {
+      "id": "env.gale.air_temperature.daily_min_extreme",
+      "field": "air_temperature_annual_extreme_min",
+      "value": 185.77,
+      "range": [
+        185.77,
+        190.69
+      ],
+      "uncertainty": {
+        "sensor_accuracy_K": 5
+      },
+      "unit": "K",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Ruíz M., Sebastián-Martínez E., Rodríguez-Manfredi J.A., Pla-García J., de la Torre-Juárez M., Rafkin S.C.R. (2025) Remote Sens. 17(3):368",
+          "doi": "10.3390/rs17030368",
+          "url": "https://www.mdpi.com/2072-4292/17/3/368",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tabla A2/A3 (Tabla A1 no recuperada)",
+          "where": "Tabla A2, MY32"
+        }
+      ],
+      "note": "Mínimo de los mínimos diarios de ATS (aire a ~1,5–1,6 m), MY32, Ls 78,4°, sol 535, altitud −4487,28 m. Rango de mínimos MY31–33 (suelo del cráter, ΔZ ≤ 118 m): 185,77–190,69 K. Solo MY32 es ciclo completo; MY31 empieza en sol 0 (Ls≈151°). No es una media diaria. Precisión ATS <5 K (Martínez 2016 Tabla 1)."
+    },
+    {
+      "id": "env.gale.air_temperature.daily_max_extreme",
+      "field": "air_temperature_annual_extreme_max",
+      "value": 276.9,
+      "range": [
+        269.53,
+        276.9
+      ],
+      "uncertainty": {
+        "sensor_accuracy_K": 5
+      },
+      "unit": "K",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Ruíz M., Sebastián-Martínez E., Rodríguez-Manfredi J.A., Pla-García J., de la Torre-Juárez M., Rafkin S.C.R. (2025) Remote Sens. 17(3):368",
+          "doi": "10.3390/rs17030368",
+          "url": "https://www.mdpi.com/2072-4292/17/3/368",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tabla A2/A3 (Tabla A1 no recuperada)",
+          "where": "Tabla A2, MY33"
+        }
+      ],
+      "note": "Máximo de los máximos diarios de ATS, MY33, Ls 204,7°, sol 1432, ΔZ 117,5 m. Rango MY31–33: 269,53–276,90 K. Texto: máx ~275 K en 180°<Ls<210°. MY34 (GDS) reduce máximos (272,19 K)."
+    },
+    {
+      "id": "env.gale.ground_temperature.daily_min_extreme",
+      "field": "ground_temperature_annual_extreme_min",
+      "value": 171.74,
+      "range": [
+        171.74,
+        185.63
+      ],
+      "uncertainty": {
+        "sensor_accuracy_K": "5–10 (según fuente)"
+      },
+      "unit": "K",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Ruíz M., Sebastián-Martínez E., Rodríguez-Manfredi J.A., Pla-García J., de la Torre-Juárez M., Rafkin S.C.R. (2025) Remote Sens. 17(3):368",
+          "doi": "10.3390/rs17030368",
+          "url": "https://www.mdpi.com/2072-4292/17/3/368",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tabla A2/A3 (Tabla A1 no recuperada)",
+          "where": "Tabla A3, MY32"
+        },
+        {
+          "citation": "Martínez G. et al. (2016) Física de la Tierra 28:163-179",
+          "doi": "10.5209/rev_FITE.2016.v28.53902",
+          "url": "https://revistas.ucm.es/index.php/FITE/article/download/53902/49342",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "§2.3 (≈173 K, sol 534, Ls 85°, Dingo Gap)"
+        }
+      ],
+      "note": "Temperatura de brillo del suelo (GTS). Rango mínimos MY31–33: 171,74–185,63 K. Outlier MY35: 154,02 K (ΔZ 367 m; no representativo del suelo del cráter). Precisión GTS <10 K (Martínez 2016) o ±5 K (Ruíz 2025 Tabla 1): discrepancia entre fuentes."
+    },
+    {
+      "id": "env.gale.ground_temperature.daily_max_extreme",
+      "field": "ground_temperature_annual_extreme_max",
+      "value": 289.37,
+      "range": [
+        287.93,
+        289.37
+      ],
+      "uncertainty": {
+        "sensor_accuracy_K": "5–10 (según fuente)"
+      },
+      "unit": "K",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Ruíz M., Sebastián-Martínez E., Rodríguez-Manfredi J.A., Pla-García J., de la Torre-Juárez M., Rafkin S.C.R. (2025) Remote Sens. 17(3):368",
+          "doi": "10.3390/rs17030368",
+          "url": "https://www.mdpi.com/2072-4292/17/3/368",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tabla A2/A3 (Tabla A1 no recuperada)",
+          "where": "Tabla A3, MY33"
+        },
+        {
+          "citation": "Martínez G. et al. (2016) Física de la Tierra 28:163-179",
+          "doi": "10.5209/rev_FITE.2016.v28.53902",
+          "url": "https://revistas.ucm.es/index.php/FITE/article/download/53902/49342",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "§2.3 (≈289 K, sols 103 y 711)"
+        }
+      ],
+      "note": "Rango máximos MY31–33: 287,93–289,37 K (MY35: 289,98; MY36: 293,16 con ΔZ>550 m)."
+    },
+    {
+      "id": "env.gale.air_temperature.diurnal_amplitude",
+      "field": "air_temperature_diurnal_range",
+      "value": [
+        45,
+        75
+      ],
+      "range": [
+        45,
+        75
+      ],
+      "uncertainty": null,
+      "unit": "K",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Martínez G. et al. (2016) Física de la Tierra 28:163-179",
+          "doi": "10.5209/rev_FITE.2016.v28.53902",
+          "url": "https://revistas.ucm.es/index.php/FITE/article/download/53902/49342",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "§2.3 p.172, Fig. 4"
+        }
+      ],
+      "note": "Diferencia máx−mín de Ta en una sol: ~45 K (sol 550, Ls~93°) a ~75 K (sol 710, Ls~173°); primeros 1160 sols. Máximo Ta 14:00–16:00 LTST; mínimo 05:00–07:00 LTST."
+    },
+    {
+      "id": "env.gale.ground_temperature.diurnal_amplitude",
+      "field": "ground_temperature_diurnal_range",
+      "value": [
+        55,
+        100
+      ],
+      "range": [
+        55,
+        100
+      ],
+      "uncertainty": null,
+      "unit": "K",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Martínez G. et al. (2016) Física de la Tierra 28:163-179",
+          "doi": "10.5209/rev_FITE.2016.v28.53902",
+          "url": "https://revistas.ucm.es/index.php/FITE/article/download/53902/49342",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "§2.3 p.172, Fig. 4"
+        }
+      ],
+      "note": "Amplitud diurna de Tg: ~55 K (sol 1120, Ls~48°) a 100 K (sol 710, Ls~173°). De noche Tg puede estar hasta ~15 K por debajo de Ta (§2.4)."
+    },
+    {
+      "id": "env.gale.air_temperature.midrange",
+      "field": "air_temperature_midrange_historical",
+      "value": 231.3,
+      "range": null,
+      "uncertainty": null,
+      "unit": "K",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "HISTORICAL",
+      "source": [
+        {
+          "citation": "Ruíz M., Sebastián-Martínez E., Rodríguez-Manfredi J.A., Pla-García J., de la Torre-Juárez M., Rafkin S.C.R. (2025) Remote Sens. 17(3):368",
+          "doi": "10.3390/rs17030368",
+          "url": "https://www.mdpi.com/2072-4292/17/3/368",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tabla A2/A3 (Tabla A1 no recuperada)",
+          "where": "ENTRADAS del cálculo, no fuente del punto medio: mínimo 185,77 K (Tabla A2, MY32) y máximo 276,90 K (Tabla A2, MY33); punto medio (185,77+276,90)/2 = 231,335 K (MODEL_ASSUMPTION)"
+        }
+      ],
+      "note": "HISTÓRICO, SIN USO en v0.1 FINAL. Antiguo valor provisional 231,3 K = (185,77+276,90)/2, punto medio de extremos (MODEL_ASSUMPTION); no era media anual. Sustituido por env.gale.air_temperature.reference (222,0 K, REMS MY32), decisión MARTIS Lead 2026-11-16.",
+      "used_in_v0": false
+    },
+    {
+      "id": "env.planetary.mean_temperature",
+      "field": "mean_temperature_planetary",
+      "value": 214,
+      "range": null,
+      "uncertainty": null,
+      "unit": "K",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "planetary_mean",
+      "version": "0.4",
+      "status": "FALLBACK",
+      "source": [
+        {
+          "citation": "NASA NSSDCA Mars Fact Sheet",
+          "doi": null,
+          "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+          "accessed": "2026-11-16",
+          "seen": "página completa",
+          "where": "Martian Atmosphere: Average temperature ~214 K"
+        }
+      ],
+      "note": "Solo fallback; no es medida de Gale. Rango diurno NSSDC (184–242 K) es de Viking 1, no de Gale."
+    },
+    {
+      "id": "env.gale.pressure.daily_mean_min",
+      "field": "surface_pressure_daily_mean_min",
+      "value": 700,
+      "range": null,
+      "uncertainty": {
+        "sensor_accuracy_Pa": 3.5,
+        "approx_in_source": true
+      },
+      "unit": "Pa",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Ruíz M., Sebastián-Martínez E., Rodríguez-Manfredi J.A., Pla-García J., de la Torre-Juárez M., Rafkin S.C.R. (2025) Remote Sens. 17(3):368",
+          "doi": "10.3390/rs17030368",
+          "url": "https://www.mdpi.com/2072-4292/17/3/368",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tabla A2/A3 (Tabla A1 no recuperada)",
+          "where": "§3.1 p. (texto, Fig. 4): 'minimum was around ~700 Pa'"
+        }
+      ],
+      "note": "Mínimo de la presión media diaria en 3967 sols (MY31 tardío–MY37), cifra aproximada del texto ('~'). Incluye ascenso a Mt. Sharp (−4501 → −3765 m): ~25 Pa de salto entre máx/mín anuales por ~350 m de ascenso (§4.1). Mínimo en Ls~150° y ~360°. Precisión PS ±3,5 Pa (Ruíz Tabla 1; Martínez 2016: <2,7 Pa)."
+    },
+    {
+      "id": "env.gale.pressure.daily_mean_max",
+      "field": "surface_pressure_daily_mean_max",
+      "value": 925,
+      "range": null,
+      "uncertainty": {
+        "sensor_accuracy_Pa": 3.5,
+        "approx_in_source": true
+      },
+      "unit": "Pa",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Ruíz M., Sebastián-Martínez E., Rodríguez-Manfredi J.A., Pla-García J., de la Torre-Juárez M., Rafkin S.C.R. (2025) Remote Sens. 17(3):368",
+          "doi": "10.3390/rs17030368",
+          "url": "https://www.mdpi.com/2072-4292/17/3/368",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tabla A2/A3 (Tabla A1 no recuperada)",
+          "where": "§3.1 (texto, Fig. 4): 'maximum measured pressure value ~925 Pa'"
+        }
+      ],
+      "note": "Máximo absoluto entre 240°<Ls<270°; máximo relativo 35°<Ls<60°. Mismas salvedades que el mínimo."
+    },
+    {
+      "id": "env.gale.pressure.diurnal_oscillation",
+      "field": "surface_pressure_diurnal_oscillation",
+      "value": 60,
+      "range": null,
+      "uncertainty": null,
+      "unit": "Pa",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK_AMBIGUA",
+      "source": [
+        {
+          "citation": "Ruíz M., Sebastián-Martínez E., Rodríguez-Manfredi J.A., Pla-García J., de la Torre-Juárez M., Rafkin S.C.R. (2025) Remote Sens. 17(3):368",
+          "doi": "10.3390/rs17030368",
+          "url": "https://www.mdpi.com/2072-4292/17/3/368",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tabla A2/A3 (Tabla A1 no recuperada)",
+          "where": "§3.1: 'range of daily pressures usually oscillates, concerning the mean value, around 60 Pa'"
+        }
+      ],
+      "note": "Cifra aproximada del texto; ambigüedad: no se aclara si es ±60 Pa o rango total. Marea térmica; mayor rango en Ls~180°, menor en Ls~270° (§4.2). Gale tiene amplitud diurna mayor que Viking por su baja cota (Martínez 2016 §2.1)."
+    },
+    {
+      "id": "env.gale.pressure.seasonal_phase",
+      "field": "surface_pressure_seasonal_phase_ls",
+      "value": "máx Ls≈250° (abs.), mín Ls≈150–157°, mín rel. Ls≈344–360°, máx rel. Ls≈35–60°",
+      "range": null,
+      "uncertainty": null,
+      "unit": "deg Ls",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Martínez G. et al. (2016) Física de la Tierra 28:163-179",
+          "doi": "10.5209/rev_FITE.2016.v28.53902",
+          "url": "https://revistas.ucm.es/index.php/FITE/article/download/53902/49342",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "§2.1 p.168"
+        },
+        {
+          "citation": "Ruíz M., Sebastián-Martínez E., Rodríguez-Manfredi J.A., Pla-García J., de la Torre-Juárez M., Rafkin S.C.R. (2025) Remote Sens. 17(3):368",
+          "doi": "10.3390/rs17030368",
+          "url": "https://www.mdpi.com/2072-4292/17/3/368",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tabla A2/A3 (Tabla A1 no recuperada)",
+          "where": "§3.1"
+        }
+      ],
+      "note": "Ciclo del CO2 polar. Martínez 2016: máx Ls~250°, mín Ls~157°, mín relativo Ls~344°, máx relativo Ls~57°."
+    },
+    {
+      "id": "env.gale.pressure.midrange",
+      "field": "surface_pressure_midrange_historical",
+      "value": 812.5,
+      "range": null,
+      "uncertainty": null,
+      "unit": "Pa",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "HISTORICAL",
+      "source": [
+        {
+          "citation": "Ruíz M., Sebastián-Martínez E., Rodríguez-Manfredi J.A., Pla-García J., de la Torre-Juárez M., Rafkin S.C.R. (2025) Remote Sens. 17(3):368",
+          "doi": "10.3390/rs17030368",
+          "url": "https://www.mdpi.com/2072-4292/17/3/368",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tabla A2/A3 (Tabla A1 no recuperada)",
+          "where": "ENTRADAS del cálculo, no fuente del punto medio: mínimo ~700 Pa y máximo ~925 Pa de la media diaria (§3.1, Fig. 4); punto medio (700+925)/2 = 812,5 Pa (MODEL_ASSUMPTION)"
+        }
+      ],
+      "note": "HISTÓRICO, SIN USO en v0.1 FINAL. Antiguo valor provisional 812,5 Pa = (700+925)/2, punto medio de extremos de la media diaria (MODEL_ASSUMPTION); no era media. Sustituido por env.gale.pressure.reference (841,8 Pa, REMS MY32), decisión MARTIS Lead 2026-11-16.",
+      "used_in_v0": false
+    },
+    {
+      "id": "env.planetary.mean_pressure",
+      "field": "surface_pressure_planetary_mean",
+      "value": 636,
+      "range": null,
+      "uncertainty": null,
+      "unit": "Pa",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "planetary_mean",
+      "version": "0.4",
+      "status": "FALLBACK",
+      "source": [
+        {
+          "citation": "NASA NSSDCA Mars Fact Sheet",
+          "doi": null,
+          "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+          "accessed": "2026-11-16",
+          "seen": "página completa",
+          "where": "Surface pressure: 6,36 mb at mean radius (4,0–8,7 mb)"
+        }
+      ],
+      "note": "Solo fallback; Gale está ~4,5 km por debajo del datum, no usar como valor regional (TDD §10.3)."
+    },
+    {
+      "id": "env.gale.radiation.gcr_absorbed_dose_rate",
+      "field": "gcr_absorbed_dose_rate_native",
+      "value": 0.21,
+      "range": null,
+      "uncertainty": {
+        "sigma_1_mGy_day": 0.04
+      },
+      "unit": "mGy/day",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Hassler D.M. et al. (2014) Science 343:1244797",
+          "doi": "10.1126/science.1244797",
+          "url": "https://doi.org/10.1126/science.1244797",
+          "accessed": "2026-11-16",
+          "seen": "manuscrito de autor completo (PDF); no la versión impresa",
+          "where": "Tabla 1 y Tabla 2 (E detector, tejido-equivalente)"
+        }
+      ],
+      "note": "VALOR NATIVO MEDIDO (SCIENTIFIC_MEASURED), sin conversión: 0,210 ± 0,04 mGy/día en los primeros ~300 sols (agosto 2012–2013; máximo solar del ciclo 24), detector E (tejido-equivalente), Hassler 2014 Tablas 1–2. Guo 2021: ~200 µGy/día a finales 2012–principios 2015, subiendo a ~320 µGy/día en el mínimo 2019–2020. La conversión a sol está en env.gale.radiation.gcr_absorbed_dose_rate_v0 (SCIENTIFIC_ESTIMATED derivado) y el escenario constante en env.gale.radiation.gcr_scenario_v0 (GAME_BALANCE)."
+    },
+    {
+      "id": "env.gale.radiation.gcr_absorbed_dose_rate_cycle_range",
+      "field": "gcr_absorbed_dose_rate_solar_cycle_range",
+      "value": [
+        0.1,
+        0.39
+      ],
+      "range": [
+        0.1,
+        0.39
+      ],
+      "uncertainty": null,
+      "unit": "mGy/día (nativo)",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Guo J., Zeitlin C., Wimmer-Schweingruber R.F., et al. (2021) Astron. Astrophys. Rev. 29:8, 'Radiation environment for future human exploration on the surface of Mars: the current understanding based on MSL/RAD dose measurements'",
+          "doi": "10.1007/s00159-021-00136-5",
+          "url": "https://doi.org/10.1007/s00159-021-00136-5 (PDF leído vía copia abierta en inspirehep.net/files/dad58ae4a9ce93c34b482cceeaf4c5fb)",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "§4.3.4: 'Martian surface dose rate ranges between ~100 and 390 µGy/day between solar maximum and minimum' (modelo empírico ciclos 20–24)"
+        }
+      ],
+      "note": "Estimación empírica a partir de modulación solar (Φ) con calibración RAD (Φ medido 370–710 MV); extrapolación a Φ alto con incertidumbre grande. En Gy/sol: 1,03e-4 – 4,01e-4."
+    },
+    {
+      "id": "env.gale.radiation.gcr_dose_equivalent_rate",
+      "field": "gcr_dose_equivalent_rate",
+      "value": 0.000503,
+      "range": [
+        0.000256872,
+        0.000976114
+      ],
+      "uncertainty": {
+        "native_1sigma_mSv_day": 0.08,
+        "propagated_1sigma_Sv_per_sol": 8.2199e-05,
+        "propagation": "σ nativa × factor; no incluye la incertidumbre del supuesto día RAD = 24 h"
+      },
+      "unit": "Sv/sol",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Guo J., Zeitlin C., Wimmer-Schweingruber R.F., et al. (2021) Astron. Astrophys. Rev. 29:8, 'Radiation environment for future human exploration on the surface of Mars: the current understanding based on MSL/RAD dose measurements'",
+          "doi": "10.1007/s00159-021-00136-5",
+          "url": "https://doi.org/10.1007/s00159-021-00136-5 (PDF leído vía copia abierta en inspirehep.net/files/dad58ae4a9ce93c34b482cceeaf4c5fb)",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "Tabla 2 p.44 (Φ=650 MV, 'medium'): 0,49 ± 0,08 mSv/día en superficie tipo Gale"
+        },
+        {
+          "citation": "Hassler D.M. et al. (2014) Science 343:1244797",
+          "doi": "10.1126/science.1244797",
+          "url": "https://doi.org/10.1126/science.1244797",
+          "accessed": "2026-11-16",
+          "seen": "manuscrito de autor completo (PDF); no la versión impresa",
+          "where": "Tabla 1: 0,64 ± 0,12 mSv/día con <Q>=3,05 ± 0,26"
+        }
+      ],
+      "note": "VALOR PREFERIDO = Guo 2021 (<Q>=2,4 ± 0,3 revisada; Zeitlin et al. 2019 citado por Guo). El 0,64 mSv/día de Hassler 2014 usa <Q>=3,05 y queda superado por la revisión (0,21×2,4≈0,50). Rango Guo 2021: 0,25–0,95 mSv/día (ciclos 20–24); escenarios Tabla 2: mín solar (350 MV) 0,86 ± 0,11; medio (650 MV) 0,49 ± 0,08; máx solar (1000 MV) 0,33 ± 0,10 mSv/día. Conversión ×1,0275 a sol (MODEL_ASSUMPTION). [v0] Decisión MARTIS Lead: usar Guo 2021 (0,49 mSv/día → 5,03e-4 Sv/sol) como dosis equivalente; constante en v0 (escenario constante = GAME_BALANCE, ver gcr_absorbed_dose_rate_v0).",
+      "value_native": "0.49 mSv/day",
+      "derived_from": "env.gale.radiation.gcr_dose_equivalent_rate_native",
+      "conversion": {
+        "expression": "0,49 mSv/día × 88775/86400 = 5,0347e-4 Sv/sol, redondeado a 5,03e-4 (mSv → Sv: × 1e-3)",
+        "factor": 1.0274884259259258,
+        "factor_classification": "MODEL_ASSUMPTION",
+        "assumptions": [
+          "día RAD = 24 h = 86 400 s",
+          "1 sol = 88 775 s (ADR-011, redondeo MODEL_ASSUMPTION)"
+        ]
+      },
+      "used_in_v0": true
+    },
+    {
+      "id": "env.gale.radiation.gcr_dose_equivalent_rate_hassler2014",
+      "field": "gcr_dose_equivalent_rate_hassler2014_original",
+      "value": 0.000657593,
+      "range": null,
+      "uncertainty": {
+        "native_1sigma_mSv_day": 0.12
+      },
+      "unit": "Sv/sol",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "SUPERADO",
+      "source": [
+        {
+          "citation": "Hassler D.M. et al. (2014) Science 343:1244797",
+          "doi": "10.1126/science.1244797",
+          "url": "https://doi.org/10.1126/science.1244797",
+          "accessed": "2026-11-16",
+          "seen": "manuscrito de autor completo (PDF); no la versión impresa",
+          "where": "Tabla 1 / Tabla 2 / Fig. 4"
+        }
+      ],
+      "note": "Valor original publicado, para trazabilidad: 0,64 ± 0,12 mSv/día (<Q>=3,05). No usar como defecto: <Q> revisado a ~2,4 (Guo 2021). Hassler Tabla 3 da en superficie 76 mGy/año y 232 mSv/año.",
+      "value_native": "0.64 mSv/day",
+      "used_in_v0": false
+    },
+    {
+      "id": "env.gale.radiation.sep_dose_per_event",
+      "field": "sep_absorbed_dose_per_event_range",
+      "value": [
+        17,
+        445
+      ],
+      "range": [
+        17,
+        445
+      ],
+      "uncertainty": null,
+      "unit": "µGy/evento",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "REFERENCE",
+      "source": [
+        {
+          "citation": "Guo J., Zeitlin C., Wimmer-Schweingruber R.F., et al. (2021) Astron. Astrophys. Rev. 29:8, 'Radiation environment for future human exploration on the surface of Mars: the current understanding based on MSL/RAD dose measurements'",
+          "doi": "10.1007/s00159-021-00136-5",
+          "url": "https://doi.org/10.1007/s00159-021-00136-5 (PDF leído vía copia abierta en inspirehep.net/files/dad58ae4a9ce93c34b482cceeaf4c5fb)",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "§7.3.1–7.3.2 pp.51–53: B(agua)/E: 2013-04-11: 42/26 µGy; 2013-10-11: 77/61; 2014-01-07: 25/17; 2014-09-01: 214/168; 2017-09-10: 445/298 µGy"
+        },
+        {
+          "citation": "Hassler D.M. et al. (2014) Science 343:1244797",
+          "doi": "10.1126/science.1244797",
+          "url": "https://doi.org/10.1126/science.1244797",
+          "accessed": "2026-11-16",
+          "seen": "manuscrito de autor completo (PDF); no la versión impresa",
+          "where": "texto: 50 µGy (detector menos blindado) y Tabla 2: 0,025 mGy/evento (SEP del sol 242)"
+        }
+      ],
+      "note": "Dosis absorbida por evento SEP con fondo GCR restado. Rango detector E (más blindado): 17–298 µGy; B (piel): 25–445 µGy. Hassler: 50 µGy (texto) vs 0,025 mGy (Tabla 2) ≈ los 42 µGy (B) y 26 µGy (E) del evento 1 de Guo (revisión). Solo 5 eventos en ~8 años, ciclo 24 débil: no generalizable a un máximo fuerte. NO es tasa por sol. [v0] SEP desactivados en v0 (ver env.gale.radiation.sep_enabled); dato solo de referencia."
+    },
+    {
+      "id": "env.gale.radiation.sep_quality_factor",
+      "field": "sep_quality_factor",
+      "value": 1.17,
+      "range": null,
+      "uncertainty": null,
+      "unit": "adimensional",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "REFERENCE",
+      "source": [
+        {
+          "citation": "Guo J., Zeitlin C., Wimmer-Schweingruber R.F., et al. (2021) Astron. Astrophys. Rev. 29:8, 'Radiation environment for future human exploration on the surface of Mars: the current understanding based on MSL/RAD dose measurements'",
+          "doi": "10.1007/s00159-021-00136-5",
+          "url": "https://doi.org/10.1007/s00159-021-00136-5 (PDF leído vía copia abierta en inspirehep.net/files/dad58ae4a9ce93c34b482cceeaf4c5fb)",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "§7.3.1 p.52: <Q>=1,17 en la parte más intensa del evento de sept. 2017 (2,3 en periodos solo-GCR)"
+        },
+        {
+          "citation": "Hassler D.M. et al. (2014) Science 343:1244797",
+          "doi": "10.1126/science.1244797",
+          "url": "https://doi.org/10.1126/science.1244797",
+          "accessed": "2026-11-16",
+          "seen": "manuscrito de autor completo (PDF); no la versión impresa",
+          "where": "texto: <Q>≈1 para protones SEP"
+        }
+      ],
+      "note": "Dosis equivalente SEP ≈ Q×dosis (MODEL_ASSUMPTION): p.ej. 445 µGy×1,17 ≈ 0,52 mSv (derivado, no publicado). [v0] SEP desactivados en v0 (ver env.gale.radiation.sep_enabled); dato solo de referencia."
+    },
+    {
+      "id": "env.gale.radiation.gcr_cumulative_30d_example",
+      "field": "gcr_dose_30d_sept2017_context",
+      "value": 0.0081,
+      "range": null,
+      "uncertainty": null,
+      "unit": "Gy per 30 d",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "CONTEXTO",
+      "source": [
+        {
+          "citation": "Guo J., Zeitlin C., Wimmer-Schweingruber R.F., et al. (2021) Astron. Astrophys. Rev. 29:8, 'Radiation environment for future human exploration on the surface of Mars: the current understanding based on MSL/RAD dose measurements'",
+          "doi": "10.1007/s00159-021-00136-5",
+          "url": "https://doi.org/10.1007/s00159-021-00136-5 (PDF leído vía copia abierta en inspirehep.net/files/dad58ae4a9ce93c34b482cceeaf4c5fb)",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "p.52 (Zeitlin 2018): 30 d de fondo: 7,3 mGy (B), 8,1 mGy (E), 16,5 mSv"
+        }
+      ],
+      "note": "Contexto: 30 d ≈ 8 mGy / 16,5 mSv en 2017 (mínimo solar creciente). Valor = 8,1 mGy (detector E) en 30 d de fondo GCR en 2017 (16,5 mSv equivalente)."
+    },
+    {
+      "id": "env.planetary.solar_toa_irradiance_mean",
+      "field": "solar_irradiance_toa_mean",
+      "value": 586.2,
+      "range": null,
+      "uncertainty": null,
+      "unit": "W/m2",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "planetary_mean",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "NASA NSSDCA Mars Fact Sheet",
+          "doi": null,
+          "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+          "accessed": "2026-11-16",
+          "seen": "página completa",
+          "where": "Bulk parameters: Solar irradiance 586,2 W/m²"
+        },
+        {
+          "citation": "Vicente-Retortillo Á., Lemmon M., Martínez G.M., Valero F., Vázquez L., Martín M.L. (2016) Física de la Tierra 28:111-127",
+          "doi": "10.5209/rev_FITE.2016.v28.53900",
+          "url": "https://revistas.ucm.es/index.php/FITE/article/download/53900/49340",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "eq. (1) p.116: E0 = 590 W/m² (distancia media)"
+        }
+      ],
+      "note": "TOP OF ATMOSPHERE a distancia media, NO es irradiancia en superficie. NSSDC 586,2 vs 590 usado por Vicente-Retortillo (diferencia ~0,6 %). Rango orbital NSSDC no dado en la ficha."
+    },
+    {
+      "id": "env.gale.solar.surface_daily_insolation_min",
+      "field": "surface_daily_insolation_min",
+      "value": 10000000.0,
+      "range": null,
+      "uncertainty": {
+        "approx_in_source": true
+      },
+      "unit": "J/m2/sol",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Vicente-Retortillo Á., Lemmon M., Martínez G.M., Valero F., Vázquez L., Martín M.L. (2016) Física de la Tierra 28:111-127",
+          "doi": "10.5209/rev_FITE.2016.v28.53900",
+          "url": "https://revistas.ucm.es/index.php/FITE/article/download/53900/49340",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "§4 p.118, Fig. 3: 'slightly above ... 10 MJ/m² at Opportunity and Curiosity' (aphelio)"
+        }
+      ],
+      "note": "Irradiación diaria total (directa+difusa) en superficie, modelo de transferencia radiativa (Vicente-Retortillo 2015) forzado con opacidad a 880 nm de Mastcam; MY31–32. Mínimo anual en torno al afelio. 'Ligeramente superior a 10': cifra aproximada. REMS no mide la banda total (solo UV), de ahí que sea ESTIMADO."
+    },
+    {
+      "id": "env.gale.solar.surface_daily_insolation_max",
+      "field": "surface_daily_insolation_max",
+      "value": 16000000.0,
+      "range": null,
+      "uncertainty": {
+        "approx_in_source": true
+      },
+      "unit": "J/m2/sol",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Vicente-Retortillo Á., Lemmon M., Martínez G.M., Valero F., Vázquez L., Martín M.L. (2016) Física de la Tierra 28:111-127",
+          "doi": "10.5209/rev_FITE.2016.v28.53900",
+          "url": "https://revistas.ucm.es/index.php/FITE/article/download/53900/49340",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "§4 p.118, Fig. 3: 'around 16 MJ/m² at the Opportunity and Curiosity locations' (perihelio)"
+        }
+      ],
+      "note": "Máximo anual alrededor del perihelio; el máximo anual es ~60 % mayor que el mínimo (mismo párrafo). Cociente superficie/TOA (T/E) en Curiosity: 0,7 (perihelio, polvo) a 0,9 (estación clara) (§4.3 p.123, Fig. 6)."
+    },
+    {
+      "id": "env.gale.solar.surface_irradiance_daily_mean_power",
+      "field": "surface_irradiance_sol_mean",
+      "value": [
+        113,
+        180
+      ],
+      "range": [
+        113,
+        180
+      ],
+      "uncertainty": null,
+      "unit": "W/m2",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Vicente-Retortillo Á., Lemmon M., Martínez G.M., Valero F., Vázquez L., Martín M.L. (2016) Física de la Tierra 28:111-127",
+          "doi": "10.5209/rev_FITE.2016.v28.53900",
+          "url": "https://revistas.ucm.es/index.php/FITE/article/download/53900/49340",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "ENTRADAS del cálculo, no fuente de la potencia media: insolación diaria ~10 MJ/m² (aphelio) y ~16 MJ/m² (perihelio) en Curiosity (§4 p.118, Fig. 3); potencia media = insolación / 88775 s (MODEL_ASSUMPTION)"
+        }
+      ],
+      "note": "Potencia media por sol = insolación diaria / 88775 s sobre Vicente-Retortillo 2016 (10 MJ/m² → 112,6; 16 MJ/m² → 180,2; redondeado a 113–180). MODEL_ASSUMPTION (derivado, no medido). Incluye la noche; NO es flujo de mediodía. Insolaciones de origen aproximadas ('ligeramente superior a 10', 'alrededor de 16')."
+    },
+    {
+      "id": "env.gale.solar.surface_noon_irradiance",
+      "field": "surface_irradiance_noon",
+      "value": null,
+      "range": null,
+      "uncertainty": null,
+      "unit": "W/m2",
+      "classification": "UNCLASSIFIED_PENDING",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "PENDING",
+      "source": [],
+      "note": "PENDIENTE: no hay cifra verificada de flujo instantáneo a mediodía en banda total. Opción provisional (MODEL_ASSUMPTION): directa ≈ E0·(a/r)²·cosθ·exp(−τ/cosθ) + difusa (esta última no modelada; Vicente-Retortillo 2016 muestra que la difusa domina en la estación polvorienta). Preferible tomar de Vicente-Retortillo et al. 2015 (doi 10.1051/swsc/2015035) o de REMS UV+PAR."
+    },
+    {
+      "id": "env.gale.solar.opacity_880nm_ref",
+      "field": "dust_optical_depth_880nm_reference",
+      "value": "1,25 (año 1) / 1,6 (año 2) en Ls~230°",
+      "range": null,
+      "uncertainty": null,
+      "unit": "adimensional",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK_PARCIAL",
+      "source": [
+        {
+          "citation": "Martínez G. et al. (2016) Física de la Tierra 28:163-179",
+          "doi": "10.5209/rev_FITE.2016.v28.53902",
+          "url": "https://revistas.ucm.es/index.php/FITE/article/download/53902/49342",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "§2.2 p.171: tau~1,25 (primer año) y ~1,6 (segundo) en Ls~230°, con ~50 % de la irradiación TOA absorbida/dispersada"
+        },
+        {
+          "citation": "Viúdez-Moreiras D. et al. (2025) PNAS, UV en Gale con REMS",
+          "doi": "10.1073/pnas.2426611122",
+          "url": "https://doi.org/10.1073/pnas.2426611122",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tablas 1–2 (re-abierto 2026-11-16); SI Appendix no leído",
+          "where": "Resultados: tau UV de mediodía típicamente 0,3–1,4 (menor cerca del afelio, mayor en 180°<Ls<360°); GDS MY34 hasta ~7 (UV) / ~8,5 (Mastcam IR)"
+        }
+      ],
+      "note": "Parámetro de entrada para cualquier conversión TOA→superficie (exp(-tau/mu0)). Valor de tau mínimo/afelio en 880 nm NO recuperado como cifra de texto en Gale (Martínez 2016 solo en Fig. 3): PENDIENTE; tau UV 0,3–1,4 no es tau a 880 nm."
+    },
+    {
+      "id": "env.gale.solar.par_midday",
+      "field": "par_irradiance_midday_orbital_mean",
+      "value": 240,
+      "range": [
+        195,
+        300
+      ],
+      "uncertainty": {
+        "relative_1sigma_pct": 8.2
+      },
+      "unit": "W/m2",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "REFERENCE",
+      "source": [
+        {
+          "citation": "Viúdez-Moreiras D. et al. (2025) PNAS, UV en Gale con REMS",
+          "doi": "10.1073/pnas.2426611122",
+          "url": "https://doi.org/10.1073/pnas.2426611122",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tablas 1–2 (re-abierto 2026-11-16); SI Appendix no leído",
+          "where": "Tabla 1: PAR (400–700 nm) a mediodía: rango 195–300, media orbital 240 (atenuación 13,5 %), afelio 204, estación polvorienta 268, GDS 96,1"
+        }
+      ],
+      "note": "ESTIMADO (PAR escalado desde canal chUVABC con UVISMART, incertidumbre 1σ 8,2 %). Mediodía, banda visible, no flujo total. Es el único dato de irradiancia instantánea en superficie verificado; no incluye infrarrojo cercano. [v0] Queda como referencia (decisión MARTIS Lead), no como entrada del modelo."
+    },
+    {
+      "id": "env.gale.uv.irradiance_noon_avg",
+      "field": "uv_irradiance_midday_orbital_mean",
+      "value": 33.8,
+      "range": [
+        26.9,
+        42.3
+      ],
+      "uncertainty": {
+        "relative_1sigma_pct": 7.1
+      },
+      "unit": "W/m2",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "REFERENCE",
+      "source": [
+        {
+          "citation": "Viúdez-Moreiras D. et al. (2025) PNAS, UV en Gale con REMS",
+          "doi": "10.1073/pnas.2426611122",
+          "url": "https://doi.org/10.1073/pnas.2426611122",
+          "accessed": "2026-11-16",
+          "seen": "texto completo + Tablas 1–2 (re-abierto 2026-11-16); SI Appendix no leído",
+          "where": "Tabla 1: UV(200–400 nm) mediodía; rango 5-sol 26,9–42,3; afelio 28,9; estación polvorienta 36,8; GDS 4,64"
+        }
+      ],
+      "note": "Valores de mediodía, no media diaria. UVA 27,0 (21,4–33,7), UVB 5,19 (4,21–6,45), UVC 1,75 (1,39–2,21) W/m²; BED 51,3 (42,2–61,0); PAR 240 (195–300). Incertidumbre 1σ: UV 7,1 %, UVB 7,8 %, UVC 11,2 %, BED 11,5 %, PAR 8,2 %. Entra en T04/T05 con factor de escala MODEL_ASSUMPTION; no usar como media diaria. [v0] Queda como referencia (decisión MARTIS Lead), no como entrada del modelo."
+    },
+    {
+      "id": "env.gale.uv.daily_irradiation",
+      "field": "uv_daily_irradiation_surface",
+      "value": null,
+      "range": null,
+      "uncertainty": null,
+      "unit": "J/m2/sol",
+      "classification": "UNCLASSIFIED_PENDING",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "PENDING",
+      "source": [],
+      "note": "PENDIENTE: Martínez 2016 Fig. 3 (modelo+Mastcam, 1160 sols) solo da la serie en figura; el eje cubre 0,6–1,6 MJ/m² y NO se toma como dato. Obtener cifra del texto/SI de Viúdez-Moreiras 2025 o integrar REMS UVS de PDS."
+    },
+    {
+      "id": "env.gale.radiation.gcr_absorbed_dose_rate_v0",
+      "field": "gcr_absorbed_dose_rate_v0",
+      "value": 0.0002158,
+      "range": null,
+      "uncertainty": {
+        "native_1sigma_mGy_day": 0.04,
+        "propagated_1sigma_Gy_per_sol": 4.11e-05,
+        "propagation": "σ nativa × factor; no incluye la incertidumbre del supuesto día RAD = 24 h"
+      },
+      "unit": "Gy/sol",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Hassler D.M. et al. (2014) Science 343:1244797, Tabla 1 (0,210 ± 0,04 mGy/día), convertido a sol",
+          "doi": "10.1126/science.1244797",
+          "accessed": "2026-11-16",
+          "seen": "manuscrito de autor completo"
+        }
+      ],
+      "note": "Valor numérico de la dosis absorbida GCR por sol: conversión DERIVADA del valor nativo medido (env.gale.radiation.gcr_absorbed_dose_rate). La CLASIFICACIÓN del valor es SCIENTIFIC_ESTIMATED (derivado); el escenario constante es GAME_BALANCE y está en env.gale.radiation.gcr_scenario_v0.",
+      "derived_from": "env.gale.radiation.gcr_absorbed_dose_rate",
+      "conversion": {
+        "expression": "0,210 mGy/día × 88775/86400 = 2,1577e-4 Gy/sol, redondeado a 2,158e-4 (mGy → Gy: × 1e-3)",
+        "factor": 1.0274884259259258,
+        "factor_classification": "MODEL_ASSUMPTION",
+        "assumptions": [
+          "día RAD = 24 h = 86 400 s",
+          "1 sol = 88 775 s (ADR-011, redondeo MODEL_ASSUMPTION)"
+        ]
+      },
+      "scenario_ref": "env.gale.radiation.gcr_scenario_v0",
+      "used_in_v0": true
+    },
+    {
+      "id": "env.gale.radiation.gcr_dose_equivalent_rate_native",
+      "field": "gcr_dose_equivalent_rate_native",
+      "value": 0.49,
+      "range": null,
+      "uncertainty": {
+        "native_1sigma_mSv_day": 0.08
+      },
+      "unit": "mSv/day",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Guo J., Zeitlin C., Wimmer-Schweingruber R.F., et al. (2021) Astron. Astrophys. Rev. 29:8, 'Radiation environment for future human exploration on the surface of Mars: the current understanding based on MSL/RAD dose measurements'",
+          "doi": "10.1007/s00159-021-00136-5",
+          "url": "https://doi.org/10.1007/s00159-021-00136-5 (PDF leído vía copia abierta en inspirehep.net/files/dad58ae4a9ce93c34b482cceeaf4c5fb)",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (PDF)",
+          "where": "Tabla 2 p.44 (Φ=650 MV, 'medium'): 0,49 ± 0,08 mSv/día en superficie tipo Gale"
+        }
+      ],
+      "note": "VALOR NATIVO de Guo 2021 Tabla 2 (estimación empírica del equivalente de dosis GCR en superficie, Φ=650 MV 'medium', con blindaje y presión tipo MSL/Gale): 0,49 ± 0,08 mSv/día. Es una ESTIMACIÓN empírica del artículo (no una medición directa de RAD), por eso SCIENTIFIC_ESTIMATED. Sin conversión a sol: la conversión está en env.gale.radiation.gcr_dose_equivalent_rate (derivado, derived_from)."
+    },
+    {
+      "id": "env.gale.radiation.gcr_scenario_v0",
+      "field": "gcr_scenario",
+      "value": "constant_in_time",
+      "range": null,
+      "uncertainty": null,
+      "unit": "n/a",
+      "classification": "GAME_BALANCE",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [],
+      "note": "Escenario de v0: dosis GCR constante en el tiempo, sin ciclo solar y sin SEP. Aplica a la dosis absorbida y a la equivalente.",
+      "rationale": "Decisión MARTIS Lead 2026-11-16: en v0 la dosis GCR es constante (valor medido en los primeros ~300 sols) para no modelar la modulación solar (rango 1,03e-4–4,01e-4 Gy/sol, Guo 2021) ni los eventos SEP (sep_enabled = false). Es una simplificación de juego, no un resultado científico."
+    },
+    {
+      "id": "env.gale.radiation.sep_enabled",
+      "field": "sep_events_enabled",
+      "value": false,
+      "range": null,
+      "uncertainty": null,
+      "unit": "bool",
+      "classification": "GAME_BALANCE",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [],
+      "note": "SEP desactivados en v0.",
+      "rationale": "Decisión MARTIS Lead 2026-11-16: los eventos SEP quedan desactivados en v0. Solo hay 5 eventos medidos en ~8 años en un ciclo solar débil (Guo 2021) y no son generalizables; dosis por evento disponibles en env.gale.radiation.sep_dose_per_event como referencia.",
+      "used_in_v0": true
+    },
+    {
+      "id": "env.gale.solar.surface_irradiance_fixed_v0",
+      "field": "surface_irradiance_sol_mean_fixed",
+      "value": 146.5,
+      "range": null,
+      "uncertainty": null,
+      "unit": "W/m2",
+      "classification": "GAME_BALANCE",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [],
+      "note": "Valor fijo de v0: potencia media por sol = punto medio de 113–180 W/m² (equivale a ~13,0 MJ/m²/sol).",
+      "rationale": "Decisión MARTIS Lead 2026-11-16: valor fijo de 146,5 W/m² = (113+180)/2 para v0, sin estacionalidad ni opacidad de polvo. El rango MODEL_ASSUMPTION (env.gale.solar.surface_irradiance_daily_mean_power) queda como variación futura.",
+      "used_in_v0": true
+    },
+    {
+      "id": "env.gale.air_temperature.reference",
+      "field": "air_temperature_reference",
+      "value": 222.0,
+      "range": [
+        208.32,
+        234.51
+      ],
+      "uncertainty": {
+        "n_sols": 306,
+        "sol_range": [
+          351,
+          1017
+        ],
+        "ls_range_deg": [
+          0.6,
+          359.2
+        ],
+        "max_ls_gap_deg": 7.6,
+        "std_of_daily_means": 7.99,
+        "sem": 0.46,
+        "min_daily_mean": 208.32,
+        "max_daily_mean": 234.51,
+        "mean_of_ls30_bins": 222.83,
+        "filter": "ATS conf b2,b7,b8; 150–300 K",
+        "sensor_accuracy_K": 5
+      },
+      "unit": "K",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "ACCEPTED",
+      "source": [
+        {
+          "citation": "MSL REMS MODRDR, NASA PDS Atmospheres Node, MSL REMS MODRDR (dataset ID MSL-M-REMS-5-MODRDR-V1.0, volumen mslrem_1001, productos RMD), https://atmos.nmsu.edu/PDS/data/mslrem_1001/DATA/",
+          "where": "MY32, soles impares 351–1017 (318 soles muestreados); script rems/fetch_reduce.py + rems/aggregate.py; resultado rems/summary.json",
+          "url": "https://atmos.nmsu.edu/PDS/data/mslrem_1001/DATA/",
+          "accessed": "2026-11-16",
+          "seen": "datos descargados y reducidos en caja (3,31 GB)"
+        }
+      ],
+      "note": "T de aire de referencia v0 (decisión MARTIS Lead 2026-11-16). Media de los promedios diarios por sol, REMS MY32 (calculada 222,01 K, redondeada a 222,0). Media de los promedios diarios por sol. Promedio diario: 24 cajas horarias LMST de MODRDR a 1 Hz, cajas vacías interpoladas linealmente (circular); se exige ≥20 cajas con dato y ningún hueco >2 h. Ls de Allison & McEwen 2000. Solo soles impares de MY32 (sol 351–1017). Filtro: AMBIENT_TEMP 150–300 K con bits de confianza b2,b7,b8 = 1. Sensibilidad 221,97–222,09 K. Salvedades: ATS a ~0,6 m sobre la cubierta del rover, con calentamiento por rover/RTG (Martínez 2017 §2.5); precisión <5 K. Un solo año marciano (MY32) y 1 de cada 2 soles; filtros de calidad propios (rems/process_rems.py). Sustituye al provisional 231,3 K.",
+      "value_computed": 222.01,
+      "used_in_v0": true
+    },
+    {
+      "id": "env.gale.ground_temperature.annual_mean",
+      "field": "ground_temperature_annual_mean",
+      "value": 223.5,
+      "range": [
+        221.5,
+        225.5
+      ],
+      "uncertainty": {
+        "n_sols": 184,
+        "sol_range": [
+          351,
+          1003
+        ],
+        "ls_range_deg": [
+          0.6,
+          352.0
+        ],
+        "max_ls_gap_deg": 18.4,
+        "std_of_daily_means": 8.01,
+        "sem": 0.59,
+        "min_daily_mean": 208.64,
+        "max_daily_mean": 236.31,
+        "mean_of_ls30_bins": 225.48,
+        "filter": "GTS 1111; 150–300 K",
+        "practical_pm_K": 2,
+        "sensor_accuracy_K": "5–10 (según fuente)",
+        "rtg_contribution_K_max": 4
+      },
+      "unit": "K",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "ACCEPTED",
+      "source": [
+        {
+          "citation": "MSL REMS MODRDR, NASA PDS Atmospheres Node, MSL REMS MODRDR (dataset ID MSL-M-REMS-5-MODRDR-V1.0, volumen mslrem_1001, productos RMD), https://atmos.nmsu.edu/PDS/data/mslrem_1001/DATA/",
+          "where": "MY32, soles impares 351–1017 (318 soles muestreados); script rems/fetch_reduce.py + rems/aggregate.py; resultado rems/summary.json",
+          "url": "https://atmos.nmsu.edu/PDS/data/mslrem_1001/DATA/",
+          "accessed": "2026-11-16",
+          "seen": "datos descargados y reducidos en caja (3,31 GB)"
+        }
+      ],
+      "note": "T de suelo (temperatura de brillo GTS), campo aparte de la T de aire. Media de promedios diarios por sol, REMS MY32 (calculada 223,48 K, redondeada a 223,5 ±2 K). Media de los promedios diarios por sol. Promedio diario: 24 cajas horarias LMST de MODRDR a 1 Hz, cajas vacías interpoladas linealmente (circular); se exige ≥20 cajas con dato y ningún hueco >2 h. Ls de Allison & McEwen 2000. Solo soles impares de MY32 (sol 351–1017). Filtro: GTS BRIGHTNESS_TEMP confianza '1111' y 150–300 K. COBERTURA MENOR: 184 soles y huecos de Ls hasta 18,4° (solo 14 soles en Ls 300–360°); sesgo hacia la mitad fría del año: media por cajas de Ls 225,48 K; sensibilidad 222,4–224,3 K, de ahí ±2 K. Salvedades: precisión GTS ±5 (Ruíz 2025) o <10 K (Martínez 2016); hasta 4 K de contribución del RTG (Hamilton 2014, citado por Martínez 2017); un solo año y 1 de cada 2 soles.",
+      "value_computed": 223.48
+    },
+    {
+      "id": "env.gale.pressure.reference",
+      "field": "surface_pressure_reference",
+      "value": 841.8,
+      "range": [
+        733.73,
+        923.27
+      ],
+      "uncertainty": {
+        "n_sols": 309,
+        "sol_range": [
+          351,
+          1017
+        ],
+        "ls_range_deg": [
+          0.6,
+          359.2
+        ],
+        "max_ls_gap_deg": 6.2,
+        "std_of_daily_means": 56.95,
+        "sem": 3.24,
+        "min_daily_mean": 733.73,
+        "max_daily_mean": 923.27,
+        "mean_of_ls30_bins": 845.6,
+        "filter": "PS conf 11; 300–1400 Pa",
+        "sensor_accuracy_Pa": 3.5
+      },
+      "unit": "Pa",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "ACCEPTED",
+      "source": [
+        {
+          "citation": "MSL REMS MODRDR, NASA PDS Atmospheres Node, MSL REMS MODRDR (dataset ID MSL-M-REMS-5-MODRDR-V1.0, volumen mslrem_1001, productos RMD), https://atmos.nmsu.edu/PDS/data/mslrem_1001/DATA/",
+          "where": "MY32, soles impares 351–1017 (318 soles muestreados); script rems/fetch_reduce.py + rems/aggregate.py; resultado rems/summary.json",
+          "url": "https://atmos.nmsu.edu/PDS/data/mslrem_1001/DATA/",
+          "accessed": "2026-11-16",
+          "seen": "datos descargados y reducidos en caja (3,31 GB)"
+        }
+      ],
+      "note": "P de referencia v0 (decisión MARTIS Lead 2026-11-16). Media de promedios diarios por sol, REMS MY32 (841,80 Pa). Media de los promedios diarios por sol. Promedio diario: 24 cajas horarias LMST de MODRDR a 1 Hz, cajas vacías interpoladas linealmente (circular); se exige ≥20 cajas con dato y ningún hueco >2 h. Ls de Allison & McEwen 2000. Solo soles impares de MY32 (sol 351–1017). Filtro: PS confianza '11', 300–1400 Pa. Sensibilidad 841,0–842,0 Pa; media por cajas de Ls 845,6 Pa. Salvedades: precisión PS ±3,5 Pa (Ruíz 2025) / <2,7 Pa (Martínez 2016); incluye el efecto de la cota del rover en MY32; un solo año y 1 de cada 2 soles. Sustituye al provisional 812,5 Pa.",
+      "value_computed": 841.8,
+      "used_in_v0": true
+    },
+    {
+      "id": "env.gale.humidity.rh_daily_max_range",
+      "field": "relative_humidity_daily_max_annual_range",
+      "value": [
+        10,
+        70
+      ],
+      "range": [
+        10,
+        70
+      ],
+      "uncertainty": null,
+      "unit": "%",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Martínez G.M. et al. (2017) Space Sci. Rev., 'The Modern Near-Surface Martian Climate: A Review of In-situ Meteorological Data from Viking to Curiosity'",
+          "where": "§3.6 (texto): máximo diario ~70 % en Ls≈93°, mínimo ~10 % en primavera tardía/inicio de verano; Fig. 14",
+          "doi": "10.1007/s11214-017-0360-x",
+          "url": "https://link.springer.com/article/10.1007/s11214-017-0360-x",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (acceso abierto) leído 2026-11-16"
+        }
+      ],
+      "note": "Máximo diario de HR (REMS-H, recalibración agosto 2016, solo segundos 1–4 tras encender el sensor), primeros 1526 sols (MY31–33). Se da casi siempre entre 04:00 y 06:00 LMST. Cifras de texto aproximadas ('about 70 %', '~10 %'). Controlada sobre todo por la temperatura, no por el vapor. El PDS REMS de hoy tiene flags de HR preliminares ('0X1'): no se reprocesó aquí."
+    },
+    {
+      "id": "env.gale.humidity.rh_daytime_upper_bound",
+      "field": "relative_humidity_daytime_max",
+      "value": 5,
+      "range": null,
+      "uncertainty": null,
+      "unit": "%",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Martínez G.M. et al. (2017) Space Sci. Rev., 'The Modern Near-Surface Martian Climate: A Review of In-situ Meteorological Data from Viking to Curiosity'",
+          "where": "§3.6: 'daytime values <5 % between 10:00 and 18:00 LMST throughout the year'",
+          "doi": "10.1007/s11214-017-0360-x",
+          "url": "https://link.springer.com/article/10.1007/s11214-017-0360-x",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (acceso abierto) leído 2026-11-16"
+        }
+      ],
+      "note": "Cota superior de HR diurna (10:00–18:00 LMST). Los VMR diurnos derivados tienen grandes incertidumbres."
+    },
+    {
+      "id": "env.gale.water_vapor.vmr_surface_layer",
+      "field": "water_vapor_mixing_ratio_surface_layer",
+      "value": [
+        30,
+        75
+      ],
+      "range": [
+        30,
+        140
+      ],
+      "uncertainty": null,
+      "unit": "ppm",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK_PARCIAL",
+      "source": [
+        {
+          "citation": "Harri A.-M. et al. (2014) J. Geophys. Res. Planets, 'Mars Science Laboratory relative humidity observations: Initial results'",
+          "where": "abstract y Key Points",
+          "doi": "10.1002/2013JE004514",
+          "accessed": "2026-11-16",
+          "seen": "solo abstract/Key Points (vía OpenAlex); texto completo no accesible"
+        },
+        {
+          "citation": "Martínez G.M. et al. (2017) Space Sci. Rev., 'The Modern Near-Surface Martian Climate: A Review of In-situ Meteorological Data from Viking to Curiosity'",
+          "where": "§3.6: VMR nocturno solo en Fig. 14; sin cifra en texto",
+          "doi": "10.1007/s11214-017-0360-x",
+          "url": "https://link.springer.com/article/10.1007/s11214-017-0360-x",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (acceso abierto) leído 2026-11-16"
+        }
+      ],
+      "note": "Rango del abstract de Harri 2014: 30–75 ppm en la capa superficial durante los primeros ~100 sols (MY31 tardío–32 temprano). INCONSISTENCIA INTERNA: los Key Points de la misma fuente dicen 30–140 ppm y HR máxima 75 %, el abstract dice 75 ppm; no se ha podido leer el texto completo para resolverlo. Martínez 2017 muestra la serie estacional (más bajo en otoño-invierno, más alto en invierno tardío–verano) pero sin cifras. Ruíz 2025 (leído): VMR máx. nocturno hasta ~60 ppm en MY≤33. Cobertura temporal parcial: no es media anual."
+    },
+    {
+      "id": "env.gale.water_vapor.precipitable_water",
+      "field": "precipitable_water_column",
+      "value": "unos pocos a 6",
+      "range": null,
+      "uncertainty": null,
+      "unit": "pr-µm",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK_PARCIAL",
+      "source": [
+        {
+          "citation": "Harri A.-M. et al. (2014) J. Geophys. Res. Planets, 'Mars Science Laboratory relative humidity observations: Initial results'",
+          "where": "abstract y Key Points",
+          "doi": "10.1002/2013JE004514",
+          "accessed": "2026-11-16",
+          "seen": "solo abstract/Key Points (vía OpenAlex); texto completo no accesible"
+        }
+      ],
+      "note": "Columna de agua precipitable con mezcla uniforme (supuesto), primeros ~100 sols. Solo abstract. No se ha recuperado dato de media anual."
+    },
+    {
+      "id": "env.gale.regolith.soil_water_content_sam_rocknest",
+      "field": "regolith_water_content_rocknest_sam",
+      "value": [
+        1.5,
+        3
+      ],
+      "range": [
+        1.5,
+        3
+      ],
+      "uncertainty": null,
+      "unit": "wt%",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Leshin L.A. et al. (2013) Science 341:1238937",
+          "where": "abstract: 'Water abundance (1.5 to 3 weight percent) ... bound within an amorphous component'",
+          "doi": "10.1126/science.1238937",
+          "url": "https://www.science.org/doi/10.1126/science.1238937",
+          "accessed": "2026-11-16",
+          "seen": "abstract y página leídos 2026-11-16"
+        }
+      ],
+      "note": "H2O liberada por el suelo eólico de Rocknest hasta ~835 °C (SAM). Es agua ligada a la componente amorfa, NO hielo. Otras muestras de Gale (Sutter 2017): 0,9 ± 0,3 – 2,5 ± 1,6 wt % H2O (abstract Crossref)."
+    },
+    {
+      "id": "env.gale.regolith.dan_water_equivalent",
+      "field": "regolith_water_equivalent_dan_gale",
+      "value": [
+        1.5,
+        3.3
+      ],
+      "range": [
+        1.4,
+        5
+      ],
+      "uncertainty": null,
+      "unit": "wt% H2O",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Mitrofanov I.G. et al. (2014) J. Geophys. Res. Planets, 'Water and chlorine content in the Martian soil along the first 1900 m of the Curiosity rover traverse as estimated by the DAN instrument'",
+          "where": "abstract: capa superior 1,5–1,7 wt %, inferior 2,2–3,3 wt %, puntos ~5 wt %; 154 puntos, primeros 361 sols",
+          "doi": "10.1002/2013JE004553",
+          "accessed": "2026-11-16",
+          "seen": "abstract leído (OpenAlex)"
+        }
+      ],
+      "note": "Contenido de agua del subsuelo somero (modelo de dos capas) a lo largo de 1900 m de traza. Modelo de dos capas; los datos son el contenido en H2O equivalente y no distinguen hielo de agua ligada a minerales. Sin hielo en superficie. Rango [1,5; 3,3] = extremos de las medias de capas (no incluye puntos ~5 %). Un tramo (odómetro 455–638 m) favorece el modelo inverso (2,1 ± 0,1 arriba / 1,4 ± 0,04 abajo)."
+    },
+    {
+      "id": "env.gale.regolith.perchlorate_gale_range",
+      "field": "regolith_perchlorate_gale_range",
+      "value": [
+        0.05,
+        1.05
+      ],
+      "range": [
+        0.05,
+        1.05
+      ],
+      "uncertainty": null,
+      "unit": "wt% ClO4",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK_ABSTRACT",
+      "source": [
+        {
+          "citation": "Sutter B. et al. (2017) J. Geophys. Res. Planets (JGR Planets, e-location 2574)",
+          "where": "abstract: 'oxychlorine phases (chlorate/perchlorate) (0.05 ± 0.025–1.05 ± 0.44 wt % ClO4)'",
+          "doi": "10.1002/2016JE005225",
+          "accessed": "2026-11-16",
+          "seen": "abstract leído (Crossref)"
+        }
+      ],
+      "note": "Rango de especies oxicloradas expresadas como ClO4 en 2 sedimentos eólicos y 9 rocas sedimentarias de Gale (SAM-EGA, desde Yellowknife Bay hasta Namib Dune). ESTIMADO porque se infiere del O2 evolucionado (supone oxicloro). Máximo 1,05 wt % en Cumberland (roca). Mezcla rocas y eólicos: no es un dato de regolito suelto."
+    },
+    {
+      "id": "env.gale.regolith.perchlorate_default_v0",
+      "field": "regolith_perchlorate_default",
+      "value": 0.55,
+      "range": null,
+      "uncertainty": null,
+      "unit": "wt% ClO4",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "ACCEPTED",
+      "source": [
+        {
+          "citation": "Sutter B. et al. (2017) J. Geophys. Res. Planets, doi 10.1002/2016JE005225 (rango 0,05–1,05 wt % ClO4)",
+          "where": "abstract: 'oxychlorine phases (chlorate/perchlorate) (0.05 ± 0.025–1.05 ± 0.44 wt % ClO4)'",
+          "doi": "10.1002/2016JE005225",
+          "accessed": "2026-11-16",
+          "seen": "solo abstract (Crossref)"
+        }
+      ],
+      "note": "Valor de simulación v0: punto medio del rango de Gale (0,05+1,05)/2 = 0,55 wt % ClO4. No es una medida de regolito suelto.",
+      "rationale": "Decisión MARTIS Lead 2026-11-16: el único rango verificado para Gale es el de Sutter 2017 (rocas sedimentarias y eólicos, SAM-EGA); se toma su punto medio como valor único de v0 porque el modelo necesita un escalar y no hay dato regional de regolito suelto verificado. Sustituir si se verifica un valor regional de regolito.",
+      "used_in_v0": true
+    },
+    {
+      "id": "env.analog.phoenix.perchlorate",
+      "field": "regolith_perchlorate_phoenix_analog",
+      "value": null,
+      "range": null,
+      "uncertainty": null,
+      "unit": "wt% ClO4",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "analog:phoenix_arctic",
+      "version": "0.4",
+      "status": "PENDING",
+      "source": [
+        {
+          "citation": "Hecht M.H. et al. (2009) Science 325:64–67 (editorial 'Phoenix Ascending')",
+          "where": "resumen editorial: la mayor parte del cloro soluble en superficie es perclorato",
+          "doi": "10.1126/science.1172466",
+          "accessed": "2026-11-16",
+          "seen": "solo resumen editorial; sin cifra verificada"
+        }
+      ],
+      "note": "ANÁLOGO (68,2°N, no Gale): perclorato detectado como principal especie del cloro soluble. Cifra cuantitativa NO verificada en esta sesión, por tanto PENDING. No usar como dato regional (TDD §10.3)."
+    },
+    {
+      "id": "env.gale.water_ice.surface_present",
+      "field": "water_ice_surface_present",
+      "value": 0,
+      "range": null,
+      "uncertainty": null,
+      "unit": "wt%",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Martínez G.M. et al. (2017) Space Sci. Rev., 'The Modern Near-Surface Martian Climate: A Review of In-situ Meteorological Data from Viking to Curiosity'",
+          "where": "§3.6 y §4.3: 'Ground frost has not been observed in situ at ... MSL'; 'at equatorial and low latitudes ... water ice is not thermodynamically stable in the shallow subsurface (Mellon & Jakosky 1993; Mellon et al. 2004; Schorghofer & Aharonson 2005)'; 'as of February 2017 frost has not been detected by the MSL Curiosity rover'",
+          "doi": "10.1007/s11214-017-0360-x",
+          "url": "https://link.springer.com/article/10.1007/s11214-017-0360-x",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (acceso abierto) leído 2026-11-16"
+        }
+      ],
+      "note": "Valor v0 = 0 (sin hielo de agua en superficie ni subsuelo somero estable). Se basa en no-detección + estabilidad termodinámica citada por una revisión; NO es una medida de contenido de hielo. DAN mide H2O total (1,5–3,3 wt %), que no se interpreta como hielo. Escarcha nocturna: evidencia INDIRECTA en pocos soles de otoño-invierno tardío de MY32 (Martínez et al. 2016, Icarus, doi 10.1016/j.icarus.2015.12.004; fuente no accesible aquí, referenciada solo a través de Martínez 2017); no confirmada visualmente.",
+      "used_in_v0": true
+    },
+    {
+      "id": "env.gale.regolith.porosity",
+      "field": "regolith_porosity",
+      "value": null,
+      "range": null,
+      "uncertainty": null,
+      "unit": "fraction",
+      "classification": "UNCLASSIFIED_PENDING",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "PENDING",
+      "source": [],
+      "note": "PENDING: no se encontró una cifra de porosidad del regolito/suelo de Gale en las fuentes leídas. NO se usa la media planetaria. Candidatas no leídas: Hamilton 2014 (inercia térmica), DAN, MAHLI/Rocknest. Contexto: ver inercia térmica y densidad de lecho rocoso.",
+      "rationale": "Sin fuente primaria verificada para la porosidad del regolito suelto de Gale: no hay valor que clasificar (R5-03c). Si un sistema v0 la lee, el cargador debe fallar nombrando el id."
+    },
+    {
+      "id": "env.gale.regolith.thermal_inertia_soil",
+      "field": "thermal_inertia_soil_sites",
+      "value": [
+        295,
+        452
+      ],
+      "range": [
+        170,
+        550
+      ],
+      "uncertainty": null,
+      "unit": "J m-2 K-1 s-1/2",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "CONTEXTO",
+      "source": [
+        {
+          "citation": "Hamilton V.E. et al. (2014) J. Geophys. Res. Planets, 'Surface energy budget and thermal inertia at Gale Crater: Calculations from ground-based measurements'",
+          "where": "abstract: Rocknest 295, Point Lake 306, Yellowknife Bay 452",
+          "doi": "10.1002/2014JE004618",
+          "accessed": "2026-11-16",
+          "seen": "abstract leído (OpenAlex)"
+        },
+        {
+          "citation": "Martínez G.M. et al. (2017) Space Sci. Rev., 'The Modern Near-Surface Martian Climate: A Review of In-situ Meteorological Data from Viking to Curiosity'",
+          "where": "§3.4: Vasavada et al. (2017) 170–550 en los primeros 1250 sols (citado); 300→420 en sol ~120",
+          "doi": "10.1007/s11214-017-0360-x",
+          "url": "https://link.springer.com/article/10.1007/s11214-017-0360-x",
+          "accessed": "2026-11-16",
+          "seen": "texto completo (acceso abierto) leído 2026-11-16"
+        }
+      ],
+      "note": "Inercia térmica (SI). Rocknest (suelo arenoso eólico) 295; Point Lake 306; Yellowknife Bay (lecho rocoso) 452. Rango de traza Vasavada 2017 (citado por Martínez 2017): 170–550. Es un contexto físico para la porosidad, no una porosidad."
+    },
+    {
+      "id": "env.gale.bedrock.bulk_density",
+      "field": "bedrock_bulk_density_gale_floor",
+      "value": 1680,
+      "range": null,
+      "uncertainty": {
+        "sigma_kg_m3": 180
+      },
+      "unit": "kg/m3",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "regional:gale",
+      "version": "0.4",
+      "status": "CONTEXTO",
+      "source": [
+        {
+          "citation": "Lewis K.W. et al. (2019) Science 363, p. 535, 'A surface gravity traverse on Mars indicates low bedrock density at Gale crater'",
+          "where": "valor 1680 ± 180 kg/m³ visto citado en el abstract de un artículo de Icarus 2021 (doi 10.1016/j.icarus.2021.114539), que además propone 2300 ± 130 con porosidad de impacto",
+          "doi": "10.1126/science.aat0738",
+          "accessed": "2026-11-16",
+          "seen": "abstract de Lewis 2019 = resumen editorial sin cifra; el número viene de la cita en Icarus 2021"
+        }
+      ],
+      "note": "Densidad de masa de los estratos/lecho rocoso (NO regolito, no es porosidad). Solo como contexto; la revisión de Icarus 2021 sugiere hasta 2300 ± 130 kg/m³."
+    }
+  ]
+}

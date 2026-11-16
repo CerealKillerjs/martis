@@ -146,6 +146,18 @@ public static class SimulationValidator
                     quantity.Name,
                     QuantityRules.IsUnitInterval);
             }
+            else if (quantity.Name is nameof(EnvironmentState.PerchlorateWtPercent)
+                or nameof(EnvironmentState.WaterIceWtPercent))
+            {
+                CollectOne(
+                    violations,
+                    InvariantIds.WeightPercentInterval,
+                    tick,
+                    index,
+                    quantity.Value,
+                    quantity.Name,
+                    QuantityRules.IsWeightPercent);
+            }
             else if (quantity.Name is nameof(EnvironmentState.IonizingAbsorbedDoseGyPerSol)
                 or nameof(EnvironmentState.IonizingEquivalentDoseSvPerSol))
             {
@@ -194,13 +206,25 @@ public static class SimulationValidator
         }
 
         if (!QuantityRules.IsNonNegativeFinite(resources.Water)
-            || !QuantityRules.IsNonNegativeFinite(environment.WaterIce)
-            || !QuantityRules.IsNonNegativeFinite(environment.WaterVapor))
+            || !QuantityRules.IsNonNegativeFinite(environment.WaterIce))
         {
             return;
         }
 
-        var sum = CellWaterBudget.ComponentSum(resources.Water, environment.WaterIce, environment.WaterVapor);
+        // Unset vapor is absent from the account. The added 0 is the identity
+        // of a missing term, not a stored measurement of 0 kg.
+        var vaporKg = 0.0;
+        if (environment.WaterVapor.IsSet)
+        {
+            if (!QuantityRules.IsNonNegativeFinite(environment.WaterVapor.Value))
+            {
+                return;
+            }
+
+            vaporKg = environment.WaterVapor.Value;
+        }
+
+        var sum = CellWaterBudget.ComponentSum(resources.Water, environment.WaterIce, vaporKg);
         if (CellWaterBudget.WithinTolerance(sum, budget.RecordedTotalKg))
         {
             return;

@@ -62,7 +62,7 @@ public sealed class SimulationValidatorTests
     public void EnvironmentAndAllocationUseDomainIdsNotVal001()
     {
         var environment = new SimulationState(1, 1) { Tick = 4 };
-        environment.Environment[0].UvRadiation = double.PositiveInfinity;
+        environment.Environment[0].UvRadiation = AssignedDouble.Set(double.PositiveInfinity);
         var environmentViolation = Assert.Single(SimulationValidator.Validate(environment));
         Assert.Equal(InvariantIds.EnvironmentNonNegative, environmentViolation.InvariantId);
         Assert.Equal(nameof(EnvironmentState.UvRadiation), environmentViolation.Quantity);
@@ -286,7 +286,7 @@ public sealed class SimulationValidatorTests
     public void PorosityAboveOneIsDomVal003()
     {
         var state = new SimulationState(1, 1);
-        state.Environment[0].SoilPorosity = Math.BitIncrement(1.0);
+        state.Environment[0].SoilPorosity = AssignedDouble.Set(Math.BitIncrement(1.0));
         var violation = Assert.Single(SimulationValidator.Validate(state));
         Assert.Equal(InvariantIds.SoilPorosityUnitInterval, violation.InvariantId);
         Assert.Equal(nameof(EnvironmentState.SoilPorosity), violation.Quantity);
@@ -327,7 +327,7 @@ public sealed class SimulationValidatorTests
         state.Environment[0].Scope = new EnvironmentScope.PlanetaryMean();
         state.Resources[0].Water = 2;
         state.Environment[0].WaterIce = 3;
-        state.Environment[0].WaterVapor = 4;
+        state.Environment[0].WaterVapor = AssignedDouble.Set(4);
         state.WaterBudgets[0].RecordedTotalKg = 9;
 
         Assert.Empty(SimulationValidator.Validate(state, ValidationContext.LoadedScenario));

@@ -131,7 +131,7 @@ GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest
 
 ## Fuera de este hito
 
-- Escenario `mars_baseline`, `EnvironmentSystem` con datos de Marte, snapshot y auditoría de `data/` (T03b). El motor de ticks y el PRNG de T03a avanzan un mundo vacío. VAL-004 se comprueba en `NextBool`. VAL-010 se comprueba con un sistema de prueba sobre el flujo Environment, en la misma plataforma. VAL-006..008 siguen pendientes. El trasvase de agua entre compartimentos llega en T03/T04.
+- El CLI `simulate` sigue creando un mundo vacío: todavía no abre el escenario (S1-32). La biblioteca sí carga MarsBaseline v0.3, con `EnvironmentSystem` a temperatura constante. VAL-004 se comprueba en `NextBool`. VAL-010 se comprueba en la misma plataforma. VAL-006..008 siguen pendientes. El trasvase de agua entre compartimentos llega en T04.
 - `Martis.Game`, escenas y el SDK de Godot (T08).
 - `benchmarks/` (T10).
 - Esquema SQLite, migraciones y partidas guardadas (T07). El proyecto de persistencia solo abre una base en memoria para comprobar el paquete.

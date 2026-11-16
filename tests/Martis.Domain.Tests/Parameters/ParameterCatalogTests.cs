@@ -428,6 +428,58 @@ public sealed class ParameterCatalogTests
     }
 
     [Fact]
+    public void DeliveredValueCarriesTheNoteAndTheRationale()
+    {
+        var catalog = LoadOne(Sample(extra: ", \"note\": \"why\""));
+        var delivered = catalog.RequireNumber("sample");
+        Assert.Equal("why", delivered.Note);
+        Assert.Equal("synthetic fixture", delivered.Rationale);
+    }
+
+    [Fact]
+    public void NumericRangeRejectsTextBoolAndAnIntervalOutsideTheRange()
+    {
+        var text = Assert.Throws<ParameterLoadException>(() => LoadOne(
+            Sample(value: "\"45-75\"", extra: ", \"range\": [45, 75]")));
+        Assert.Contains("not a number or an interval", text.Message, StringComparison.Ordinal);
+
+        var flag = Assert.Throws<ParameterLoadException>(() => LoadOne(
+            Sample(value: "true", extra: ", \"range\": [0, 1]")));
+        Assert.Contains("not a number or an interval", flag.Message, StringComparison.Ordinal);
+
+        var gap = Assert.Throws<ParameterLoadException>(() => LoadOne(
+            Sample(value: "null", extra: ", \"range\": [0, 1]")));
+        Assert.Contains("not a number or an interval", gap.Message, StringComparison.Ordinal);
+
+        var interval = Assert.Throws<ParameterLoadException>(() => LoadOne(
+            Sample(value: "[0, 3]", extra: ", \"range\": [0, 1]")));
+        Assert.Contains("outside", interval.Message, StringComparison.Ordinal);
+
+        var inside = LoadOne(Sample(value: "[0.25, 0.5]", extra: ", \"range\": [0, 1]"));
+        var delivered = inside.RequireRange("sample");
+        Assert.Equal(0.25, delivered.Value.Minimum);
+        Assert.Equal(0.5, delivered.Value.Maximum);
+    }
+
+    [Fact]
+    public void PendingNullSkipsTheRangeCheckAndStillCannotBeRead()
+    {
+        var catalog = LoadOne(Sample(
+            classification: "UNCLASSIFIED_PENDING",
+            status: "PENDING",
+            value: "null",
+            extra: ", \"range\": [0, 1], \"note\": \"gap\""));
+        Assert.Equal(ParameterClassification.UnclassifiedPending, catalog.Definitions[0].Classification);
+        var error = Assert.Throws<ParameterUnavailableException>(() => catalog.RequireNumber("sample"));
+        Assert.Equal(ParameterUnavailableReason.Pending, error.Reason);
+        Assert.Contains("sample", error.Message, StringComparison.Ordinal);
+
+        var outside = Assert.Throws<ParameterLoadException>(() => LoadOne(
+            Sample(value: "2", extra: ", \"range\": [0, 1]")));
+        Assert.Contains("outside", outside.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void NumericRangeAcceptsBothEndpoints()
     {
         var lower = LoadOne(Sample(value: "0", extra: ", \"range\": [0, 1]"));
@@ -440,18 +492,46 @@ public sealed class ParameterCatalogTests
     public void PlanetaryMeanWarnsWhenARegionalCellUsesIt()
     {
         var catalog = LoadValidCatalog();
-        catalog.NoteRegionalCellUse("mean_level");
-        catalog.NoteRegionalCellUse("mean_level");
-        catalog.NoteRegionalCellUse("native_count");
+        catalog.NoteRegionalCellUse("mean_level", "site-alpha");
+        catalog.NoteRegionalCellUse("mean_level", "site-alpha");
+        catalog.NoteRegionalCellUse("native_count", "site-alpha");
 
         var warning = Assert.Single(catalog.Warnings);
         Assert.Equal("mean_level", warning.ParameterId);
+        Assert.Equal("site-alpha", warning.CellSite);
         Assert.Contains("mean_level", warning.Message, StringComparison.Ordinal);
         Assert.Contains("planetary_mean", warning.Message, StringComparison.Ordinal);
         Assert.Equal(11d, catalog.RequireNumber("mean_level").Value);
 
-        var missing = Assert.Throws<ParameterUnavailableException>(() => catalog.NoteRegionalCellUse("absent"));
+        var missing = Assert.Throws<ParameterUnavailableException>(() => catalog.NoteRegionalCellUse("absent", "site-alpha"));
         Assert.Equal("absent", missing.ParameterId);
+
+        Assert.Throws<ArgumentException>(() => catalog.NoteRegionalCellUse("mean_level", " "));
+    }
+
+    [Fact]
+    public void RegionalSiteMismatchAndAnalogUseWarnWithoutRewritingTheValue()
+    {
+        var catalog = LoadValidCatalog();
+
+        catalog.NoteRegionalCellUse("native_count", "other-site");
+        catalog.NoteRegionalCellUse("native_count", "other-site");
+        catalog.NoteRegionalCellUse("mutation_rate", "site-alpha");
+        catalog.NoteRegionalCellUse("native_count", "site-alpha");
+
+        Assert.Equal(2, catalog.Warnings.Count);
+        var regional = catalog.Warnings[0];
+        Assert.Equal("native_count", regional.ParameterId);
+        Assert.Equal("other-site", regional.CellSite);
+        Assert.Contains("regional:site-alpha", regional.Message, StringComparison.Ordinal);
+        Assert.Contains("other-site", regional.Message, StringComparison.Ordinal);
+        Assert.Equal(4d, catalog.RequireNumber("native_count").Value);
+
+        var analog = catalog.Warnings[1];
+        Assert.Equal("mutation_rate", analog.ParameterId);
+        Assert.Equal("site-alpha", analog.CellSite);
+        Assert.Contains("analog:fixture", analog.Message, StringComparison.Ordinal);
+        Assert.Contains("site-alpha", analog.Message, StringComparison.Ordinal);
     }
 
     [Fact]

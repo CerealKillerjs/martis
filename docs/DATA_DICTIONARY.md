@@ -24,19 +24,21 @@ No hay `DeltaTimeDays` en el código. La edad de la población va en soles.
 | --- | --- | --- | --- | --- | --- | --- |
 | TemperatureKelvin | AssignedDouble | K. Se usa la temperatura del aire | Media sobre los 88 775 s del sol. REMS mide aire y suelo, y son distintos. La media esconde el ciclo diurno (`MODEL_ASSUMPTION`) | unset, o finito y > 0 | DOM-VAL-001 si está asignado y no cumple; DOM-VAL-009 si un escenario cargado lo deja unset | VAL-001, con cota estricta y sin ser un recurso |
 | PressurePascal | AssignedDouble | Pa | Media sobre los 88 775 s del sol | unset, o finito y ≥ 0. El 0 asignado es un dato | DOM-VAL-002; DOM-VAL-009 si el escenario lo deja unset | VAL-001, sin ser un recurso |
-| UvRadiation | double | W/m², banda 200–400 nm, mediodía local, horizontal | No es media del sol. La fluencia diaria en J/m² por sol está pendiente y no se acumula tick a tick | finito y ≥ 0 | DOM-VAL-004 | VAL-001 |
+| UvRadiation | AssignedDouble | W/m², banda 200–400 nm, mediodía local, horizontal | No es media del sol. La fluencia diaria en J/m² por sol está pendiente y no se acumula tick a tick | unset, o finito y ≥ 0. En MarsBaseline v0 queda unset | DOM-VAL-004 si está asignado | VAL-001 |
 | IonizingAbsorbedDoseGyPerSol | double | Gy por sol (Gy = J/kg), tejido o agua, no silicio. GCR en superficie. SEP fuera de v0 | Acumulada en el sol. No se suma al sievert | finito y ≥ 0 | DOM-VAL-013 | VAL-001, sin ser un recurso |
 | IonizingEquivalentDoseSvPerSol | double | Sv por sol (Sv = Gy × Q, Q adimensional). Usar Sv en microorganismos es `MODEL_ASSUMPTION` | Acumulada en el sol. No se compara con el gray | finito y ≥ 0 | DOM-VAL-013 | VAL-001, sin ser un recurso |
 | SolarIrradiance | double | W/m² en superficie, no en el tope de la atmósfera | Media sobre el sol. La energía del tick es G · SecondsPerSol, en J/m². Alternativa no usada: J/m² por sol | finito y ≥ 0 | DOM-VAL-004 | VAL-001 |
-| WaterIce | double | kg por celda, condicionado a H-07 | Stock físico. La biología no lo consume | finito y ≥ 0 | DOM-VAL-004 | VAL-001 |
-| WaterVapor | double | kg por celda, condicionado a H-07 | Stock físico. La biología no lo consume | finito y ≥ 0 | DOM-VAL-004 | VAL-001 |
-| SoilPorosity | double | fracción de volumen | El intervalo [0, 1] es la definición de la fracción, no un supuesto | finito y en [0, 1] | DOM-VAL-003 | VAL-005, sin ser un gen |
-| PerchlorateMassKg | double | kg por celda, tras convertir una fracción másica | Especie pendiente: ClO₄⁻ o una sal de Ca/Mg. La convierte el cargador de T03 | finito y ≥ 0 | DOM-VAL-004 | VAL-001 |
-| Scope | EnvironmentScope o null | — | Ámbito principal, por celda | en un escenario cargado, uno de PlanetaryMean, Regional(SiteId), Lab, Game | DOM-VAL-010 si falta | ninguno de §10 |
+| WaterIce | double | kg por celda, condicionado a H-07 | Stock físico. Depósito GAME_BALANCE. No se deriva del wt % | finito y ≥ 0 | DOM-VAL-004 | VAL-001 |
+| WaterVapor | AssignedDouble | kg por celda, condicionado a H-07 | Stock físico. La biología no lo consume | unset, o finito y ≥ 0. En MarsBaseline v0 queda unset. Unset no entra en la suma como medición | DOM-VAL-004 si está asignado | VAL-001 |
+| SoilPorosity | AssignedDouble | fracción de volumen | El intervalo [0, 1] es la definición de la fracción, no un supuesto | unset, o finito y en [0, 1]. En MarsBaseline v0 queda unset | DOM-VAL-003 si está asignado | VAL-005, sin ser un gen |
+| PerchlorateMassKg | AssignedDouble | kg por celda | Sin asignar hasta H-07. El wt % no se convierte a kg | unset, o finito y ≥ 0 | DOM-VAL-004 si está asignado | VAL-001 |
+| PerchlorateWtPercent | double | wt % ClO4 | Fracción másica. No es PerchlorateMassKg | finito y en [0, 100] | DOM-VAL-016 | ninguno de §10 |
+| WaterIceWtPercent | double | wt % | Fracción másica. No es WaterIce en kg | finito y en [0, 100] | DOM-VAL-016 | ninguno de §10 |
+| Scope | EnvironmentScope o null | — | Ámbito principal, por celda. MarsBaseline lo toma de metadata.scope_id | en un escenario cargado, uno de PlanetaryMean, Regional(SiteId), Lab, Game | DOM-VAL-010 si falta | ninguno de §10 |
 
 Referencias de dosis, no copiadas al código. La clasificación `SCIENTIFIC_ESTIMATED` es la del valor por sol derivado; el valor nativo de Hassler es `SCIENTIFIC_MEASURED`. Hassler et al. 2014, Science 343:1244797, doi:10.1126/science.1244797, 0,210 ± 0,040 mGy/día ≈ 2,158·10⁻⁴ Gy/sol; Guo et al. 2021, doi:10.1007/s00159-021-00136-5, 0,49 ± 0,08 mSv/día ≈ 5,03·10⁻⁴ Sv/sol. El paso de día a sol multiplica por 88 775 / 86 400 y es `MODEL_ASSUMPTION` porque supone un día RAD de 24 h.
 
-`AssignedDouble` por defecto es unset. Unset no es el número 0: `Set(0)` es otro valor. `CheckInvariants` no exige que temperatura y presión estén asignadas; `SimulationValidator` con `ValidationContext.LoadedScenario` sí. Un mundo sin escenario puede pasar el validador con las dos sin asignar. Ese mismo estado no es un escenario válido.
+`AssignedDouble` por defecto es unset. Unset no es el número 0: `Set(0)` es otro valor. `CheckInvariants` no exige que un `AssignedDouble` esté asignado. `SimulationValidator` con `ValidationContext.LoadedScenario` sí exige temperatura, presión y alcance. UV, vapor, porosidad y `PerchlorateMassKg` pueden quedar unset en un escenario cargado: MarsBaseline v0 los deja así. Un mundo sin escenario puede pasar el validador con esos campos sin asignar. Ese mismo estado no es un escenario válido.
 
 `SiteId` es un identificador de sitio, distinto de organismo, gen y reacción. `Regional` exige texto.
 
@@ -131,13 +133,13 @@ El cargador genérico lee un documento con `metadata`, `location` y `parameters`
 | ParameterDefinition | clase | Una entrada: id único, field, valor, unit, classification, scope, version, status, used_in_v0, source, range, uncertainty, note, rationale, derived_from, conversion |
 | ParameterLiteral | número, bool, texto, intervalo [min, max] o null | El JSON tal cual. Null no se convierte en 0 |
 | ParameterClassification | SCIENTIFIC_MEASURED, SCIENTIFIC_ESTIMATED, MODEL_ASSUMPTION, GAME_BALANCE, SPECULATIVE, UNCLASSIFIED_PENDING | Las cinco primeras son las de ADR-000 R5. UNCLASSIFIED_PENDING solo se admite con status PENDING y value null, y ningún sistema lo recibe |
-| ParameterScope | planetary_mean, regional:\<site\>, analog:\<nombre\> | No son los ámbitos de celda Lab y Game. Un planetary_mean no sustituye una medición regional: `NoteRegionalCellUse` avisa y no reescribe el valor |
+| ParameterScope | planetary_mean, regional:\<site\>, analog:\<nombre\> | No son los ámbitos de celda Lab y Game. `NoteRegionalCellUse(id, sitio)` avisa y no reescribe el valor si es planetary_mean, si es regional:A en una celda de B, o si es analog: en una celda regional (R5-07) |
 | ParameterSource | citation, accessed, doi?, url?, where? | SCIENTIFIC_* exige al menos una fuente con doi o url. GAME_BALANCE puede llevar source null, como `mutation_rate` en el TDD §10.2 |
-| ParameterCatalog | documento cargado | `RequireNumber`, `RequireBool`, `RequireString` y `RequireRange` entregan el valor con clasificación, ámbito, fuente, `derived_from`, `conversion`, `uncertainty` y `range`. PENDING, HISTORICAL, SUPERADO y used_in_v0 false se conservan y fallan al leerse, nombrando el id. Cualquier otro status es texto. No hay valor por defecto |
+| ParameterCatalog | documento cargado | `RequireNumber`, `RequireBool`, `RequireString` y `RequireRange` entregan el valor con clasificación, ámbito, fuente, `derived_from`, `conversion`, `uncertainty`, `range`, `note` y `rationale` (R6-03). PENDING, HISTORICAL, SUPERADO y used_in_v0 false se conservan y fallan al leerse, nombrando el id. Cualquier otro status es texto. No hay valor por defecto |
 | version | decimal | El JSON puede traer un entero (`1`) o un texto (`"0.1"`). Se guarda el número parseado y tiene que ser > 0 |
 | conversion | objeto | Obligatorio con `derived_from` y prohibido sin él. Lleva `expression`, `factor` (finito y > 0), `factor_classification` (`MODEL_ASSUMPTION`) y `assumptions` (array de textos no vacío). El cargador no multiplica el factor |
 | uncertainty | texto o objeto | Un texto se guarda tal cual. Un objeto se guarda como JSON canónico (claves ordenadas, tokens de número copiados) y no se interpreta |
-| range | [min, max] | Intervalo cerrado. min > max se rechaza. Un número fuera del intervalo se rechaza. Los extremos son válidos |
+| range | [min, max] | Intervalo cerrado. min > max se rechaza. Un número o un intervalo fuera de ese rango se rechaza. Los extremos son válidos. Un value de texto, bool o null con range numérico se rechaza (R6-01), salvo un PENDING o UNCLASSIFIED_PENDING cuyo value es null: ese rango no se comprueba al cargar y la entrada falla al leerse (R6-02) |
 
 `derived_from` apunta al id del valor nativo. El derivado guarda su propio número. Nunca es `SCIENTIFIC_MEASURED`. Puede ser `SCIENTIFIC_ESTIMATED` (con DOI o URL) solo si la nativa es `SCIENTIFIC_*`. Si la nativa no es `SCIENTIFIC_*`, el derivado tampoco. La conversión es `MODEL_ASSUMPTION` en el factor, no en la etiqueta del derivado. El cargador no calcula el número. La geometría de la celda (H-07) sigue fuera: este tipo no pasa kg/m² a kg por celda. Un valor que no es `SCIENTIFIC_*` y no trae fuente necesita `rationale` o `note`.
 
@@ -155,8 +157,11 @@ El cargador genérico lee un documento con `metadata`, `location` y `parameters`
 | ICommandHandler | interfaz en Simulation | Aplica un comando sobre SimulationState |
 | ISimulationSystem | interfaz | Un paso del tick. Recibe el contexto y Δt en soles |
 | SimulationContext | clase | Estado, RngStreams, configuración y Δt en soles |
-| SimulationPipeline | pipeline-v0 | Quince pasos de §5.4, en orden fijo. apply-commands vacía la cola. El resto son stubs |
-| SimulationEngine | clase | Advance(steps). Advance(0) no corre sistemas. Un paso negativo lanza ArgumentOutOfRangeException. El tick sube al terminar el paso. ApplyCommand solo encola |
+| SimulationPipeline | pipeline-v0 | Quince pasos de §5.4, en orden fijo. apply-commands vacía la cola. CreateV0 pone EnvironmentSystem en update-environment: T constante, D = 0 y S = 0, sin sorteo. El resto siguen en stub |
+| SimulationEngine | clase | Advance(steps). Advance(0) no corre sistemas. Un paso negativo lanza ArgumentOutOfRangeException. EnableValidation true valida al final del tick; false no valida. Si el tick lanza, el mundo, el PRNG y la cola vuelven al estado de antes del tick. ApplyCommand solo encola |
 | PrototypeWorld | fábrica | Mundo vacío 64×64 para el CLI. No lee un escenario |
+| MarsBaselineScenario | cargador | Lee el JSON de Ciencia con v0_field_map y scope_id, y los depósitos GAME_BALANCE en kg. No convierte wt % a kg. Los ids fuera del mapa no se entregan |
+| ScenarioRunSnapshot | copia | Entorno, depósitos y PRNG. El hash es SHA-256 del texto canónico. La ida y vuelta restaura entorno y PRNG |
+| SimulationSnapshot | vista en Contracts | Celdas, poblaciones y estadísticas copiadas. No sigue los cambios posteriores del mundo |
 
 El CLI `simulate` acepta `--scenario`, `--seed`, `--ticks` y `--output`, crea ese mundo vacío, avanza los ticks e imprime el tick final. No escribe resultados y no abre `data/scenarios`.

@@ -2,8 +2,8 @@ namespace Martis.Domain.Parameters;
 
 /// <summary>
 /// A value delivered to a system, still carrying the classification, scope,
-/// sources, derivation, uncertainty and range of that value (ADR-000 R5).
-/// This is not a bare double.
+/// sources, derivation, uncertainty, range, note and rationale of that value
+/// (ADR-000 R5, R6-03). This is not a bare double.
 /// </summary>
 public sealed class SourcedValue<T>
 {
@@ -20,7 +20,9 @@ public sealed class SourcedValue<T>
         string? derivedFrom,
         ParameterConversion? conversion,
         string? uncertainty,
-        ParameterRange? range)
+        ParameterRange? range,
+        string? note,
+        string? rationale)
     {
         Id = id;
         Field = field;
@@ -35,6 +37,8 @@ public sealed class SourcedValue<T>
         Conversion = conversion;
         Uncertainty = uncertainty;
         Range = range;
+        Note = note;
+        Rationale = rationale;
     }
 
     public string Id { get; }
@@ -65,4 +69,10 @@ public sealed class SourcedValue<T>
     public string? Uncertainty { get; }
 
     public ParameterRange? Range { get; }
+
+    /// <summary>Note copied from the parameter. Null when the file omits it.</summary>
+    public string? Note { get; }
+
+    /// <summary>Rationale copied from the parameter. Null when the file omits it.</summary>
+    public string? Rationale { get; }
 }
