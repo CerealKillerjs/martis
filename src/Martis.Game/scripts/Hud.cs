@@ -257,6 +257,7 @@ public partial class Hud : Control
         _toast.Visible = true;
         _toastTime = 4.0;
         GameAudio.Instance?.Play(bad ? Martis.Audio.Sfx.Error : Martis.Audio.Sfx.Toast, -5f);
+        AnimateToast(bad);
     }
 
     public void Banner(string title, string text)
@@ -264,6 +265,7 @@ public partial class Hud : Control
         _banner.GetNode<Label>("Box/Title").Text = title;
         _banner.GetNode<Label>("Box/Text").Text = text;
         _banner.Visible = true;
+        AnimateBanner();
     }
 
     public override void _Process(double delta)

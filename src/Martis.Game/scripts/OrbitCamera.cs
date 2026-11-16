@@ -18,6 +18,7 @@ public partial class OrbitCamera : Camera3D
     private float _distance = 95f;
     private float _goalDistance = 95f;
     private bool _rotating;
+    private Flight? _flight;
     private bool _panning;
 
     public Terrain? Ground { get; set; }
@@ -33,6 +34,7 @@ public partial class OrbitCamera : Camera3D
         _goalPitch = pitch;
         if (snap)
         {
+            _flight = null;
             _target = target;
             _distance = distance;
             _yaw = yaw;
@@ -43,11 +45,23 @@ public partial class OrbitCamera : Camera3D
 
     public void FocusOn(Vector3 target) => _goalTarget = target;
 
+    /// <summary>Scripted flight with ease-in-out (game start). Any camera input cancels it.</summary>
+    public void FlyTo(Vector3 target, float distance, float yaw, float pitch, float seconds)
+    {
+        _flight = new Flight(_target, _distance, _yaw, _pitch, target, distance, yaw, pitch, seconds);
+    }
+
+    private sealed record Flight(Vector3 FromTarget, float FromDistance, float FromYaw, float FromPitch, Vector3 Target, float Distance, float Yaw, float Pitch, float Seconds)
+    {
+        public float Elapsed { get; set; }
+    }
+
     public override void _UnhandledInput(InputEvent @event)
     {
         switch (@event)
         {
             case InputEventMouseButton button:
+                _flight = null;
                 if (button.ButtonIndex == MouseButton.Right)
                 {
                     _rotating = button.Pressed;
@@ -80,6 +94,25 @@ public partial class OrbitCamera : Camera3D
     public override void _Process(double delta)
     {
         var dt = (float)delta;
+        if (_flight is { } flight)
+        {
+            flight.Elapsed += dt;
+            var t = Math.Clamp(flight.Elapsed / flight.Seconds, 0f, 1f);
+            var e = t < 0.5f ? 4f * t * t * t : 1f - (MathF.Pow((-2f * t) + 2f, 3f) / 2f);
+            _goalTarget = flight.FromTarget.Lerp(flight.Target, e);
+            _goalDistance = Mathf.Lerp(flight.FromDistance, flight.Distance, e);
+            _goalYaw = Mathf.Lerp(flight.FromYaw, flight.Yaw, e);
+            _goalPitch = Mathf.Lerp(flight.FromPitch, flight.Pitch, e);
+            _target = _goalTarget;
+            _distance = _goalDistance;
+            _yaw = _goalYaw;
+            _pitch = _goalPitch;
+            if (t >= 1f)
+            {
+                _flight = null;
+            }
+        }
+
         var move = Vector2.Zero;
         if (Input.IsKeyPressed(Key.W)) move.Y -= 1;
         if (Input.IsKeyPressed(Key.S)) move.Y += 1;

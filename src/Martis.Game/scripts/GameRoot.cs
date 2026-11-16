@@ -24,6 +24,8 @@ public partial class GameRoot : Node
     private GameSession _session = null!;
     private World3D _world = null!;
     private Hud _hud = null!;
+    private PauseMenu _pause = null!;
+    private int _speedBeforePause = 1;
     private SaveService _saves = null!;
     private int _speed = 1;
     private double _solProgress;
@@ -120,7 +122,19 @@ public partial class GameRoot : Node
                     SetSpeed(_speed == 0 ? 1 : 0);
                     break;
                 case Key.Escape:
-                    _hud.EndDeploy();
+                    if (_hud.DeployMode)
+                    {
+                        _hud.EndDeploy();
+                    }
+                    else if (_pause.IsOpen)
+                    {
+                        _pause.Close();
+                    }
+                    else
+                    {
+                        _pause.Open();
+                    }
+
                     break;
                 case Key.F5:
                     Save();
@@ -176,7 +190,29 @@ public partial class GameRoot : Node
             _hud.ExperimentRequested += Experiment;
             _hud.DeployToggled += on => _hud.Toast(on ? "Elige una celda para la colonia." : "Despliegue cancelado.");
             _hud.SetOrganisms(session.Organisms);
+            _pause = new PauseMenu { Name = "Pause", Theme = _hud.Theme };
+            layer.AddChild(_pause);
+            _pause.Toggled += open =>
+            {
+                if (open)
+                {
+                    _speedBeforePause = _speed;
+                    SetSpeed(0);
+                }
+                else
+                {
+                    SetSpeed(_speedBeforePause);
+                }
+            };
             SetSpeed(1);
+            if (!GameLaunch.ScriptedRun())
+            {
+                // Opening shot: the camera glides down from orbit onto the landing site.
+                _hud.CallDeferred(Hud.MethodName.Entrance);
+                var centre = _world.Ground.CellCenter(session.Width / 2, session.Height / 2);
+                _world.Camera.Frame(centre + new Vector3(0, 60, 0), 300f, -0.4f, 1.3f, snap: true);
+                _world.Camera.FlyTo(centre, 110f, 0.75f, 0.68f, 4.5f);
+            }
         }
 
         Select(session.Width / 2, session.Height / 2);
