@@ -6,8 +6,9 @@ namespace Martis.Domain.World;
 /// <summary>
 /// World state stored in linear arrays (TDD §12.2, H-02, ADR-005).
 /// Cell <c>i</c> is <c>y * width + x</c>. The dimensions are constructor arguments.
-/// Each cell has its own environment, resource pool and allocation buffer.
+/// Each cell has its own environment, resource pool, water budget and allocation buffer.
 /// The buffer records demand; nothing in this type subtracts from the pool.
+/// The water budget records the total; it does not move water between compartments.
 /// </summary>
 public sealed class SimulationState
 {
@@ -29,11 +30,13 @@ public sealed class SimulationState
         Environment = new EnvironmentState[count];
         Resources = new ResourcePool[count];
         AllocationBuffers = new AllocationBuffer[count];
+        WaterBudgets = new CellWaterBudget[count];
         for (var i = 0; i < count; i++)
         {
             Environment[i] = new EnvironmentState();
             Resources[i] = new ResourcePool();
             AllocationBuffers[i] = new AllocationBuffer();
+            WaterBudgets[i] = new CellWaterBudget();
         }
 
         Populations = [];
@@ -53,6 +56,12 @@ public sealed class SimulationState
     public ResourcePool[] Resources { get; }
 
     public AllocationBuffer[] AllocationBuffers { get; }
+
+    /// <summary>
+    /// One accounted water total per cell, aligned with <see cref="Resources"/> and
+    /// <see cref="Environment"/>.
+    /// </summary>
+    public CellWaterBudget[] WaterBudgets { get; }
 
     /// <summary>
     /// Populations in caller order. The validator walks this list in that order.

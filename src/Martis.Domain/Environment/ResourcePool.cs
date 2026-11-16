@@ -3,41 +3,45 @@ using Martis.Domain.Common;
 namespace Martis.Domain.Environment;
 
 /// <summary>
-/// Accessible resource deposits of one cell (TDD §2.3). These are model deposits,
-/// not necessarily total chemical concentrations.
-/// Every amount is finite and greater than or equal to 0 (VAL-001, H-13).
-/// The unit of every amount is pendiente de H-18. No unit is invented here.
-/// Defaults are 0, meaning the deposit has not been set, not a measured stock.
+/// Accessible resource deposits of one cell (TDD §2.3, ADR-011).
+/// Every amount is a mass in kg, finite and at least 0 (VAL-001).
+/// Molar masses live in <see cref="ElementalCompositionMatrix"/> and are not numbers yet.
+/// Defaults are an assigned zero, not an unset measurement.
 /// Populations must not subtract from this pool. Demand is recorded on
 /// <see cref="AllocationBuffer"/> and reconciled later.
 /// </summary>
 public sealed class ResourcePool
 {
-    /// <summary>Carbon dioxide deposit. Unit: pendiente de H-18.</summary>
+    /// <summary>Carbon dioxide deposit. Unit: kg per cell.</summary>
     public double CarbonDioxide { get; set; }
 
-    /// <summary>Water deposit. Unit: pendiente de H-18.</summary>
+    /// <summary>
+    /// Liquid water the biology can use, in kg per cell.
+    /// It is not ice and it is not vapor. Those physical reserves are
+    /// <see cref="EnvironmentState.WaterIce"/> and <see cref="EnvironmentState.WaterVapor"/>.
+    /// The same mass is not stored in both places (ADR-011, DOM-VAL-012).
+    /// </summary>
     public double Water { get; set; }
 
-    /// <summary>Oxygen deposit. Unit: pendiente de H-18.</summary>
+    /// <summary>Oxygen deposit. Unit: kg per cell.</summary>
     public double Oxygen { get; set; }
 
-    /// <summary>Nitrogen deposit. Unit: pendiente de H-18.</summary>
+    /// <summary>Nitrogen deposit. Unit: kg per cell.</summary>
     public double Nitrogen { get; set; }
 
-    /// <summary>Phosphorus deposit. Unit: pendiente de H-18.</summary>
+    /// <summary>Phosphorus deposit. Unit: kg per cell.</summary>
     public double Phosphorus { get; set; }
 
-    /// <summary>Sulfur deposit. Unit: pendiente de H-18.</summary>
+    /// <summary>Sulfur deposit. Unit: kg per cell.</summary>
     public double Sulfur { get; set; }
 
-    /// <summary>Iron deposit. Unit: pendiente de H-18.</summary>
+    /// <summary>Iron deposit. Unit: kg per cell.</summary>
     public double Iron { get; set; }
 
-    /// <summary>Organic carbon deposit. Unit: pendiente de H-18.</summary>
+    /// <summary>Organic carbon deposit. Unit: kg per cell.</summary>
     public double OrganicCarbon { get; set; }
 
-    /// <summary>Mineral carbon deposit. Unit: pendiente de H-18.</summary>
+    /// <summary>Mineral carbon deposit. Unit: kg per cell.</summary>
     public double MineralCarbon { get; set; }
 
     /// <summary>The nine deposits in TDD declaration order.</summary>

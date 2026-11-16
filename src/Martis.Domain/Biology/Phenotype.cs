@@ -5,8 +5,10 @@ namespace Martis.Domain.Biology;
 /// <summary>
 /// Derived traits of a population (TDD §2.4). This value is calculated. It is not
 /// stored on <see cref="Population"/> and it is not a source of truth.
-/// Each component must be finite and greater than or equal to 0. No upper bound
-/// is declared: the biological scale is not fixed.
+/// Each component must be finite and at least 0. No upper bound is declared.
+/// <see cref="MaintenanceCost"/> and <see cref="ReproductionRate"/> are dimensionless
+/// per tick, classified MODEL_ASSUMPTION (ADR-011), until a physical scale is fixed.
+/// The other components still have no unit.
 /// TODO: pendiente MARTIS Ciencia.
 /// </summary>
 public sealed record Phenotype
@@ -61,12 +63,18 @@ public sealed record Phenotype
         init => _photosyntheticEfficiency = QuantityRules.ReturnNonNegativeFinite(value, nameof(PhotosyntheticEfficiency));
     }
 
+    /// <summary>
+    /// Dimensionless maintenance cost per tick. Classification: MODEL_ASSUMPTION (ADR-011).
+    /// </summary>
     public double MaintenanceCost
     {
         get => _maintenanceCost;
         init => _maintenanceCost = QuantityRules.ReturnNonNegativeFinite(value, nameof(MaintenanceCost));
     }
 
+    /// <summary>
+    /// Dimensionless reproduction rate per tick. Classification: MODEL_ASSUMPTION (ADR-011).
+    /// </summary>
     public double ReproductionRate
     {
         get => _reproductionRate;

@@ -14,13 +14,14 @@ public sealed class SimulationValidatorTests
     {
         var state = new SimulationState(2, 2) { Tick = 0 };
         state.Resources[3].Water = 1;
-        state.Environment[1].PressurePascal = double.MaxValue;
+        state.WaterBudgets[3].RecordedTotalKg = 1;
+        state.Environment[1].PressurePascal = AssignedDouble.Set(double.MaxValue);
         state.AllocationBuffers[0].Iron = 0;
         var population = Samples.Population(cell: 3, genome: Samples.Genome(("z", 1), ("a", 0)), id: 9);
         population.Abundance = 0;
         population.BiomassKg = -0.0;
         population.EnergyReserveJ = 2;
-        population.AgeDistributionMeanDays = 0;
+        population.AgeDistributionMeanSols = 0;
         population.Viability = 1;
         state.Populations.Add(population);
 
@@ -58,37 +59,57 @@ public sealed class SimulationValidatorTests
     }
 
     [Fact]
-    public void Val001AlsoCoversEnvironmentAndTheAllocationBuffer()
+    public void EnvironmentAndAllocationUseDomainIdsNotVal001()
     {
         var environment = new SimulationState(1, 1) { Tick = 4 };
         environment.Environment[0].UvRadiation = double.PositiveInfinity;
         var environmentViolation = Assert.Single(SimulationValidator.Validate(environment));
-        Assert.Equal(InvariantIds.NoNegativeResource, environmentViolation.InvariantId);
+        Assert.Equal(InvariantIds.EnvironmentNonNegative, environmentViolation.InvariantId);
         Assert.Equal(nameof(EnvironmentState.UvRadiation), environmentViolation.Quantity);
         Assert.Equal(4, environmentViolation.Tick);
+        Assert.NotEqual(InvariantIds.NoNegativeResource, environmentViolation.InvariantId);
 
         var buffer = new SimulationState(1, 1);
         buffer.AllocationBuffers[0].MineralCarbon = -1;
         var bufferViolation = Assert.Single(SimulationValidator.Validate(buffer));
-        Assert.Equal(InvariantIds.NoNegativeResource, bufferViolation.InvariantId);
+        Assert.Equal(InvariantIds.AllocationNonNegative, bufferViolation.InvariantId);
         Assert.Equal(nameof(ResourcePool.MineralCarbon), bufferViolation.Quantity);
         Assert.Null(bufferViolation.Population);
+        Assert.NotEqual(InvariantIds.NoNegativeResource, bufferViolation.InvariantId);
     }
 
-    [Theory]
-    [InlineData(nameof(Population.Abundance))]
-    [InlineData(nameof(Population.EnergyReserveJ))]
-    [InlineData(nameof(Population.AgeDistributionMeanDays))]
-    public void Val002RejectsANegativePopulationQuantity(string quantity)
+    [Fact]
+    public void Val002RejectsNonFiniteAbundanceOnly()
     {
         var (state, population) = WorldWithPopulation();
-        ScalarProperties.Set(population, quantity, double.NaN);
+        population.Abundance = double.NaN;
         var violation = Assert.Single(SimulationValidator.Validate(state));
         Assert.Equal(InvariantIds.NoNegativePopulation, violation.InvariantId);
-        Assert.Equal(quantity, violation.Quantity);
+        Assert.Equal(nameof(Population.Abundance), violation.Quantity);
         Assert.Equal(population.Id, violation.Population);
-        Assert.Equal(0, violation.CellIndex);
         Assert.True(double.IsNaN(violation.Value));
+    }
+
+    [Fact]
+    public void EnergyReserveIsNotVal002()
+    {
+        var (state, population) = WorldWithPopulation();
+        population.EnergyReserveJ = -1;
+        var violation = Assert.Single(SimulationValidator.Validate(state));
+        Assert.Equal(InvariantIds.EnergyReserveNonNegative, violation.InvariantId);
+        Assert.NotEqual(InvariantIds.NoNegativePopulation, violation.InvariantId);
+        Assert.Equal(nameof(Population.EnergyReserveJ), violation.Quantity);
+    }
+
+    [Fact]
+    public void AgeInSolsIsNotVal002()
+    {
+        var (state, population) = WorldWithPopulation();
+        population.AgeDistributionMeanSols = double.NaN;
+        var violation = Assert.Single(SimulationValidator.Validate(state));
+        Assert.Equal(InvariantIds.AgeNonNegative, violation.InvariantId);
+        Assert.Equal(nameof(Population.AgeDistributionMeanSols), violation.Quantity);
+        Assert.NotEqual(InvariantIds.NoNegativePopulation, violation.InvariantId);
     }
 
     [Fact]
@@ -121,12 +142,13 @@ public sealed class SimulationValidatorTests
 
     [Theory]
     [MemberData(nameof(FiniteEdges.OutsideUnitInterval), MemberType = typeof(FiniteEdges))]
-    public void Val004RejectsViabilityOutsideTheUnitInterval(double value)
+    public void ViabilityOutsideTheUnitIntervalIsNotVal004(double value)
     {
         var (state, population) = WorldWithPopulation();
         population.Viability = value;
         var violation = Assert.Single(SimulationValidator.Validate(state));
-        Assert.Equal(InvariantIds.ProbabilityInUnitInterval, violation.InvariantId);
+        Assert.Equal(InvariantIds.ViabilityUnitInterval, violation.InvariantId);
+        Assert.NotEqual(InvariantIds.ProbabilityInUnitInterval, violation.InvariantId);
         Assert.Equal(nameof(Population.Viability), violation.Quantity);
         Assert.Equal(population.Id, violation.Population);
         DoubleBits.Equal(value, violation.Value);
@@ -134,7 +156,7 @@ public sealed class SimulationValidatorTests
 
     [Theory]
     [MemberData(nameof(FiniteEdges.InsideUnitInterval), MemberType = typeof(FiniteEdges))]
-    public void Val004AcceptsViabilityInsideTheUnitInterval(double value)
+    public void ViabilityInsideTheUnitIntervalHasNoViolation(double value)
     {
         var (state, population) = WorldWithPopulation();
         population.Viability = value;
@@ -258,6 +280,83 @@ public sealed class SimulationValidatorTests
         missingPopulation.Populations.Add(null!);
         var populationError = Assert.Throws<InvalidOperationException>(() => SimulationValidator.Validate(missingPopulation));
         Assert.Contains("null", populationError.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void PorosityAboveOneIsDomVal003()
+    {
+        var state = new SimulationState(1, 1);
+        state.Environment[0].SoilPorosity = Math.BitIncrement(1.0);
+        var violation = Assert.Single(SimulationValidator.Validate(state));
+        Assert.Equal(InvariantIds.SoilPorosityUnitInterval, violation.InvariantId);
+        Assert.Equal(nameof(EnvironmentState.SoilPorosity), violation.Quantity);
+        DoubleBits.Equal(Math.BitIncrement(1.0), violation.Value);
+    }
+
+    [Fact]
+    public void ZeroKelvinIsRejectedAndUnsetIsNotALoadedScenario()
+    {
+        var zero = new SimulationState(1, 1) { Tick = 6 };
+        zero.Environment[0].TemperatureKelvin = AssignedDouble.Set(0.0);
+        zero.Environment[0].PressurePascal = AssignedDouble.Set(0.0);
+        zero.Environment[0].Scope = new EnvironmentScope.Lab();
+        var zeroViolation = Assert.Single(SimulationValidator.Validate(zero, ValidationContext.LoadedScenario));
+        Assert.Equal(InvariantIds.TemperaturePositive, zeroViolation.InvariantId);
+        DoubleBits.Equal(0.0, zeroViolation.Value);
+        Assert.Equal(6, zeroViolation.Tick);
+
+        var fresh = new SimulationState(1, 1);
+        Assert.Empty(SimulationValidator.Validate(fresh));
+        var loaded = SimulationValidator.Validate(fresh, ValidationContext.LoadedScenario);
+        Assert.Equal(
+            [
+                (InvariantIds.ScenarioQuantityUnset, nameof(EnvironmentState.TemperatureKelvin)),
+                (InvariantIds.ScenarioQuantityUnset, nameof(EnvironmentState.PressurePascal)),
+                (InvariantIds.ScenarioScopeMissing, "Scope"),
+            ],
+            loaded.Select(violation => (violation.InvariantId, violation.Quantity)).ToArray());
+        Assert.All(loaded, violation => Assert.True(double.IsNaN(violation.Value)));
+    }
+
+    [Fact]
+    public void LoadedScenarioWithAnchorsAndAClosedWaterBudgetPasses()
+    {
+        var state = new SimulationState(1, 1);
+        state.Environment[0].TemperatureKelvin = AssignedDouble.Set(Math.BitIncrement(0.0));
+        state.Environment[0].PressurePascal = AssignedDouble.Set(0.0);
+        state.Environment[0].Scope = new EnvironmentScope.PlanetaryMean();
+        state.Resources[0].Water = 2;
+        state.Environment[0].WaterIce = 3;
+        state.Environment[0].WaterVapor = 4;
+        state.WaterBudgets[0].RecordedTotalKg = 9;
+
+        Assert.Empty(SimulationValidator.Validate(state, ValidationContext.LoadedScenario));
+    }
+
+    [Fact]
+    public void CountingTheSameWaterAsLiquidAndIceBreaksTheRecordedTotal()
+    {
+        var state = new SimulationState(1, 1) { Tick = 2 };
+        state.Resources[0].Water = 5;
+        state.Environment[0].WaterIce = 5;
+        state.WaterBudgets[0].RecordedTotalKg = 5;
+
+        var violation = Assert.Single(SimulationValidator.Validate(state));
+        Assert.Equal(InvariantIds.WaterPartition, violation.InvariantId);
+        Assert.Equal(nameof(CellWaterBudget.RecordedTotalKg), violation.Quantity);
+        DoubleBits.Equal(5, violation.Value);
+        Assert.Equal(2, violation.Tick);
+        Assert.Equal(0, violation.CellIndex);
+        Assert.Equal(10, CellWaterBudget.ComponentSum(5, 5, 0));
+    }
+
+    [Fact]
+    public void ANegativeResourceDoesNotAlsoFailTheWaterPartition()
+    {
+        var state = new SimulationState(1, 1);
+        state.Resources[0].Water = -1;
+        var violation = Assert.Single(SimulationValidator.Validate(state));
+        Assert.Equal(InvariantIds.NoNegativeResource, violation.InvariantId);
     }
 
     [Fact]

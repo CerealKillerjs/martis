@@ -6,11 +6,25 @@ namespace Martis.Domain.Common;
 /// </summary>
 internal static class QuantityRules
 {
+    public static bool IsStrictlyPositiveFinite(double value)
+        => double.IsFinite(value) && value > 0.0;
+
     public static bool IsNonNegativeFinite(double value)
         => double.IsFinite(value) && value >= 0.0;
 
     public static bool IsUnitInterval(double value)
         => IsNonNegativeFinite(value) && value <= 1.0;
+
+    public static void RequireStrictlyPositiveFinite(double value, string name)
+    {
+        if (!IsStrictlyPositiveFinite(value))
+        {
+            throw new ArgumentOutOfRangeException(
+                name,
+                value,
+                "The quantity must be finite and greater than 0.");
+        }
+    }
 
     public static void RequireNonNegativeFinite(double value, string name)
     {

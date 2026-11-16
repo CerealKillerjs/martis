@@ -13,7 +13,7 @@ public sealed class PopulationTests
         DoubleBits.Equal(0, population.Abundance);
         DoubleBits.Equal(0, population.BiomassKg);
         DoubleBits.Equal(0, population.EnergyReserveJ);
-        DoubleBits.Equal(0, population.AgeDistributionMeanDays);
+        DoubleBits.Equal(0, population.AgeDistributionMeanSols);
         DoubleBits.Equal(0, population.Viability);
     }
 
@@ -28,7 +28,7 @@ public sealed class PopulationTests
         AssertRejected(population => population.Abundance = value, nameof(Population.Abundance), value);
         AssertRejected(population => population.BiomassKg = value, nameof(Population.BiomassKg), value);
         AssertRejected(population => population.EnergyReserveJ = value, nameof(Population.EnergyReserveJ), value);
-        AssertRejected(population => population.AgeDistributionMeanDays = value, nameof(Population.AgeDistributionMeanDays), value);
+        AssertRejected(population => population.AgeDistributionMeanSols = value, nameof(Population.AgeDistributionMeanSols), value);
     }
 
     [Theory]
@@ -39,7 +39,7 @@ public sealed class PopulationTests
         population.Abundance = value;
         population.BiomassKg = value;
         population.EnergyReserveJ = value;
-        population.AgeDistributionMeanDays = value;
+        population.AgeDistributionMeanSols = value;
         population.Viability = 1;
         population.CheckInvariants();
     }

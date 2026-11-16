@@ -1,3 +1,4 @@
+using Martis.Domain.Common;
 using Martis.Domain.Environment;
 using Martis.Domain.Validation;
 using Martis.Domain.World;
@@ -19,6 +20,7 @@ public sealed class SimulationStateTests
         Assert.Equal(4096, state.Environment.Length);
         Assert.Equal(4096, state.Resources.Length);
         Assert.Equal(4096, state.AllocationBuffers.Length);
+        Assert.Equal(4096, state.WaterBudgets.Length);
         Assert.Equal(4095, state.Index(width - 1, height - 1).ToLinearIndex());
         Assert.Equal(state.ToLinearIndex(width - 1, height - 1), state.Index(width - 1, height - 1).ToLinearIndex());
         Assert.Empty(state.Populations);
@@ -27,6 +29,7 @@ public sealed class SimulationStateTests
         Assert.All(state.Environment, static cell => Assert.NotNull(cell));
         Assert.All(state.Resources, static cell => Assert.NotNull(cell));
         Assert.All(state.AllocationBuffers, static cell => Assert.NotNull(cell));
+        Assert.All(state.WaterBudgets, static cell => Assert.NotNull(cell));
         Assert.Empty(SimulationValidator.Validate(state));
     }
 
@@ -34,13 +37,15 @@ public sealed class SimulationStateTests
     public void CellsAreIndependentObjects()
     {
         var state = new SimulationState(2, 2);
-        state.Environment[0].TemperatureKelvin = 1;
+        state.Environment[0].TemperatureKelvin = AssignedDouble.Set(1);
         state.Resources[0].Water = 2;
         state.AllocationBuffers[0].Water = 3;
 
-        DoubleBits.Equal(0, state.Environment[1].TemperatureKelvin);
+        Assert.True(state.Environment[0].TemperatureKelvin.IsSet);
+        Assert.True(state.Environment[1].TemperatureKelvin.IsUnset);
         DoubleBits.Equal(0, state.Resources[1].Water);
         DoubleBits.Equal(2, state.Resources[0].Water);
+        DoubleBits.Equal(0, state.WaterBudgets[0].RecordedTotalKg);
         DoubleBits.Equal(0, state.Resources[3].Water);
         Assert.NotSame(state.Environment[0], state.Environment[1]);
         Assert.NotSame(state.Resources[0], state.AllocationBuffers[0]);

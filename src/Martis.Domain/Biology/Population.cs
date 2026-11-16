@@ -53,22 +53,22 @@ public sealed class Population
     public double BiomassKg { get; set; }
 
     /// <summary>
-    /// Stored energy. Unit: joule (J). Finite and greater than or equal to 0.
-    /// Reported as VAL-002 because it is a population quantity. VAL-008 (energy
-    /// consumed versus energy available) is not checked in T02.
+    /// Stored energy. Unit: joule (J). Finite and at least 0 (DOM-VAL-006).
+    /// VAL-002 is abundance only. VAL-008 is not checked in T02.
     /// </summary>
     public double EnergyReserveJ { get; set; }
 
     /// <summary>
-    /// Mean of the age distribution. The property name follows TDD §2.5 and says
-    /// days. H-05 is still open: a sol is not an Earth day, and this type stores
-    /// no conversion factor. Finite and greater than or equal to 0 (VAL-002).
+    /// Mean of the age distribution. Unit: sol. One sol is
+    /// <see cref="MartianTime.SecondsPerSol"/> seconds (ADR-011).
+    /// Finite and at least 0 (DOM-VAL-007). This is not VAL-002.
     /// </summary>
-    public double AgeDistributionMeanDays { get; set; }
+    public double AgeDistributionMeanSols { get; set; }
 
     /// <summary>
     /// Fraction of the abundance that remains viable, in the closed interval [0, 1]
-    /// (VAL-004). The endpoints are that invariant, not a measured threshold.
+    /// (DOM-VAL-008). The TDD does not name this field as a probability, so it is
+    /// not VAL-004. The biological definition is still open.
     /// TODO: pendiente MARTIS Ciencia.
     /// </summary>
     public double Viability { get; set; }
@@ -83,7 +83,7 @@ public sealed class Population
         QuantityRules.RequireNonNegativeFinite(Abundance, nameof(Abundance));
         QuantityRules.RequireNonNegativeFinite(BiomassKg, nameof(BiomassKg));
         QuantityRules.RequireNonNegativeFinite(EnergyReserveJ, nameof(EnergyReserveJ));
-        QuantityRules.RequireNonNegativeFinite(AgeDistributionMeanDays, nameof(AgeDistributionMeanDays));
+        QuantityRules.RequireNonNegativeFinite(AgeDistributionMeanSols, nameof(AgeDistributionMeanSols));
         QuantityRules.RequireUnitInterval(Viability, nameof(Viability));
         ArgumentNullException.ThrowIfNull(Genome);
     }
