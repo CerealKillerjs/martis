@@ -256,6 +256,7 @@ public partial class Hud : Control
         _toast.AddThemeColorOverride("font_color", bad ? new Color(1f, 0.5f, 0.45f) : new Color(1f, 0.93f, 0.85f));
         _toast.Visible = true;
         _toastTime = 4.0;
+        GameAudio.Instance?.Play(bad ? Martis.Audio.Sfx.Error : Martis.Audio.Sfx.Toast, -5f);
     }
 
     public void Banner(string title, string text)

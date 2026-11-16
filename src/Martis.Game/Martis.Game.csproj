@@ -7,5 +7,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Martis.Simulation\Martis.Simulation.csproj" />
     <ProjectReference Include="..\Martis.Persistence\Martis.Persistence.csproj" />
+    <ProjectReference Include="..\Martis.Audio\Martis.Audio.csproj" />
   </ItemGroup>
 </Project>

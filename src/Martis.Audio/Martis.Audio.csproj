@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    ADR-018: procedural audio for the game (sound effects, generative soundtrack, wind).
+    Pure C#, no Godot and no engine references, so it is unit tested inside MARTIS.sln.
+  -->
+</Project>

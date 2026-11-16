@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Godot;
+using Martis.Audio;
 using Martis.Simulation.Sessions;
 
 namespace Martis.Game;
@@ -88,9 +89,20 @@ public partial class GameRoot : Node
 
         _world.TimeOfDay = (float)((_solProgress + 0.25) % 1.0);
         _hud.ShowStatus(_view ?? _session.View(), _world.TimeOfDay);
+        GameAudio.Instance?.Observe(new MusicContext
+        {
+            TimeOfDay = _world.TimeOfDay,
+            BiomassKg = (_view ?? _session.View()).TotalBiomassKg,
+            BiomassGrowthPerSol = _growth,
+            SecondsPerSol = SecondsPerSol[_speed],
+            Failure = _session.Failure is not null,
+        });
     }
 
     private WorldView? _view;
+
+    /// <summary>Smoothed relative biomass change per sol, for the music director (ADR-018).</summary>
+    private double _growth;
 
     public override void _UnhandledInput(InputEvent @event)
     {
@@ -99,6 +111,7 @@ public partial class GameRoot : Node
             switch (key.Keycode)
             {
                 case Key.Space:
+                    GameAudio.Instance?.Play(_speed == 0 ? Sfx.Resume : Sfx.Pause);
                     SetSpeed(_speed == 0 ? 1 : 0);
                     break;
                 case Key.Escape:
@@ -172,7 +185,14 @@ public partial class GameRoot : Node
 
     private void Refresh()
     {
+        var previous = _view;
         _view = _session.View();
+        if (previous is not null && _view.Tick > previous.Tick)
+        {
+            var growth = MusicDirector.Growth(previous.TotalBiomassKg, _view.TotalBiomassKg, (int)(_view.Tick - previous.Tick));
+            _growth += 0.2 * (growth - _growth);
+        }
+
         _world.Show(_view);
         _hud.ShowMission(_session.Mission);
         if (_selected.X >= 0)
@@ -198,6 +218,8 @@ public partial class GameRoot : Node
             }
         }
 
+        PlayEventSound(events);
+
         if (_session.Failure is not null)
         {
             SetSpeed(0);
@@ -207,6 +229,8 @@ public partial class GameRoot : Node
         if (!_celebrated && _session.Mission is { IsComplete: true } mission)
         {
             _celebrated = true;
+            GameAudio.Instance?.Play(Sfx.Victory);
+            GameAudio.Instance?.Celebrate();
             _hud.Banner("¡PRIMERA COLONIA!", $"{mission.Definition.Name} completada en el sol {_session.Tick}. La vida terrestre diseñada por ti se sostiene en Marte.");
         }
     }
@@ -261,6 +285,7 @@ public partial class GameRoot : Node
         }
 
         _session.RecordAction("analyze-region");
+        GameAudio.Instance?.Play(Sfx.Analyze);
         var (x, y) = _selected;
         var report = _session.Inspect(x, y);
         var neighbours = Enumerable.Range(-2, 5)
@@ -293,6 +318,7 @@ public partial class GameRoot : Node
         try
         {
             var id = _saves.Save(_session);
+            GameAudio.Instance?.Play(Sfx.Save);
             _hud.Toast($"Partida guardada ({id}, sol {_session.Tick}).");
         }
         catch (Exception exception) when (exception is System.Data.Common.DbException or System.IO.IOException or InvalidOperationException)
@@ -308,6 +334,7 @@ public partial class GameRoot : Node
             var loaded = _saves.LoadLatest(out var message);
             if (loaded is not null)
             {
+                GameAudio.Instance?.Play(Sfx.Load);
                 StartSession(loaded);
             }
 
@@ -325,6 +352,21 @@ public partial class GameRoot : Node
         _saves.CurrentId = null;
         StartSession(GameSession.NewGame(_dataRoot, seed % 1_000_000UL));
         _hud.Toast($"Nueva partida, semilla {_session.Seed}.");
+    }
+
+    /// <summary>One sound per refresh: the most important event of the batch (ADR-018).</summary>
+    private static void PlayEventSound(IEnumerable<SessionEvent> events)
+    {
+        Sfx[] priority = [Sfx.Mission, Sfx.Extinction, Sfx.Error, Sfx.Mutation, Sfx.Deploy, Sfx.Experiment];
+        var sounds = events.Select(item => SfxSynth.ForEvent(item.Kind)).OfType<Sfx>().ToHashSet();
+        foreach (var sfx in priority)
+        {
+            if (sounds.Contains(sfx))
+            {
+                GameAudio.Instance?.Play(sfx);
+                return;
+            }
+        }
     }
 
     /// <summary>Scripted showcase used for screenshots: a thriving colony at dusk.</summary>
