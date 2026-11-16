@@ -142,7 +142,7 @@ public sealed class CliSmokeTests
     }
 
     private static readonly string[] ResultFiles =
-        ["metadata.json", "final_snapshot.json", "resource_history.csv", "population_history.csv", "mass_balance.csv", "simulation.log"];
+        ["metadata.json", "final_snapshot.json", "resource_history.csv", "population_history.csv", "mass_balance.csv", "mutations.csv", "simulation.log"];
 
     [Fact]
     public async Task IntroducedPhototrophGrowsAndTheMassBalanceIsWritten()

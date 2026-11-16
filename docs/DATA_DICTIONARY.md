@@ -6,7 +6,7 @@ Las cifras que son una medición o una estimación llevan su fuente y su clasifi
 
 VAL-001..005 significan solo lo que dice el TDD §10. Las reglas añadidas en este hito son DOM-VAL-001..016. La columna «se parece a» dice qué VAL del TDD recuerda, sin sustituirlo. La elección de unidad es `MODEL_ASSUMPTION`. La clasificación, la fuente y el ámbito van por valor en el JSON del escenario (TDD §10.2).
 
-VAL-006, VAL-007 y VAL-008 se comprueban en el paso `validate-conservation` del pipeline con biología (`pipeline-v2` desde T05; T04, [ADR-012](ADR/ADR-012-modelo-metabolico.md)).
+VAL-006, VAL-007 y VAL-008 se comprueban en el paso `validate-conservation` del pipeline con biología (`pipeline-v3` desde T06; T04, [ADR-012](ADR/ADR-012-modelo-metabolico.md)).
 
 ## Tiempo
 
@@ -190,3 +190,14 @@ El CLI `simulate` acepta `--scenario`, `--seed`, `--ticks` y `--output`, crea es
 | K | double | kg por celda | > 0 | `min(K_space, K_C, K_N, K_P)`; no crea recursos |
 | necromasa | double (por tick) | kg por celda | ≥ 0 | se recicla en el mismo tick; VAL-007 la cuenta |
 | extinción | regla | individuos | `N < 1` | la población se quita y su biomasa es necromasa |
+
+## Evolución (T06)
+
+| Nombre | Tipo | Unidad | Rango | Invariante |
+| --- | --- | --- | --- | --- |
+| mutation.trait_probability (μ) | double | probabilidad por gen y evento | [0, 1] | μ = 0 ⇒ ninguna variante nueva |
+| mutation.sigma (σ) | double | expresión génica | ≥ 0 | `g′ = clamp(g + σz, 0, 1)` (VAL-005) |
+| drift.effective_size (Nₑ) | double | individuos | ≥ 1 | separado de la abundancia agregada |
+| variant.merge_tolerance | double | expresión génica | [0, 1] | variantes más cercanas se fusionan |
+| MaxVariantsPerSpeciesPerCell | int | variantes | ≥ 1 (32) | nunca se supera tras `apply-selection-and-drift` (ADR-006) |
+| mutations.csv | archivo | — | una fila por variante nueva | misma semilla ⇒ mismas filas (VAL-010) |

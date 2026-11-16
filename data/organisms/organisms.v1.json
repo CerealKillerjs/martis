@@ -384,6 +384,114 @@
         1e-12,
         1000000000.0
       ]
+    },
+    {
+      "id": "org.phototroph_a01.mutation.event_rate",
+      "field": "mutation_event_rate",
+      "value": 0.5,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "Probabilidad de un evento de mutación por tick: 1 − exp(−tasa · fracción de recién nacidos). No es una tasa molecular (TDD §4.2).",
+      "range": [
+        0,
+        100
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.mutation.trait_probability",
+      "field": "mutation_trait_probability",
+      "value": 0.3,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "μ: probabilidad de que cada gen mute en un evento.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.mutation.sigma",
+      "field": "mutation_sigma",
+      "value": 0.05,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "σ del cambio gaussiano de la expresión génica.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.mutation.founder_fraction",
+      "field": "mutation_founder_fraction",
+      "value": 0.05,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "Fracción de la biomasa recién nacida que funda la variante nueva.",
+      "range": [
+        1e-09,
+        0.999
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.drift.effective_size",
+      "field": "drift_effective_size",
+      "value": 100000.0,
+      "unit": "individuos",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "Nₑ de la deriva por tick, separado de la abundancia agregada (TDD §4.3).",
+      "range": [
+        1,
+        1000000000000.0
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.variant.merge_tolerance",
+      "field": "variant_merge_tolerance",
+      "value": 0.005,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "Diferencia máxima de expresión entre genes para considerar dos variantes equivalentes y fusionarlas (TDD §4.4).",
+      "range": [
+        0,
+        1
+      ]
     }
   ]
 }

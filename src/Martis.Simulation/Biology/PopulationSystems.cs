@@ -211,6 +211,7 @@ public sealed class ReproductionSystem(MetabolismWorkspace workspace) : ISimulat
             if (now > survivors && now > 0.0)
             {
                 workspace.Totals.NewIndividuals += now - survivors;
+                workspace.Newborns[id] = now - survivors;
                 population.AgeDistributionMeanSols = aged * (survivors / now);
             }
             else

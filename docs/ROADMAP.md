@@ -18,7 +18,7 @@ dotnet run --project src/Martis.Cli -- simulate \
 echo $?   # 0
 ```
 
-- Existen `metadata.json`, `final_snapshot.json`, `resource_history.csv`, `simulation.log` (+ `population_history.csv` con cabecera) en la carpeta de salida (H-16: `mutations.csv` y `mass_balance.csv` llegan con T06/T04).
+- Existen `metadata.json`, `final_snapshot.json`, `resource_history.csv`, `simulation.log` (+ `population_history.csv` con cabecera) en la carpeta de salida (H-16: `mass_balance.csv` llegó con T04 y `mutations.csv` con T06).
 - `tick == 1000` en el snapshot final; el validador no reporta violaciones.
 - Dos ejecuciones con la misma semilla producen ficheros idénticos byte a byte (VAL-010; misma plataforma y runtime, §6).
 - Un estado inválido inyectado en un test hace que el CLI termine con exit ≠ 0 y deje en el log semilla, tick, celda y sistema.
@@ -94,6 +94,7 @@ Convención: «Criterio TDD» es el literal de §16; «Criterio verificable» es
 - **Criterio TDD:** Variabilidad reproducible.
 - **Criterio verificable:** misma semilla ⇒ mismas variantes y frecuencias (VAL-010); genes siempre en [0,1] (VAL-005); nunca más de `MaxVariantsPerSpeciesPerCell` variantes (ADR-006); fusión conserva abundancia y biomasa; `mutations.csv` generado.
 - **Depende de:** T05; ADR-006, ADR-009.
+- **Estado:** implementado en `pipeline-v3` ([ADR-014](ADR/ADR-014-evolucion.md), propuesto): mutación gaussiana acotada con el flujo Mutation, deriva multinomial con Nₑ (flujo GeneticDrift), fusión por tolerancia, tope de variantes y `mutations.csv`.
 
 ### T07 — Persistence
 - **Contenido (TDD):** SQLite, snapshots, migraciones y recuperación.

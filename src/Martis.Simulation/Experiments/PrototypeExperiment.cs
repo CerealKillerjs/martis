@@ -70,10 +70,11 @@ public static class PrototypeExperiment
     public const string PopulationHistoryFile = "population_history.csv";
     public const string LogFile = "simulation.log";
     public const string MassBalanceFile = "mass_balance.csv";
+    public const string MutationsFile = "mutations.csv";
 
     /// <summary>Files every run produces, in write order.</summary>
     public static IReadOnlyList<string> FileNames { get; } =
-        [MetadataFile, SnapshotFile, ResourceHistoryFile, PopulationHistoryFile, MassBalanceFile, LogFile];
+        [MetadataFile, SnapshotFile, ResourceHistoryFile, PopulationHistoryFile, MassBalanceFile, MutationsFile, LogFile];
 
     /// <summary>
     /// Runs the flow. <paramref name="engineFactory"/> defaults to
@@ -123,6 +124,7 @@ public static class PrototypeExperiment
         var log = new Log();
         var resources = new StringBuilder();
         var populations = new StringBuilder();
+        var mutations = new StringBuilder("tick,cell,organism,parent_id,child_id,child_biomass_kg,changes\n");
         resources.Append("tick");
         foreach (var name in ResourceColumns.Names)
         {
@@ -180,6 +182,7 @@ public static class PrototypeExperiment
                 }
 
                 balance.Accumulate(workspace);
+                AppendMutations(mutations, workspace);
                 var tick = engine.CurrentTick;
                 if (tick % request.HistoryIntervalTicks == 0 || step + 1 == request.Ticks)
                 {
@@ -212,6 +215,7 @@ public static class PrototypeExperiment
             new ExperimentFile(ResourceHistoryFile, utf8.GetBytes(resources.ToString())),
             new ExperimentFile(PopulationHistoryFile, utf8.GetBytes(populations.ToString())),
             new ExperimentFile(MassBalanceFile, utf8.GetBytes(balance.ToString())),
+            new ExperimentFile(MutationsFile, utf8.GetBytes(mutations.ToString())),
             new ExperimentFile(LogFile, utf8.GetBytes(log.ToString())),
         };
         return new ExperimentResult(succeeded, engine.CurrentTick, failure, files);
@@ -337,6 +341,27 @@ public static class PrototypeExperiment
         buffer.WrittenSpan.CopyTo(bytes);
         bytes[^1] = (byte)'\n';
         return bytes;
+    }
+
+    /// <summary>One row per new variant; <c>changes</c> is <c>GENE:before&gt;after</c> joined by ';'.</summary>
+    private static void AppendMutations(StringBuilder text, Biology.MetabolismWorkspace? workspace)
+    {
+        if (workspace is null)
+        {
+            return;
+        }
+
+        foreach (var item in workspace.MutationEvents)
+        {
+            text.Append(Num(item.Tick)).Append(',')
+                .Append(Num(item.CellIndex)).Append(',')
+                .Append(item.OrganismId).Append(',')
+                .Append(Num(item.ParentId)).Append(',')
+                .Append(Num(item.ChildId)).Append(',')
+                .Append(Num(item.ChildBiomassKg)).Append(',')
+                .Append(string.Join(';', item.Changes.Select(change => $"{change.GeneId}:{Num(change.Before)}>{Num(change.After)}")))
+                .Append('\n');
+        }
     }
 
     private static string Num(long value) => value.ToString(CultureInfo.InvariantCulture);

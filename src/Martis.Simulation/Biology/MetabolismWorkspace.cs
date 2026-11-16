@@ -24,6 +24,19 @@ public sealed class PopulationFlux
     public double AllocatedExtent { get; set; }
 }
 
+/// <summary>One gene that changed in a mutation: expression before and after.</summary>
+public sealed record GeneChange(string GeneId, double Before, double After);
+
+/// <summary>A new variant split from <see cref="ParentId"/> by mutation (T06, mutations.csv).</summary>
+public sealed record MutationEvent(
+    long Tick,
+    int CellIndex,
+    string OrganismId,
+    long ParentId,
+    long ChildId,
+    double ChildBiomassKg,
+    IReadOnlyList<GeneChange> Changes);
+
 /// <summary>Per-tick totals published for histories and the mass balance file.</summary>
 public sealed class TickTotals
 {
@@ -62,6 +75,9 @@ public sealed class TickTotals
 
     public int Mutations { get; set; }
 
+    /// <summary>Variants folded into another one by tolerance or by the variant cap (ADR-006).</summary>
+    public int Merges { get; set; }
+
     public void Reset()
     {
         ExternalInflowKg = 0;
@@ -79,6 +95,7 @@ public sealed class TickTotals
         Births = 0;
         Extinctions = 0;
         Mutations = 0;
+        Merges = 0;
     }
 }
 
@@ -133,6 +150,12 @@ public sealed class MetabolismWorkspace
     /// <summary>Fraction that survived this tick's mortality step, by population id.</summary>
     public Dictionary<long, double> Survival { get; } = [];
 
+    /// <summary>Newborn individuals of each population this tick (set by the reproduction step).</summary>
+    public Dictionary<long, double> Newborns { get; } = [];
+
+    /// <summary>Variants created by the mutation step this tick, in creation order.</summary>
+    public List<MutationEvent> MutationEvents { get; } = [];
+
     /// <summary>Ids of the populations that went extinct this tick, in removal order.</summary>
     public List<long> Extinct { get; } = [];
 
@@ -173,6 +196,8 @@ public sealed class MetabolismWorkspace
         AbundanceAtStart.Clear();
         Survival.Clear();
         Extinct.Clear();
+        Newborns.Clear();
+        MutationEvents.Clear();
         Totals.Reset();
         Totals.ExternalInflowKg = PendingInflowKg;
         PendingInflowKg = 0;

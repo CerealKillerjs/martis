@@ -13,10 +13,11 @@ public static class SimulationPipeline
     public const string Version = "pipeline-v0";
 
     /// <summary>
-    /// Pipeline with biology: T04 metabolism (ADR-012) and T05 mortality, reproduction
-    /// and recycling (ADR-013). The step order is still §5.4; the id names the model.
+    /// Pipeline with biology: T04 metabolism (ADR-012), T05 mortality, reproduction and
+    /// recycling (ADR-013) and T06 mutation, drift and variant management (ADR-014).
+    /// The step order is still §5.4; the id names the model.
     /// </summary>
-    public const string BiologyVersion = "pipeline-v2";
+    public const string BiologyVersion = "pipeline-v3";
 
     public static IReadOnlyList<string> StepNames { get; } =
     [
@@ -97,6 +98,8 @@ public static class BiologyPipeline
                 SimulationSteps.UpdateBiomassAndEnergy => new Biology.BiomassEnergySystem(workspace),
                 SimulationSteps.CalculateMortality => new Biology.MortalitySystem(workspace),
                 SimulationSteps.GenerateReproduction => new Biology.ReproductionSystem(workspace),
+                SimulationSteps.ApplyMutations => new Biology.MutationSystem(workspace),
+                SimulationSteps.ApplySelectionAndDrift => new Biology.SelectionDriftSystem(workspace),
                 SimulationSteps.RecycleDeadBiomass => new Biology.RecycleSystem(workspace),
                 SimulationSteps.ValidateConservation => new Biology.ConservationSystem(workspace),
                 _ => new StubSimulationSystem(name),

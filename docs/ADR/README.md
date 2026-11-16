@@ -14,5 +14,6 @@
 - [ADR-011 — Unidades del modelo](ADR-011-unidades-del-modelo.md) (Aceptado: decisión de MARTIS Lead tras la validación científica de MARTIS Ciencia (rondas 1-4 del PR #4, head ed68024), 2026-11-16)
 - [ADR-012 — Modelo metabólico v1 (T04)](ADR-012-modelo-metabolico.md) (Propuesto)
 - [ADR-013 — Dinámica de poblaciones v1 (T05)](ADR-013-dinamica-de-poblaciones.md) (Propuesto)
+- [ADR-014 — Evolución v1: mutación, deriva y variantes (T06)](ADR-014-evolucion.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).
