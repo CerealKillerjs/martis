@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Martis.Simulation\Martis.Simulation.csproj" />
+    <ProjectReference Include="..\Martis.Persistence\Martis.Persistence.csproj" />
+  </ItemGroup>
+</Project>

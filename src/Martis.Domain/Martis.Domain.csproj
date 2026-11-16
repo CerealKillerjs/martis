@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Domain is pure BCL. Do not add a PackageReference or a ProjectReference.
+    Godot and SQLite are forbidden here (TDD §1.2, ADR-000 R1).
+  -->
+</Project>

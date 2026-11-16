@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Martis.Domain\Martis.Domain.csproj" />
+  </ItemGroup>
+</Project>
