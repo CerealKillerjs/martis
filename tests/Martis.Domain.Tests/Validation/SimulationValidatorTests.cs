@@ -1,3 +1,4 @@
+using System.Reflection;
 using Martis.Domain.Biology;
 using Martis.Domain.Common;
 using Martis.Domain.Environment;
@@ -76,6 +77,55 @@ public sealed class SimulationValidatorTests
         Assert.Equal(nameof(ResourcePool.MineralCarbon), bufferViolation.Quantity);
         Assert.Null(bufferViolation.Population);
         Assert.NotEqual(InvariantIds.NoNegativeResource, bufferViolation.InvariantId);
+    }
+
+    public static IEnumerable<object[]> AssignedEnvironmentEdges()
+    {
+        foreach (var name in new[]
+        {
+            nameof(EnvironmentState.UvRadiation),
+            nameof(EnvironmentState.WaterVapor),
+            nameof(EnvironmentState.PerchlorateMassKg),
+        })
+        {
+            foreach (var row in FiniteEdges.NonFiniteOrNegative())
+            {
+                yield return [name, row[0], false];
+            }
+
+            foreach (var row in FiniteEdges.NonNegativeFinite())
+            {
+                yield return [name, row[0], true];
+            }
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(AssignedEnvironmentEdges))]
+    public void AssignedEnvironmentFieldsUseDomVal004(string name, double value, bool accepted)
+    {
+        var state = new SimulationState(1, 1) { Tick = 4 };
+        var property = typeof(EnvironmentState).GetProperty(name);
+        Assert.NotNull(property);
+        property!.SetValue(state.Environment[0], AssignedDouble.Set(value));
+        if (name == nameof(EnvironmentState.WaterVapor) && double.IsFinite(value) && value >= 0.0)
+        {
+            // The recorded total has to include an assigned vapor. Unset vapor is not this case.
+            state.WaterBudgets[0].RecordedTotalKg = value;
+        }
+
+        var violations = SimulationValidator.Validate(state);
+        if (accepted)
+        {
+            Assert.Empty(violations);
+            return;
+        }
+
+        var violation = Assert.Single(violations);
+        Assert.Equal(InvariantIds.EnvironmentNonNegative, violation.InvariantId);
+        Assert.Equal(name, violation.Quantity);
+        Assert.Equal(4, violation.Tick);
+        Assert.Equal(0, violation.CellIndex);
     }
 
     [Fact]

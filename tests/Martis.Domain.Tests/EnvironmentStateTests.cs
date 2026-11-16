@@ -14,6 +14,17 @@ public sealed class EnvironmentStateTests
         nameof(EnvironmentState.WaterIce),
     ];
 
+    /// <summary>
+    /// Fields that used to be plain doubles in fdaf2be and are now
+    /// <see cref="AssignedDouble"/>. The edge matrix is the same; the value is assigned.
+    /// </summary>
+    private static readonly string[] AssignedNonNegativeNames =
+    [
+        nameof(EnvironmentState.UvRadiation),
+        nameof(EnvironmentState.WaterVapor),
+        nameof(EnvironmentState.PerchlorateMassKg),
+    ];
+
     private static readonly string[] UnassignedNames =
     [
         nameof(EnvironmentState.UvRadiation),
@@ -138,6 +149,57 @@ public sealed class EnvironmentStateTests
         ScalarProperties.Set(state, name, value);
         state.CheckInvariants();
         DoubleBits.Equal(value, state.Quantities.Single(quantity => quantity.Name == name).Value);
+    }
+
+    public static IEnumerable<object[]> BadAssignedNonNegative()
+    {
+        foreach (var name in AssignedNonNegativeNames)
+        {
+            foreach (var row in FiniteEdges.NonFiniteOrNegative())
+            {
+                yield return [name, row[0]];
+            }
+        }
+    }
+
+    public static IEnumerable<object[]> GoodAssignedNonNegative()
+    {
+        foreach (var name in AssignedNonNegativeNames)
+        {
+            foreach (var row in FiniteEdges.NonNegativeFinite())
+            {
+                yield return [name, row[0]];
+            }
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(BadAssignedNonNegative))]
+    public void CheckRejectsAnAssignedNonFiniteOrNegativeField(string name, double value)
+    {
+        var state = new EnvironmentState();
+        SetAssigned(state, name, value);
+        var error = Assert.Throws<ArgumentOutOfRangeException>(state.CheckInvariants);
+        Assert.Equal(name, error.ParamName);
+        DoubleBits.Equal(value, (double)error.ActualValue!);
+    }
+
+    [Theory]
+    [MemberData(nameof(GoodAssignedNonNegative))]
+    public void CheckAcceptsAnAssignedFiniteNonNegativeField(string name, double value)
+    {
+        var state = new EnvironmentState();
+        SetAssigned(state, name, value);
+        state.CheckInvariants();
+        var stored = state.Quantities.Single(quantity => quantity.Name == name).Value;
+        DoubleBits.Equal(value, stored);
+    }
+
+    private static void SetAssigned(EnvironmentState state, string name, double value)
+    {
+        var property = typeof(EnvironmentState).GetProperty(name);
+        Assert.NotNull(property);
+        property!.SetValue(state, AssignedDouble.Set(value));
     }
 
     public static IEnumerable<object[]> AcceptedPorosity()

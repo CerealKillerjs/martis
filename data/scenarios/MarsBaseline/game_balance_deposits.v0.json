@@ -37,7 +37,7 @@
       "status": "ACCEPTED",
       "used_in_v0": true,
       "source": null,
-      "note": "GAME_BALANCE proposal. Not a Gale measurement.",
+      "note": "Accepted GAME_BALANCE v0.1 value. Not a Gale measurement.",
       "rationale": "Stock de juego para el CO2 accesible. No es una columna atmosférica: H-07 no fija metros por celda."
     },
     {
@@ -51,8 +51,8 @@
       "status": "ACCEPTED",
       "used_in_v0": true,
       "source": null,
-      "note": "GAME_BALANCE proposal. Not a Gale measurement.",
-      "rationale": "Líquido accesible de juego. No sale del wt % de hielo ni del agua ligada de SAM."
+      "note": "Accepted GAME_BALANCE v0.1 value. Not a Gale measurement.",
+      "rationale": "reserva de agua utilizable (abstracción de juego; no implica agua líquida estable en superficie)"
     },
     {
       "id": "game.gale.deposit.oxygen",
@@ -65,7 +65,7 @@
       "status": "ACCEPTED",
       "used_in_v0": true,
       "source": null,
-      "note": "GAME_BALANCE proposal. Not a Gale measurement.",
+      "note": "Accepted GAME_BALANCE v0.1 value. Not a Gale measurement.",
       "rationale": "Stock de juego. La especie de oxígeno sigue abierta en ADR-011."
     },
     {
@@ -79,7 +79,7 @@
       "status": "ACCEPTED",
       "used_in_v0": true,
       "source": null,
-      "note": "GAME_BALANCE proposal. Not a Gale measurement.",
+      "note": "Accepted GAME_BALANCE v0.1 value. Not a Gale measurement.",
       "rationale": "Stock de juego. La especie de nitrógeno sigue abierta en ADR-011."
     },
     {
@@ -93,7 +93,7 @@
       "status": "ACCEPTED",
       "used_in_v0": true,
       "source": null,
-      "note": "GAME_BALANCE proposal. Not a Gale measurement.",
+      "note": "Accepted GAME_BALANCE v0.1 value. Not a Gale measurement.",
       "rationale": "Stock de juego. La especie de fósforo sigue abierta en ADR-011."
     },
     {
@@ -107,7 +107,7 @@
       "status": "ACCEPTED",
       "used_in_v0": true,
       "source": null,
-      "note": "GAME_BALANCE proposal. Not a Gale measurement.",
+      "note": "Accepted GAME_BALANCE v0.1 value. Not a Gale measurement.",
       "rationale": "Stock de juego. La especie de azufre sigue abierta en ADR-011."
     },
     {
@@ -121,7 +121,7 @@
       "status": "ACCEPTED",
       "used_in_v0": true,
       "source": null,
-      "note": "GAME_BALANCE proposal. Not a Gale measurement.",
+      "note": "Accepted GAME_BALANCE v0.1 value. Not a Gale measurement.",
       "rationale": "Stock de juego. No es un ensayo mineral del regolito de Gale."
     },
     {
@@ -135,7 +135,7 @@
       "status": "ACCEPTED",
       "used_in_v0": true,
       "source": null,
-      "note": "GAME_BALANCE proposal. Not a Gale measurement.",
+      "note": "Accepted GAME_BALANCE v0.1 value. Not a Gale measurement.",
       "rationale": "Stock de juego. No es una medida de carbono orgánico de SAM."
     },
     {
@@ -149,7 +149,7 @@
       "status": "ACCEPTED",
       "used_in_v0": true,
       "source": null,
-      "note": "GAME_BALANCE proposal. Not a Gale measurement.",
+      "note": "Accepted GAME_BALANCE v0.1 value. Not a Gale measurement.",
       "rationale": "Stock de juego. La especie de carbono mineral sigue abierta en ADR-011."
     },
     {

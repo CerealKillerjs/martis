@@ -14,7 +14,7 @@ using Martis.Simulation.Snapshots;
 namespace Martis.Simulation.Tests.Scenarios;
 
 /// <summary>
-/// The published v0.3 file is the definitive load. Expected numbers are read
+/// The published v0.4 file is the definitive load. Expected numbers are read
 /// back from that file. They are not copied into this test as literals.
 /// </summary>
 public sealed class PublishedMarsBaselineTests

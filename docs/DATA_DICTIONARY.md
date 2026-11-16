@@ -4,7 +4,7 @@ Tipos del modelo de dominio. Los identificadores `RegionId`, `CellId`, `Populati
 
 Las cifras que son una medición o una estimación llevan su fuente y su clasificación. El 88 775 s del sol es el redondeo de modelo de una medición citada abajo. Lo que no tiene fuente no es una medición. Las unidades que fija [ADR-011](ADR/ADR-011-unidades-del-modelo.md) están aceptadas. T03a añade el cargador de parámetros, la configuración y el motor de ticks.
 
-VAL-001..005 significan solo lo que dice el TDD §10. Las reglas añadidas en este hito son DOM-VAL-001..015. La columna «se parece a» dice qué VAL del TDD recuerda, sin sustituirlo. La elección de unidad es `MODEL_ASSUMPTION`. La clasificación, la fuente y el ámbito van por valor en el JSON del escenario (TDD §10.2).
+VAL-001..005 significan solo lo que dice el TDD §10. Las reglas añadidas en este hito son DOM-VAL-001..016. La columna «se parece a» dice qué VAL del TDD recuerda, sin sustituirlo. La elección de unidad es `MODEL_ASSUMPTION`. La clasificación, la fuente y el ámbito van por valor en el JSON del escenario (TDD §10.2).
 
 VAL-006, VAL-007 y VAL-008 no se comprueban: no hay consumo, balance elemental ni balance de energía.
 
@@ -115,7 +115,7 @@ H-07: el prototipo habla de una rejilla de 64×64 celdas. Eso es un tamaño de p
 
 | Campo | Significado |
 | --- | --- |
-| InvariantId | `VAL-001`, `VAL-002`, `VAL-003`, `VAL-005` o `DOM-VAL-001`..`DOM-VAL-015`. VAL-004 no lo emite este validador. DOM-VAL-014 y DOM-VAL-015 solo los lanza el constructor de `Phenotype`; `SimulationValidator` no los emite |
+| InvariantId | `VAL-001`, `VAL-002`, `VAL-003`, `VAL-005` o `DOM-VAL-001`..`DOM-VAL-016`. VAL-004 no lo emite este validador. DOM-VAL-014 y DOM-VAL-015 solo los lanza el constructor de `Phenotype`; `SimulationValidator` no los emite |
 | Tick | el tick del estado |
 | CellIndex | índice lineal |
 | Population | la población, o null |
