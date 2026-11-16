@@ -3,9 +3,11 @@ namespace Martis.Domain.Parameters;
 /// <summary>
 /// One loaded parameter. Classification, scope and sources describe this value,
 /// not every value that shares <see cref="Field"/>.
-/// A derived entry points at the native entry with <see cref="DerivedFrom"/> and
-/// records the conversion as <c>MODEL_ASSUMPTION</c>. The loader does not compute
-/// the derived number from the native one.
+/// A derived entry points at the native entry with <see cref="DerivedFrom"/>.
+/// The derived value is never <see cref="ParameterClassification.ScientificMeasured"/>.
+/// It may be <see cref="ParameterClassification.ScientificEstimated"/> only when the
+/// native value is scientific. <see cref="Conversion"/> records the factor and the
+/// assumptions; the loader does not multiply them into <see cref="Value"/>.
 /// </summary>
 public sealed class ParameterDefinition
 {
@@ -25,7 +27,7 @@ public sealed class ParameterDefinition
         string? note,
         string? rationale,
         string? derivedFrom,
-        string? conversion)
+        ParameterConversion? conversion)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -88,7 +90,7 @@ public sealed class ParameterDefinition
 
     public decimal Version { get; }
 
-    /// <summary>Status text as written. PENDING and HISTORICAL change who may read the value.</summary>
+    /// <summary>Status text as written. PENDING, HISTORICAL and SUPERADO are not delivered.</summary>
     public string Status { get; }
 
     /// <summary>Null when the file omits the flag. False means no v0 system may read the value.</summary>
@@ -107,6 +109,6 @@ public sealed class ParameterDefinition
     /// <summary>Id of the native value. Null when this entry is not a derived value.</summary>
     public string? DerivedFrom { get; }
 
-    /// <summary><c>MODEL_ASSUMPTION</c> when <see cref="DerivedFrom"/> is set.</summary>
-    public string? Conversion { get; }
+    /// <summary>Present exactly when <see cref="DerivedFrom"/> is set. The factor is not applied.</summary>
+    public ParameterConversion? Conversion { get; }
 }

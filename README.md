@@ -121,7 +121,7 @@ En `tests/Martis.Integration.Tests`, con el rasgo `Category=Architecture`:
 
 - Por reflexión (`Assembly.GetReferencedAssemblies`): `Martis.Domain` no referencia ensamblados `Godot*`, `Microsoft.Data.Sqlite*`, `SQLitePCL*` ni `Martis.*`. Simulation referencia Domain y Contracts, y no referencia Persistence, Cli, Godot ni SQLite. Contracts referencia solo Domain: nunca Simulation, Persistence, Cli, SQLite ni Godot.
 - Por los `.csproj` (BCL, sin paquetes extra): el grafo de arriba, sin ciclos. La reflexión no ve una referencia de proyecto que ningún método usa; el examen del `.csproj` sí.
-- El código de `src/` no llama a `System.Random`, `Random.Shared`, `GetHashCode()`, `Parallel.*`, `AsParallel()`, `Task.Run`, `DateTime.Now`, `DateTime.UtcNow` ni `Guid.NewGuid()`. Los comentarios pueden nombrarlas; el escáner los quita antes de buscar.
+- El código de `src/` no llama a `System.Random`, `Random.Shared`, `GetHashCode()`, `Parallel.*`, `AsParallel()`, `Task.Run`, `DateTime.Now`, `DateTime.UtcNow` ni `Guid.NewGuid()`. En Domain y Simulation tampoco llama a `Environment.TickCount` ni a `Stopwatch`. Los comentarios pueden nombrarlas; el escáner los quita antes de buscar. El comando `simulate` no es el prototipo del TDD §19: no carga un escenario ni guarda resultados.
 
 `dotnet test` puede imprimir `VSTEST_ARTIFACTS_DIRECTORY environment variable was not found... outdated Microsoft.NET.Test.Sdk`. Sale de `testhost` 18.12.0 (el paquete fijado, que es el último estable) cuando el proceso no define esa variable. No es un aviso del compilador: `dotnet build -c Release` termina con 0 avisos. Definir la variable apunta el directorio de artefactos del host y el texto desaparece. La CI la define.
 

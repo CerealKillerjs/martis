@@ -24,6 +24,12 @@ public sealed class ForbiddenApiTests
         ("Guid.NewGuid", Compile(@"\bGuid\.NewGuid\s*\(")),
     ];
 
+    private static readonly (string Label, Regex Pattern)[] SimulationPatterns =
+    [
+        ("Environment.TickCount", Compile(@"\bEnvironment\.TickCount\b")),
+        ("Stopwatch", Compile(@"\bStopwatch\b")),
+    ];
+
     [Fact]
     public void CommentStripperKeepsCodeAndDropsComments()
     {
@@ -67,6 +73,25 @@ public sealed class ForbiddenApiTests
     }
 
     [Fact]
+    public void TickCountAndStopwatchAreDetectedInSimulationCode()
+    {
+        const string usage = """
+            var ticks = Environment.TickCount;
+            var watch = Stopwatch.StartNew();
+            """;
+
+        const string comments = """
+            // Environment.TickCount
+            /* Stopwatch */
+            var unrelated = TickCounter;
+            """;
+
+        Assert.Contains("Environment.TickCount", LabelsIn(usage, SimulationPatterns));
+        Assert.Contains("Stopwatch", LabelsIn(usage, SimulationPatterns));
+        Assert.Empty(LabelsIn(comments, SimulationPatterns));
+    }
+
+    [Fact]
     public void SourceDoesNotCallNondeterministicApis()
     {
         var root = RepoLayout.Root;
@@ -83,7 +108,13 @@ public sealed class ForbiddenApiTests
         var violations = new List<string>();
         foreach (var file in files)
         {
-            foreach (var label in LabelsIn(File.ReadAllText(file)))
+            var labels = LabelsIn(File.ReadAllText(file));
+            if (IsSimulationSource(file))
+            {
+                labels.AddRange(LabelsIn(File.ReadAllText(file), SimulationPatterns));
+            }
+
+            foreach (var label in labels)
             {
                 violations.Add($"{Path.GetRelativePath(root, file)}: {label}");
             }
@@ -96,9 +127,14 @@ public sealed class ForbiddenApiTests
 
     private static List<string> LabelsIn(string source)
     {
+        return LabelsIn(source, Patterns);
+    }
+
+    private static List<string> LabelsIn(string source, IEnumerable<(string Label, Regex Pattern)> patterns)
+    {
         var stripped = CSharpText.WithoutComments(source);
         var labels = new List<string>();
-        foreach (var (label, pattern) in Patterns)
+        foreach (var (label, pattern) in patterns)
         {
             if (pattern.IsMatch(stripped))
             {
@@ -107,6 +143,13 @@ public sealed class ForbiddenApiTests
         }
 
         return labels;
+    }
+
+    private static bool IsSimulationSource(string path)
+    {
+        var normalized = path.Replace('\\', '/');
+        return normalized.Contains("/Martis.Domain/", StringComparison.Ordinal)
+            || normalized.Contains("/Martis.Simulation/", StringComparison.Ordinal);
     }
 
     private static Regex Compile(string pattern)

@@ -4,7 +4,7 @@ Tipos del modelo de dominio. Los identificadores `RegionId`, `CellId`, `Populati
 
 Las cifras que son una medición o una estimación llevan su fuente y su clasificación. El 88 775 s del sol es el redondeo de modelo de una medición citada abajo. Lo que no tiene fuente no es una medición. Las unidades que fija [ADR-011](ADR/ADR-011-unidades-del-modelo.md) están aceptadas. T03a añade el cargador de parámetros, la configuración y el motor de ticks.
 
-VAL-001..005 significan solo lo que dice el TDD §10. Las reglas añadidas en este hito son DOM-VAL-001..014. La columna «se parece a» dice qué VAL del TDD recuerda, sin sustituirlo. La elección de unidad es `MODEL_ASSUMPTION`. La clasificación, la fuente y el ámbito van por valor en el JSON del escenario (TDD §10.2).
+VAL-001..005 significan solo lo que dice el TDD §10. Las reglas añadidas en este hito son DOM-VAL-001..015. La columna «se parece a» dice qué VAL del TDD recuerda, sin sustituirlo. La elección de unidad es `MODEL_ASSUMPTION`. La clasificación, la fuente y el ámbito van por valor en el JSON del escenario (TDD §10.2).
 
 VAL-006, VAL-007 y VAL-008 no se comprueban: no hay consumo, balance elemental ni balance de energía.
 
@@ -14,7 +14,7 @@ VAL-006, VAL-007 y VAL-008 no se comprueban: no hay consumo, balance elemental n
 | --- | --- | --- | --- | --- |
 | MartianTime.SecondsPerSol | int | s por sol | 88 775, una sola copia en `src/` | 1 tick = 1 sol. El entero es un redondeo de modelo (`MODEL_ASSUMPTION`) de una medición |
 
-1 tick = 1 sol. `SecondsPerSol` = 88 775 s es un redondeo de modelo (`MODEL_ASSUMPTION`) del día solar medio de Marte. La medición (`SCIENTIFIC_MEASURED`) es D. R. Williams, NASA NSSDCA, Mars Fact Sheet, tabla «Orbital parameters», fila «Length of day (hrs)» 24,6597 h ≈ 88 774,92 s (https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html; consultado el 2026-11-16; la página no tiene fecha de actualización). Contraste: Allison & McEwen (2000), Planet. Space Sci. 48, 215–235, doi:10.1016/S0032-0633(99)00092-6, 88 775,244 s (NASA GISS Mars24, https://www.giss.nasa.gov/tools/mars24/help/notes.html). La diferencia es ≤ 0,25 s por sol (< 3·10⁻⁶). No es el periodo sideral (24,6229 h ≈ 88 642,4 s).
+1 tick = 1 sol. `SecondsPerSol` = 88 775 s es un redondeo de modelo (`MODEL_ASSUMPTION`) del día solar medio de Marte. La medición (`SCIENTIFIC_MEASURED`) es D. R. Williams, NASA NSSDCA, Mars Fact Sheet, tabla «Orbital parameters», fila «Length of day (hrs)» 24,6597 h ≈ 88 774,92 s (https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html; consultado el 2026-11-16; la página no tiene fecha de actualización). Contraste: Allison & McEwen (2000), Planet. Space Sci. 48, 215–235, doi:10.1016/S0032-0633(99)00092-6, 88 775,244 s (NASA GISS Mars24, https://www.giss.nasa.gov/tools/mars24/help/notes.html). El redondeo 88 775 s difiere ≤ 0,25 s de cada fuente (0,08 s de NSSDCA; 0,244 s de Allison & McEwen); entre las dos fuentes hay 0,32 s. No es el periodo sideral (24,6229 h ≈ 88 642,4 s).
 
 No hay `DeltaTimeDays` en el código. La edad de la población va en soles.
 
@@ -133,10 +133,13 @@ El cargador genérico lee un documento con `metadata`, `location` y `parameters`
 | ParameterClassification | SCIENTIFIC_MEASURED, SCIENTIFIC_ESTIMATED, MODEL_ASSUMPTION, GAME_BALANCE, SPECULATIVE, UNCLASSIFIED_PENDING | Las cinco primeras son las de ADR-000 R5. UNCLASSIFIED_PENDING solo se admite con status PENDING y value null, y ningún sistema lo recibe |
 | ParameterScope | planetary_mean, regional:\<site\>, analog:\<nombre\> | No son los ámbitos de celda Lab y Game. Un planetary_mean no sustituye una medición regional: `NoteRegionalCellUse` avisa y no reescribe el valor |
 | ParameterSource | citation, accessed, doi?, url?, where? | SCIENTIFIC_* exige al menos una fuente con doi o url. GAME_BALANCE puede llevar source null, como `mutation_rate` en el TDD §10.2 |
-| ParameterCatalog | documento cargado | `RequireNumber`, `RequireBool`, `RequireString` y `RequireRange` entregan el valor con su procedencia. PENDING, HISTORICAL y used_in_v0 false se conservan y fallan al leerse, nombrando el id. No hay valor por defecto |
+| ParameterCatalog | documento cargado | `RequireNumber`, `RequireBool`, `RequireString` y `RequireRange` entregan el valor con clasificación, ámbito, fuente, `derived_from`, `conversion`, `uncertainty` y `range`. PENDING, HISTORICAL, SUPERADO y used_in_v0 false se conservan y fallan al leerse, nombrando el id. Cualquier otro status es texto. No hay valor por defecto |
 | version | decimal | El JSON puede traer un entero (`1`) o un texto (`"0.1"`). Se guarda el número parseado y tiene que ser > 0 |
+| conversion | objeto | Obligatorio con `derived_from` y prohibido sin él. Lleva `expression`, `factor` (finito y > 0), `factor_classification` (`MODEL_ASSUMPTION`) y `assumptions` (array de textos no vacío). El cargador no multiplica el factor |
+| uncertainty | texto o objeto | Un texto se guarda tal cual. Un objeto se guarda como JSON canónico (claves ordenadas, tokens de número copiados) y no se interpreta |
+| range | [min, max] | Intervalo cerrado. min > max se rechaza. Un número fuera del intervalo se rechaza. Los extremos son válidos |
 
-`derived_from` apunta al id del valor nativo. El derivado guarda su propio número, con clasificación `MODEL_ASSUMPTION`. El cargador no calcula la conversión. La geometría de la celda (H-07) sigue fuera: este tipo no pasa kg/m² a kg por celda.
+`derived_from` apunta al id del valor nativo. El derivado guarda su propio número. Nunca es `SCIENTIFIC_MEASURED`. Puede ser `SCIENTIFIC_ESTIMATED` (con DOI o URL) solo si la nativa es `SCIENTIFIC_*`. Si la nativa no es `SCIENTIFIC_*`, el derivado tampoco. La conversión es `MODEL_ASSUMPTION` en el factor, no en la etiqueta del derivado. El cargador no calcula el número. La geometría de la celda (H-07) sigue fuera: este tipo no pasa kg/m² a kg por celda. Un valor que no es `SCIENTIFIC_*` y no trae fuente necesita `rationale` o `note`.
 
 ## Configuración, azar y motor (T03a)
 

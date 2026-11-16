@@ -1,8 +1,9 @@
 namespace Martis.Domain.Parameters;
 
 /// <summary>
-/// A value delivered to a system, still carrying the classification, scope and
-/// sources of that value (ADR-000 R5). This is not a bare double.
+/// A value delivered to a system, still carrying the classification, scope,
+/// sources, derivation, uncertainty and range of that value (ADR-000 R5).
+/// This is not a bare double.
 /// </summary>
 public sealed class SourcedValue<T>
 {
@@ -15,7 +16,11 @@ public sealed class SourcedValue<T>
         ParameterScope scope,
         decimal version,
         string status,
-        IReadOnlyList<ParameterSource> sources)
+        IReadOnlyList<ParameterSource> sources,
+        string? derivedFrom,
+        ParameterConversion? conversion,
+        string? uncertainty,
+        ParameterRange? range)
     {
         Id = id;
         Field = field;
@@ -26,6 +31,10 @@ public sealed class SourcedValue<T>
         Version = version;
         Status = status;
         Sources = sources;
+        DerivedFrom = derivedFrom;
+        Conversion = conversion;
+        Uncertainty = uncertainty;
+        Range = range;
     }
 
     public string Id { get; }
@@ -45,4 +54,15 @@ public sealed class SourcedValue<T>
     public string Status { get; }
 
     public IReadOnlyList<ParameterSource> Sources { get; }
+
+    /// <summary>Id of the native entry. Null when this value is not derived.</summary>
+    public string? DerivedFrom { get; }
+
+    /// <summary>Conversion record. Null when this value is not derived. The factor was not applied.</summary>
+    public ParameterConversion? Conversion { get; }
+
+    /// <summary>Raw uncertainty text, or the canonical JSON of an uncertainty object.</summary>
+    public string? Uncertainty { get; }
+
+    public ParameterRange? Range { get; }
 }

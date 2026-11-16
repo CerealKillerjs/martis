@@ -12,6 +12,9 @@ public enum ParameterUnavailableReason
     /// <summary>Status is HISTORICAL. The entry stays in the catalog and is not delivered.</summary>
     Historical,
 
+    /// <summary>Status is SUPERADO. The entry stays in the catalog and is not delivered.</summary>
+    Superseded,
+
     /// <summary><c>used_in_v0</c> is false. The entry stays in the catalog and is not delivered.</summary>
     NotUsedInV0,
 
@@ -73,6 +76,8 @@ public sealed class ParameterUnavailableException : InvalidOperationException
                 $"Parameter '{parameterId}' is PENDING. No v0 system may read it, and no default was invented.",
             ParameterUnavailableReason.Historical =>
                 $"Parameter '{parameterId}' is HISTORICAL and is not delivered to a system.",
+            ParameterUnavailableReason.Superseded =>
+                $"Parameter '{parameterId}' is SUPERADO and is not delivered to a system.",
             ParameterUnavailableReason.NotUsedInV0 =>
                 $"Parameter '{parameterId}' has used_in_v0 false and is not delivered to a system.",
             ParameterUnavailableReason.WrongKind =>

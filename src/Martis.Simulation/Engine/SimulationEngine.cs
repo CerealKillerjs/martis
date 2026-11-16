@@ -1,4 +1,5 @@
 using Martis.Contracts.Commands;
+using Martis.Domain.Validation;
 using Martis.Domain.World;
 using Martis.Simulation.Commands;
 using Martis.Simulation.Random;
@@ -7,8 +8,10 @@ namespace Martis.Simulation.Engine;
 
 /// <summary>
 /// Runs a fixed list of systems once per tick (TDD §5.5, ADR-003, ADR-000).
-/// The tick counter advances only after every system returns. Systems must not
-/// change <see cref="SimulationState.Tick"/> themselves.
+/// The tick counter advances only after every system returns and
+/// <see cref="SimulationValidator"/> reports no violations. A violation throws
+/// <see cref="SimulationInvariantException"/> and leaves the tick unchanged.
+/// Systems must not change <see cref="SimulationState.Tick"/> themselves.
 /// <see cref="ApplyCommand"/> does not touch the state. The apply-commands step
 /// of the following tick does, in queue order.
 /// </summary>
@@ -90,6 +93,12 @@ public sealed class SimulationEngine : ISimulationEngine
             foreach (var system in _systems)
             {
                 system.Execute(context, _configuration.DeltaTimeSols);
+            }
+
+            var violations = SimulationValidator.Validate(State);
+            if (violations.Count > 0)
+            {
+                throw new SimulationInvariantException(State.Tick, violations);
             }
 
             checked

@@ -63,6 +63,44 @@ public sealed class RngStreams
             Events.ExportState());
     }
 
+    /// <summary>
+    /// Returns one of the five streams. Sequences other than 1..5 throw.
+    /// ADR-003 fixes those five sequences; a sixth stream is not part of <c>pcg32-v1</c>
+    /// and is not created beside them.
+    /// </summary>
+    public Pcg32 ForSequence(ulong sequence)
+    {
+        if (sequence == EnvironmentSequence)
+        {
+            return Environment;
+        }
+
+        if (sequence == MutationSequence)
+        {
+            return Mutation;
+        }
+
+        if (sequence == ReproductionSequence)
+        {
+            return Reproduction;
+        }
+
+        if (sequence == GeneticDriftSequence)
+        {
+            return GeneticDrift;
+        }
+
+        if (sequence == EventsSequence)
+        {
+            return Events;
+        }
+
+        throw new ArgumentOutOfRangeException(
+            nameof(sequence),
+            sequence,
+            "pcg32-v1 defines five streams, sequences 1 through 5. A sixth stream is rejected.");
+    }
+
     public void Restore(RngStreamState state)
     {
         ArgumentNullException.ThrowIfNull(state);

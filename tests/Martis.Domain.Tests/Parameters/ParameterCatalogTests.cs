@@ -244,7 +244,12 @@ public sealed class ParameterCatalogTests
         Assert.Equal("count", native.Field);
         Assert.Equal("count", derived.Field);
         Assert.Equal(ParameterClassification.ScientificMeasured, native.Classification);
-        Assert.Equal(ParameterClassification.ModelAssumption, derived.Classification);
+        Assert.Equal(ParameterClassification.ScientificEstimated, derived.Classification);
+        Assert.Equal("native_count", derived.DerivedFrom);
+        Assert.Equal(2d, derived.Conversion!.Factor);
+        Assert.Equal("MODEL_ASSUMPTION", derived.Conversion.FactorClassification);
+        Assert.Equal("{\"note\":\"synthetic\",\"width\":0.1}", derived.Uncertainty);
+        Assert.IsType<ParameterRange.Interval>(derived.Range);
         Assert.Equal("10.0000/synthetic.measured", Assert.Single(native.Sources).Doi);
         Assert.Equal("https://example.invalid/conversion", Assert.Single(derived.Sources).Url);
         Assert.NotEqual(native.Classification, derived.Classification);
@@ -261,27 +266,174 @@ public sealed class ParameterCatalogTests
         Assert.Equal(4d, native.Value);
         Assert.Equal(5d, derived.Value);
         Assert.Equal("native_count", stored.DerivedFrom);
-        Assert.Equal("MODEL_ASSUMPTION", stored.Conversion);
-        Assert.Equal(ParameterClassification.ModelAssumption, derived.Classification);
+        Assert.Equal(2d, stored.Conversion!.Factor);
+        Assert.NotEqual(native.Value * stored.Conversion.Factor, derived.Value);
+        Assert.Equal(ParameterClassification.ScientificEstimated, derived.Classification);
 
         var reversed = LoadMany(
-            Sample(id: "derived_count", classification: "MODEL_ASSUMPTION", value: "5", extra: ", \"derived_from\": \"native_count\"")
+            Sample(id: "derived_count", classification: "SCIENTIFIC_ESTIMATED", value: "5", source: SourceWithUrl(), extra: DerivedLink("native_count"))
             + ","
             + Sample(id: "native_count", classification: "SCIENTIFIC_MEASURED", value: "4", source: SourceWithDoi()));
         Assert.Equal(5d, reversed.RequireNumber("derived_count").Value);
         Assert.Equal(4d, reversed.RequireNumber("native_count").Value);
+    }
 
-        var omitted = Assert.Throws<ParameterLoadException>(() => LoadMany(
-            Sample(id: "native_count", classification: "SCIENTIFIC_MEASURED", source: SourceWithDoi())
-            + ","
-            + Sample(id: "derived_count", classification: "GAME_BALANCE", extra: ", \"derived_from\": \"native_count\"")));
-        Assert.Contains("MODEL_ASSUMPTION", omitted.Message, StringComparison.Ordinal);
-
-        var assumed = LoadMany(
+    [Fact]
+    public void EstimatedDerivedFromMeasuredPasses()
+    {
+        var catalog = LoadMany(
             Sample(id: "native_count", classification: "SCIENTIFIC_MEASURED", value: "4", source: SourceWithDoi())
             + ","
-            + Sample(id: "derived_count", classification: "MODEL_ASSUMPTION", value: "5", extra: ", \"derived_from\": \"native_count\""));
-        Assert.Equal("MODEL_ASSUMPTION", assumed.Definitions.Single(item => item.Id == "derived_count").Conversion);
+            + Sample(id: "derived_count", classification: "SCIENTIFIC_ESTIMATED", value: "5", source: SourceWithUrl(), extra: DerivedLink("native_count")));
+        var derived = catalog.RequireNumber("derived_count");
+        Assert.Equal(ParameterClassification.ScientificEstimated, derived.Classification);
+        Assert.Equal(5d, derived.Value);
+        Assert.Equal("native_count", derived.DerivedFrom);
+    }
+
+    [Fact]
+    public void MeasuredDerivedValueIsRejected()
+    {
+        var error = Assert.Throws<ParameterLoadException>(() => LoadMany(
+            Sample(id: "native_count", classification: "SCIENTIFIC_MEASURED", value: "4", source: SourceWithDoi())
+            + ","
+            + Sample(id: "derived_count", classification: "SCIENTIFIC_MEASURED", value: "5", source: SourceWithDoi(), extra: DerivedLink("native_count"))));
+        Assert.Equal("derived_count", error.ParameterId);
+        Assert.Contains("SCIENTIFIC_MEASURED", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void EstimatedDerivedFromModelAssumptionIsRejected()
+    {
+        var error = Assert.Throws<ParameterLoadException>(() => LoadMany(
+            Sample(id: "native_count", classification: "MODEL_ASSUMPTION", value: "4")
+            + ","
+            + Sample(id: "derived_count", classification: "SCIENTIFIC_ESTIMATED", value: "5", source: SourceWithUrl(), extra: DerivedLink("native_count"))));
+        Assert.Equal("derived_count", error.ParameterId);
+        Assert.Contains("not SCIENTIFIC_*", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ModelAssumptionDerivedValuePasses()
+    {
+        var catalog = LoadMany(
+            Sample(id: "native_count", classification: "MODEL_ASSUMPTION", value: "4")
+            + ","
+            + Sample(id: "derived_count", classification: "MODEL_ASSUMPTION", value: "5", extra: DerivedLink("native_count")));
+        var derived = catalog.RequireNumber("derived_count");
+        Assert.Equal(ParameterClassification.ModelAssumption, derived.Classification);
+        Assert.Equal(5d, derived.Value);
+        Assert.Equal("MODEL_ASSUMPTION", derived.Conversion!.FactorClassification);
+    }
+
+    [Theory]
+    [InlineData("expression")]
+    [InlineData("factor")]
+    [InlineData("factor_classification")]
+    [InlineData("assumptions")]
+    public void ConversionRejectsAMissingField(string field)
+    {
+        var error = Assert.Throws<ParameterLoadException>(() => LoadMany(
+            Sample(id: "native_count", classification: "SCIENTIFIC_MEASURED", value: "4", source: SourceWithDoi())
+            + ","
+            + Sample(id: "derived_count", classification: "MODEL_ASSUMPTION", value: "5", extra: DerivedLink("native_count", Omit(field)))));
+        Assert.Contains("derived_count", error.Message, StringComparison.Ordinal);
+        Assert.Contains(field, error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ConversionRejectsANonPositiveFactorAndEmptyAssumptions()
+    {
+        var zero = Assert.Throws<ParameterLoadException>(() => LoadDerived(ConversionObject(factor: "0")));
+        Assert.Contains("factor", zero.Message, StringComparison.Ordinal);
+
+        var negative = Assert.Throws<ParameterLoadException>(() => LoadDerived(ConversionObject(factor: "-1")));
+        Assert.Contains("factor", negative.Message, StringComparison.Ordinal);
+
+        var text = Assert.Throws<ParameterLoadException>(() => LoadDerived(ConversionObject(factor: "\"2\"")));
+        Assert.Contains("factor", text.Message, StringComparison.Ordinal);
+
+        var emptyAssumptions = Assert.Throws<ParameterLoadException>(() => LoadDerived(ConversionObject(assumptions: "[]")));
+        Assert.Contains("assumptions", emptyAssumptions.Message, StringComparison.Ordinal);
+
+        var blankAssumption = Assert.Throws<ParameterLoadException>(() => LoadDerived(ConversionObject(assumptions: "[\" \"]")));
+        Assert.Contains("assumptions", blankAssumption.Message, StringComparison.Ordinal);
+
+        var wrongClass = Assert.Throws<ParameterLoadException>(() => LoadDerived(ConversionObject(factorClassification: "GAME_BALANCE")));
+        Assert.Contains("factor_classification", wrongClass.Message, StringComparison.Ordinal);
+
+        var blankExpression = Assert.Throws<ParameterLoadException>(() => LoadDerived(ConversionObject(expression: "")));
+        Assert.Contains("expression", blankExpression.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ConversionIsRequiredWithDerivedFromAndForbiddenWithoutIt()
+    {
+        var missing = Assert.Throws<ParameterLoadException>(() => LoadMany(
+            Sample(id: "native_count", classification: "MODEL_ASSUMPTION", value: "4")
+            + ","
+            + Sample(id: "derived_count", classification: "MODEL_ASSUMPTION", value: "5", extra: ", \"derived_from\": \"native_count\"")));
+        Assert.Contains("conversion", missing.Message, StringComparison.Ordinal);
+
+        var stray = Assert.Throws<ParameterLoadException>(() => LoadOne(
+            Sample(extra: ", \"conversion\": " + ConversionObject())));
+        Assert.Contains("without derived_from", stray.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void UncertaintyIsKeptRawForAStringAndCanonicalForAnObject()
+    {
+        var catalog = LoadValidCatalog();
+        Assert.Equal("synthetic", catalog.RequireNumber("mean_level").Uncertainty);
+
+        var swapped = LoadOne(Sample(
+            classification: "SCIENTIFIC_ESTIMATED",
+            source: SourceWithUrl(),
+            extra: ", \"uncertainty\": {\"width\":0.1,\"note\":\"synthetic\"}"));
+        Assert.Equal("{\"note\":\"synthetic\",\"width\":0.1}", swapped.RequireNumber("sample").Uncertainty);
+    }
+
+    [Fact]
+    public void SupersededStatusIsNotDelivered()
+    {
+        var catalog = LoadOne(Sample(status: "SUPERADO", value: "6"));
+        Assert.Equal("SUPERADO", Assert.Single(catalog.Definitions).Status);
+        var error = Assert.Throws<ParameterUnavailableException>(() => catalog.RequireNumber("sample"));
+        Assert.Equal("sample", error.ParameterId);
+        Assert.Equal(ParameterUnavailableReason.Superseded, error.Reason);
+        Assert.Contains("sample", error.Message, StringComparison.Ordinal);
+        Assert.Contains("SUPERADO", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NonScientificValueWithoutSourceNeedsARationaleOrANote()
+    {
+        var error = Assert.Throws<ParameterLoadException>(() => LoadOne(Sample(rationale: null)));
+        Assert.Contains("rationale", error.Message, StringComparison.Ordinal);
+
+        var withNote = LoadOne(Sample(rationale: null, extra: ", \"note\": \"why this balance exists\""));
+        Assert.Equal("why this balance exists", withNote.Definitions[0].Note);
+    }
+
+    [Fact]
+    public void NumericRangeRejectsAnOutsideValueAndAReversedInterval()
+    {
+        var outside = Assert.Throws<ParameterLoadException>(() => LoadOne(
+            Sample(value: "1.1", extra: ", \"range\": [0, 1]")));
+        Assert.Contains("outside", outside.Message, StringComparison.Ordinal);
+
+        var reversed = Assert.Throws<ParameterLoadException>(() => LoadOne(
+            Sample(value: "0.5", extra: ", \"range\": [2, 1]")));
+        Assert.Contains("minimum", reversed.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NumericRangeAcceptsBothEndpoints()
+    {
+        var lower = LoadOne(Sample(value: "0", extra: ", \"range\": [0, 1]"));
+        Assert.Equal(0d, lower.RequireNumber("sample").Value);
+        var upper = LoadOne(Sample(value: "1", extra: ", \"range\": [0, 1]"));
+        Assert.Equal(1d, upper.RequireNumber("sample").Value);
     }
 
     [Fact]
@@ -349,8 +501,10 @@ public sealed class ParameterCatalogTests
         string status = "OK",
         string value = "1",
         string source = "null",
+        string? rationale = "synthetic fixture",
         string extra = "")
     {
+        var rationaleJson = rationale is null ? string.Empty : $",\"rationale\":\"{rationale}\"";
         return "{"
             + $"\"id\":\"{id}\","
             + "\"field\":\"sample\","
@@ -361,8 +515,42 @@ public sealed class ParameterCatalogTests
             + $"\"version\":{version},"
             + $"\"status\":\"{status}\","
             + $"\"source\":{source}"
+            + rationaleJson
             + extra
             + "}";
+    }
+
+    private static string ConversionObject(
+        string expression = "x 2",
+        string factor = "2",
+        string factorClassification = "MODEL_ASSUMPTION",
+        string assumptions = "[\"synthetic scale\"]")
+    {
+        return "{"
+            + $"\"expression\":\"{expression}\","
+            + $"\"factor\":{factor},"
+            + $"\"factor_classification\":\"{factorClassification}\","
+            + $"\"assumptions\":{assumptions}"
+            + "}";
+    }
+
+    private static string Omit(string field)
+    {
+        var complete = ConversionObject();
+        return complete.Replace($"\"{field}\":", "\"dropped\":", StringComparison.Ordinal);
+    }
+
+    private static string DerivedLink(string nativeId, string? conversion = null)
+    {
+        return $", \"derived_from\": \"{nativeId}\", \"conversion\": {conversion ?? ConversionObject()}";
+    }
+
+    private static ParameterCatalog LoadDerived(string conversion)
+    {
+        return LoadMany(
+            Sample(id: "native_count", classification: "SCIENTIFIC_MEASURED", value: "4", source: SourceWithDoi())
+            + ","
+            + Sample(id: "derived_count", classification: "MODEL_ASSUMPTION", value: "5", extra: DerivedLink("native_count", conversion)));
     }
 
     private static string Without(string propertyName, string propertyJson)
@@ -383,6 +571,13 @@ public sealed class ParameterCatalogTests
     {
         return """
             [{ "citation": "Synthetic measured source", "doi": "10.0000/synthetic.measured", "accessed": "2026-01-02" }]
+            """;
+    }
+
+    private static string SourceWithUrl()
+    {
+        return """
+            [{ "citation": "Synthetic estimate", "url": "https://example.invalid/estimate", "accessed": "2026-01-03" }]
             """;
     }
 
