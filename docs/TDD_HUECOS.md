@@ -47,7 +47,7 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 
 ## Deuda de modelo (ronda 2)
 
-- R2-10. Solo temperatura y presión distinguen «sin asignar». El resto de campos ambientales nace en 0. El cargador de T03 tiene que rellenarlos todos de forma explícita.
+- R2-10. Temperatura, presión, UV, vapor, porosidad y masa de perclorato distinguen «sin asignar» con `AssignedDouble`. T03b deja UV, vapor, porosidad y `PerchlorateMassKg` sin asignar en MarsBaseline v0. El hielo en kg es un depósito `GAME_BALANCE`, no una conversión del wt %. Los demás campos los escribe el escenario.
 - R2-11. `MaintenanceCost` y `ReproductionRate` están en [0, 1] y se leen por sol (1 tick). El primero es una fracción de `EnergyReserveJ`. El segundo es una tasa per cápita (0 significa que no se reproduce). El techo ≤ 1 es una decisión de diseño. Se calibran en T05/T06.
 - R2-12. El agua adsorbida o hidratada queda fuera de v0. DOM-VAL-012 comprueba la contabilidad contra el total registrado y no un doble conteo cuyo total se haya inflado. La conservación entre ticks se comprueba en T04.
 - R2-13. `BiomassKg` tiene pendiente declarar si es masa seca o húmeda, junto a la tabla de especies de los depósitos.
@@ -58,10 +58,10 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 
 - Rechazar un valor sin `classification`. Rechazar `SCIENTIFIC_*` sin una fuente que tenga DOI o URL. Un `GAME_BALANCE` puede ir con `source: null`: es el ejemplo `mutation_rate` del TDD §10.2 y lo que permite ADR-000 R5. T03a lo aplica en el cargador genérico.
 - Avisar si una celda `Regional` usa un valor `planetary_mean`. T03a lo hace con `NoteRegionalCellUse`: avisa, nombra el id y no reescribe el número. El cargador no ve celdas al leer el JSON.
-- T03b: pasar el sitio de la celda al aviso y avisar si `regional:A` se usa en una celda de B, o si se usa `analog:`. T03a no lo implementa (R5-07).
+- T03b (R5-07): `NoteRegionalCellUse(id, sitio)` avisa, sin reescribir el número, si el valor es `planetary_mean`, si es `regional:A` y la celda es de B, o si es `analog:` en una celda regional. El mismo id y sitio se anotan una sola vez.
 - `UNCLASSIFIED_PENDING` solo entra si `status` es PENDING y `value` es null. Leerlo es un error que nombra el id. No se inventa un cero. PENDING, HISTORICAL, SUPERADO y `used_in_v0: false` se cargan y no se entregan. Cualquier otro status es texto.
 - Convertir datos intensivos a kg por celda con la geometría del escenario. Sigue pendiente: H-07 no tiene metros por celda y T03a no trae escenario.
-- Rellenar explícitamente todos los campos de `EnvironmentState` (R2-10). Sigue pendiente de T03b: este hito no carga un escenario.
+- Rellenar explícitamente todos los campos de `EnvironmentState` (R2-10). T03b lo hace desde `metadata.v0_field_map` y los depósitos. El alcance de la celda sale de `metadata.scope_id`. UV, vapor, porosidad y `PerchlorateMassKg` quedan sin asignar. El wt % de perclorato no se convierte a kg.
 - Guardar el valor nativo de la fuente con su clasificación y el valor derivado aparte (R3-07). El derivado es `SCIENTIFIC_ESTIMATED` si la nativa es científica; nunca es `SCIENTIFIC_MEASURED`. Si la nativa no es `SCIENTIFIC_*`, el derivado tampoco. La conversión es un objeto cuya clasificación de factor es `MODEL_ASSUMPTION`. T03a no calcula el número y no copia cifras de Marte.
 - Citar el UV de REMS con Viúdez-Moreiras et al. 2025, doi:10.1073/pnas.2426611122 (R3-09). Sigue solo anotado: no hay escenario en T03a.
 - La fluencia UV diaria (J/m² por sol) queda pendiente de T03/T05. No se suma tick a tick como si fuera la media del sol.

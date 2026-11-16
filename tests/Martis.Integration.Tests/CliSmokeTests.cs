@@ -37,6 +37,13 @@ public sealed class CliSmokeTests
     [Fact]
     public async Task SimulatePrintsTheFinalTickAndReturnsZero()
     {
+        var science = Path.Combine(
+            RepoLayout.Root,
+            "data",
+            "scenarios",
+            "MarsBaseline",
+            "mars_baseline_gale.v0.json");
+        var before = File.ReadAllBytes(science);
         var result = await RunCli(
             "simulate",
             "--scenario",
@@ -52,10 +59,7 @@ public sealed class CliSmokeTests
         Assert.Equal("1000", result.Stdout.Trim());
         Assert.Equal(string.Empty, result.Stderr.Trim());
         Assert.False(Directory.Exists(Path.Combine(RepoLayout.Root, "synthetic-output")));
-        Assert.Empty(Directory.EnumerateFiles(
-            Path.Combine(RepoLayout.Root, "data", "scenarios"),
-            "*.json",
-            SearchOption.AllDirectories));
+        Assert.Equal(before, File.ReadAllBytes(science));
     }
 
     [Fact]

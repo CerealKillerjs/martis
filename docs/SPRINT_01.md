@@ -2,7 +2,7 @@
 
 Fuente: TDD v1.0 §18 (cinco jornadas), §18.1 (checklist), §19 (definición de terminado). Estado: **propuesta pendiente de visto bueno de Dani**.
 
-**Meta:** que el prototipo CLI de §19 funcione de extremo a extremo (MarsBaseline, 64×64, 1000 ticks, validar, snapshot, guardar resultados, exit 0). **Eso todavía no está hecho.** T03a avanza un mundo vacío y no cierra el §19: no carga el escenario, no escribe el snapshot ni los ficheros de resultados. Eso sigue en S1-25..S1-32. **Godot no hace falta para el CLI**, así que las tareas de Godot son paralelas y no bloquean.
+**Meta:** que el prototipo CLI de §19 funcione de extremo a extremo (MarsBaseline, 64×64, 1000 ticks, validar, snapshot, guardar resultados, exit 0). **Eso todavía no está hecho.** La biblioteca ya carga el escenario MarsBaseline v0.4. El CLI no cierra el §19: no escribe el snapshot ni los ficheros de resultados. Eso sigue en S1-32. **Godot no hace falta para el CLI**, así que las tareas de Godot son paralelas y no bloquean.
 
 ## Reglas del sprint
 

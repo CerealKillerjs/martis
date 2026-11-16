@@ -3,7 +3,7 @@ namespace Martis.Domain.Validation;
 /// <summary>
 /// Identifiers written into <see cref="InvariantViolation"/>.
 /// VAL-001..005 are only the invariants named in TDD §10.
-/// DOM-VAL-001..015 are domain rules added here. Each one notes, in
+/// DOM-VAL-001..016 are domain rules added here. Each one notes, in
 /// docs/DATA_DICTIONARY.md, which TDD invariant it resembles.
 /// VAL-004 is declared so the TDD id stays stable. No field in this milestone
 /// is a TDD probability, so the validator does not emit it.
@@ -54,4 +54,7 @@ public static class InvariantIds
 
     /// <summary>Per-capita reproduction rate per tick, in the closed interval [0, 1].</summary>
     public const string ReproductionRatePerCapita = "DOM-VAL-015";
+
+    /// <summary>A weight percent in the closed interval [0, 100]. It is not a kilogram mass.</summary>
+    public const string WeightPercentInterval = "DOM-VAL-016";
 }

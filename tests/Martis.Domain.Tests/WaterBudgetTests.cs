@@ -8,8 +8,8 @@ public sealed class WaterBudgetTests
     [Fact]
     public void LiquidIceAndVaporAreDifferentProperties()
     {
-        var pool = DoubleNames(typeof(ResourcePool));
-        var environment = DoubleNames(typeof(EnvironmentState));
+        var pool = PropertyNames(typeof(ResourcePool));
+        var environment = PropertyNames(typeof(EnvironmentState));
 
         Assert.Contains(nameof(ResourcePool.Water), pool);
         Assert.DoesNotContain(nameof(EnvironmentState.WaterIce), pool);
@@ -37,6 +37,6 @@ public sealed class WaterBudgetTests
             static member => member.Name.Contains("Molar", StringComparison.Ordinal));
     }
 
-    private static string[] DoubleNames(Type type)
-        => ScalarProperties.WritableDoubles(type).ToArray();
+    private static string[] PropertyNames(Type type)
+        => type.GetProperties(BindingFlags.Instance | BindingFlags.Public).Select(property => property.Name).ToArray();
 }

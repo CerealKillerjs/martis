@@ -31,12 +31,14 @@ public sealed class SimulationState
         Resources = new ResourcePool[count];
         AllocationBuffers = new AllocationBuffer[count];
         WaterBudgets = new CellWaterBudget[count];
+        MassLedgers = new CellMassLedger[count];
         for (var i = 0; i < count; i++)
         {
             Environment[i] = new EnvironmentState();
             Resources[i] = new ResourcePool();
             AllocationBuffers[i] = new AllocationBuffer();
             WaterBudgets[i] = new CellWaterBudget();
+            MassLedgers[i] = new CellMassLedger();
         }
 
         Populations = [];
@@ -62,6 +64,11 @@ public sealed class SimulationState
     /// <see cref="Environment"/>.
     /// </summary>
     public CellWaterBudget[] WaterBudgets { get; }
+
+    /// <summary>
+    /// One initial-mass account per cell. Empty until a scenario records the deposits.
+    /// </summary>
+    public CellMassLedger[] MassLedgers { get; }
 
     /// <summary>
     /// Populations in caller order. The validator walks this list in that order.

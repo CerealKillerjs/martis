@@ -66,4 +66,19 @@ internal static class QuantityRules
                 "The quantity must be finite and inside the closed interval [0, 1].");
         }
     }
+
+    /// <summary>A weight percent: finite and inside the closed interval [0, 100].</summary>
+    public static bool IsWeightPercent(double value)
+        => double.IsFinite(value) && value >= 0.0 && value <= 100.0;
+
+    public static void RequireWeightPercent(double value, string name)
+    {
+        if (!IsWeightPercent(value))
+        {
+            throw new ArgumentOutOfRangeException(
+                name,
+                value,
+                "The quantity must be finite and inside the closed interval [0, 100].");
+        }
+    }
 }

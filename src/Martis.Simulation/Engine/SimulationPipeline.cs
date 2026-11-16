@@ -3,7 +3,10 @@ namespace Martis.Simulation.Engine;
 /// <summary>
 /// Fixed v0 order of TDD §5.4 (H-28). The id is <see cref="Version"/>.
 /// Reordering these steps is a new pipeline version, not a silent edit.
-/// Every step except <see cref="SimulationSteps.ApplyCommands"/> is a stub.
+/// <see cref="CreateStubs"/> leaves every step except
+/// <see cref="SimulationSteps.ApplyCommands"/> as a stub.
+/// <see cref="CreateV0"/> runs <see cref="EnvironmentSystem"/> in the environment step.
+/// The other steps stay stubs: diurnal and seasonal cycles are not in this version.
 /// </summary>
 public static class SimulationPipeline
 {
@@ -37,6 +40,27 @@ public static class SimulationPipeline
             systems[i] = name == SimulationSteps.ApplyCommands
                 ? new ApplyCommandsSystem()
                 : new StubSimulationSystem(name);
+        }
+
+        return systems;
+    }
+
+    /// <summary>
+    /// Pipeline used by a loaded scenario. The environment step keeps temperature
+    /// constant (D = 0 and S = 0). It does not draw a random number.
+    /// </summary>
+    public static IReadOnlyList<ISimulationSystem> CreateV0()
+    {
+        var systems = new ISimulationSystem[StepNames.Count];
+        for (var i = 0; i < StepNames.Count; i++)
+        {
+            var name = StepNames[i];
+            systems[i] = name switch
+            {
+                SimulationSteps.ApplyCommands => new ApplyCommandsSystem(),
+                SimulationSteps.UpdateEnvironment => new EnvironmentSystem(),
+                _ => new StubSimulationSystem(name),
+            };
         }
 
         return systems;

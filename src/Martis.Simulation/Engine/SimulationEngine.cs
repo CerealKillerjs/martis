@@ -8,9 +8,12 @@ namespace Martis.Simulation.Engine;
 
 /// <summary>
 /// Runs a fixed list of systems once per tick (TDD §5.5, ADR-003, ADR-000).
-/// The tick counter advances only after every system returns and
-/// <see cref="SimulationValidator"/> reports no violations. A violation throws
-/// <see cref="SimulationInvariantException"/> and leaves the tick unchanged.
+/// The tick counter advances only after every system returns.
+/// When <see cref="SimulationConfiguration.EnableValidation"/> is true,
+/// <see cref="SimulationValidator"/> must report no violations.
+/// A violation throws <see cref="SimulationInvariantException"/>.
+/// Any exception from a system or from that check restores the world, the PRNG
+/// and the command queue to the start of the tick (R6-04).
 /// Systems must not change <see cref="SimulationState.Tick"/> themselves.
 /// <see cref="ApplyCommand"/> does not touch the state. The apply-commands step
 /// of the following tick does, in queue order.
@@ -83,27 +86,41 @@ public sealed class SimulationEngine : ISimulationEngine
 
         for (var step = 0; step < steps; step++)
         {
-            var context = new SimulationContext(
-                State,
-                _random,
-                _configuration,
-                _configuration.DeltaTimeSols,
-                _commands,
-                _handlers);
-            foreach (var system in _systems)
+            // The copy is discarded when the tick commits. A failure puts the
+            // world, the PRNG and the queue back, so the tick is not half-applied.
+            var checkpoint = StateCheckpoint.Capture(State, _random, _commands);
+            try
             {
-                system.Execute(context, _configuration.DeltaTimeSols);
-            }
+                var context = new SimulationContext(
+                    State,
+                    _random,
+                    _configuration,
+                    _configuration.DeltaTimeSols,
+                    _commands,
+                    _handlers);
+                foreach (var system in _systems)
+                {
+                    system.Execute(context, _configuration.DeltaTimeSols);
+                }
 
-            var violations = SimulationValidator.Validate(State);
-            if (violations.Count > 0)
-            {
-                throw new SimulationInvariantException(State.Tick, violations);
-            }
+                if (_configuration.EnableValidation)
+                {
+                    var violations = SimulationValidator.Validate(State);
+                    if (violations.Count > 0)
+                    {
+                        throw new SimulationInvariantException(State.Tick, violations);
+                    }
+                }
 
-            checked
+                checked
+                {
+                    State.Tick++;
+                }
+            }
+            catch (Exception)
             {
-                State.Tick++;
+                checkpoint.Restore(State, _random, _commands);
+                throw;
             }
         }
     }

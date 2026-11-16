@@ -5,11 +5,13 @@ using Martis.Simulation.Random;
 namespace Martis.Simulation.Tests.Engine;
 
 /// <summary>
-/// VAL-010 on the stub engine. The probe writes the Environment stream into
+/// Repeatability of two runs (VAL-010). The same seed matches bit for bit and
+/// another seed does not. This class does not lock system order: that lock is
+/// <see cref="GoldenVectorTests"/>. The probe writes the Environment stream into
 /// solar irradiance. Those numbers are draws in [0, 1), not a solar model.
 /// </summary>
 [Trait("Category", "Determinism")]
-public sealed class EngineDeterminismTests
+public sealed class EngineRepeatabilityTests
 {
     [Fact]
     public void SameSeedMatchesBitForBitAndAnotherSeedDoesNot()
