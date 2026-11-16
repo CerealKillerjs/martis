@@ -1,6 +1,6 @@
 # ADR-005 — DT-005: Modelo espacial
 
-- **Estado:** Propuesto — pendiente de visto bueno de Dani.
+- **Estado:** Aceptado (Dani, 2026-11-16). Se aprueba la decisión recomendada.
 - **Decisión TDD:** DT-005 «Modelo espacial»; recomendación inicial: «Arrays lineales».
 
 ## Contexto

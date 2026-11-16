@@ -1,6 +1,6 @@
 # ADR-009 — DT-009: Integración genética (herencia)
 
-- **Estado:** Propuesto — pendiente de visto bueno de Dani.
+- **Estado:** Aceptado (Dani, 2026-11-16). Se aprueba la decisión recomendada.
 - **Decisión TDD:** DT-009 «Integración genética»; recomendación inicial: «Herencia clonal».
 
 ## Contexto

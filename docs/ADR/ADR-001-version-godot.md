@@ -1,6 +1,6 @@
 # ADR-001 — DT-001: Versión concreta de Godot 4 (.NET)
 
-- **Estado:** Propuesto — pendiente de visto bueno de Dani.
+- **Estado:** Aceptado (Dani, 2026-11-16). Se aprueba la decisión recomendada.
 - **Decisión TDD:** DT-001 «Versión concreta de Godot 4»; recomendación inicial: «Última estable compatible».
 - **Fecha de verificación:** 2026-11-16
 
@@ -46,3 +46,6 @@ Opción 1 de forma **provisional**: usar **Godot 4.7.2-stable (.NET)** como vers
 - `docs/SETUP.md` anota la versión exacta instalada y su origen (URL oficial de descarga).
 - Spike S1-07/S1-08: `dotnet build src/Martis.Game` compila con la versión elegida y el editor abre el proyecto.
 - Al iniciar T08 y en cada actualización de Godot: revisar de nuevo la página de archivo y las notas de versión.
+
+## Nota de aprobación (2026-11-16)
+Dani aprueba Godot 4.7.2-stable (.NET). Para alinearlo con ADR-002, el proyecto Godot sube su TargetFramework a `net10.0` (por encima del mínimo `net8.0`, que ya no tiene soporte). Se reevalúa 4.8 al iniciar T08.

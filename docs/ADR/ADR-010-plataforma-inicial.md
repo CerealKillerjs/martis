@@ -1,6 +1,6 @@
 # ADR-010 — DT-010: Plataforma inicial
 
-- **Estado:** Propuesto — pendiente de visto bueno de Dani.
+- **Estado:** Aceptado (Dani, 2026-11-16). Se aprueba la decisión recomendada.
 - **Decisión TDD:** DT-010 «Plataforma inicial»; recomendación inicial: «Windows y Linux».
 - **Fecha de verificación:** 2026-11-16
 

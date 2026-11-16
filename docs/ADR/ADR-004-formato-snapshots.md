@@ -1,6 +1,6 @@
 # ADR-004 — DT-004: Formato de snapshots
 
-- **Estado:** Propuesto — pendiente de visto bueno de Dani.
+- **Estado:** Aceptado (Dani, 2026-11-16). Se aprueba la decisión recomendada.
 - **Decisión TDD:** DT-004 «Formato snapshots»; recomendación inicial: «Binario versionado + compresión».
 
 ## Contexto
@@ -33,3 +33,6 @@ Además el TDD usa «snapshot» para dos cosas distintas (hueco H-03): el **snap
 - Test de versión: un payload con esquema desconocido se rechaza con error claro.
 - Archivo «golden» pequeño versionado en `tests/` para detectar cambios accidentales de formato.
 - Tamaño y tiempo de snapshot completo se **miden** (BenchmarkDotNet); el objetivo «< 1 s» de §7.4 es objetivo, no medición.
+
+## Nota de aprobación (2026-11-16)
+Dani aprueba binario versionado con cabecera para guardado y JSON solo para exportes y depuración. La compresión forma parte del formato objetivo; se activa cuando el benchmark inicial la mida.

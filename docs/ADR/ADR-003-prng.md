@@ -1,6 +1,6 @@
 # ADR-003 — DT-003: Generador de números pseudoaleatorios (PRNG)
 
-- **Estado:** Propuesto — pendiente de visto bueno de Dani.
+- **Estado:** Aceptado (Dani, 2026-11-16). Se aprueba la decisión recomendada.
 - **Decisión TDD:** DT-003 «PRNG»; recomendación inicial: PCG32 (§6 admite «PCG32 o PCG64»).
 
 ## Contexto

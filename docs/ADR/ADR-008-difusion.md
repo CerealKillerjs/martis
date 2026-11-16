@@ -1,6 +1,6 @@
 # ADR-008 — DT-008: Método de difusión
 
-- **Estado:** Propuesto — pendiente de visto bueno de Dani.
+- **Estado:** Aceptado (Dani, 2026-11-16). Se aprueba la decisión recomendada.
 - **Decisión TDD:** DT-008 «Difusión»; recomendación inicial: «Diferencias finitas».
 
 ## Contexto

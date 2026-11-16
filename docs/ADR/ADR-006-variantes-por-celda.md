@@ -1,6 +1,6 @@
 # ADR-006 — DT-006: Límite de variantes por celda
 
-- **Estado:** Propuesto — pendiente de visto bueno de Dani.
+- **Estado:** Aceptado (Dani, 2026-11-16). Se aprueba la decisión recomendada.
 - **Decisión TDD:** DT-006 «Variantes por celda»; recomendación inicial: «Límite configurable 32».
 
 ## Contexto

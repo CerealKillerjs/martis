@@ -1,6 +1,6 @@
 # ADR-007 — DT-007: Simulación paralela
 
-- **Estado:** Propuesto — pendiente de visto bueno de Dani.
+- **Estado:** Aceptado (Dani, 2026-11-16). Se aprueba la decisión recomendada.
 - **Decisión TDD:** DT-007 «Simulación paralela»; recomendación inicial: «No en primera versión».
 
 ## Contexto
