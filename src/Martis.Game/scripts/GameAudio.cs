@@ -50,6 +50,30 @@ public partial class GameAudio : Node
 
     public override void _ExitTree()
     {
+        // Release every engine object this node holds from C#, so nothing outlives the
+        // SceneTree at exit (ObjectDB leaks, and pushes into a freed playback).
+        GetTree().NodeAdded -= Decorate;
+        SetProcess(false);
+        foreach (var player in GetChildren())
+        {
+            if (player is AudioStreamPlayer audio)
+            {
+                audio.Stop();
+                audio.Stream = null;
+            }
+        }
+
+        _musicPlayback?.Dispose();
+        _windPlayback?.Dispose();
+        _musicPlayback = null;
+        _windPlayback = null;
+        foreach (var stream in _effects.Values)
+        {
+            stream.Dispose();
+        }
+
+        _effects.Clear();
+        _voices.Clear();
         if (Instance == this)
         {
             Instance = null;
