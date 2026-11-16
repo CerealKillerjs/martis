@@ -17,7 +17,8 @@
       "version": 1,
       "status": "OK",
       "source": null,
-      "note": "Illustrative TDD 10.2 example. Not a measured rate."
+      "note": "Illustrative TDD 10.2 example. Not a measured rate.",
+      "rationale": "Illustrative balance value from TDD 10.2. Not a measured rate."
     },
     {
       "id": "flag_enabled",
@@ -28,7 +29,8 @@
       "scope": "analog:fixture",
       "version": "0.1",
       "status": "ACCEPTED",
-      "source": []
+      "source": [],
+      "rationale": "Synthetic switch for the fixture."
     },
     {
       "id": "label_code",
@@ -57,7 +59,8 @@
       "scope": "analog:bench",
       "version": 2,
       "status": "FALLBACK",
-      "source": null
+      "source": null,
+      "rationale": "Synthetic interval kept as an assumption."
     },
     {
       "id": "native_count",
@@ -81,10 +84,15 @@
       "field": "count",
       "value": 5,
       "unit": "synthetic_per_sol",
-      "classification": "MODEL_ASSUMPTION",
+      "classification": "SCIENTIFIC_ESTIMATED",
       "scope": "regional:site-alpha",
       "version": 1,
       "status": "OK",
+      "range": [0, 10],
+      "uncertainty": {
+        "note": "synthetic",
+        "width": 0.1
+      },
       "source": [
         {
           "citation": "Synthetic conversion note",
@@ -93,7 +101,12 @@
         }
       ],
       "derived_from": "native_count",
-      "conversion": "MODEL_ASSUMPTION",
+      "conversion": {
+        "expression": "x 2",
+        "factor": 2,
+        "factor_classification": "MODEL_ASSUMPTION",
+        "assumptions": ["synthetic scale"]
+      },
       "rationale": "The derived number is stored apart from the native number. The loader does not compute it."
     },
     {
@@ -105,7 +118,8 @@
       "scope": "planetary_mean",
       "version": "0.1",
       "status": "PENDING",
-      "source": null
+      "source": null,
+      "note": "Synthetic gap. No value is invented."
     },
     {
       "id": "old_note",
@@ -116,7 +130,8 @@
       "scope": "analog:archive",
       "version": 1,
       "status": "HISTORICAL",
-      "source": null
+      "source": null,
+      "note": "Kept for audit. Not delivered."
     },
     {
       "id": "unused_knob",
@@ -128,7 +143,8 @@
       "version": 1,
       "status": "OK",
       "used_in_v0": false,
-      "source": null
+      "source": null,
+      "rationale": "Loaded and withheld from v0 systems."
     },
     {
       "id": "mean_level",

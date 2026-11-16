@@ -64,6 +64,19 @@ public sealed class RngStreamsTests
     }
 
     [Fact]
+    public void ASixthSequenceIsRejectedAndLeavesTheFiveStreamsUntouched()
+    {
+        var streams = RngStreams.Create(12345UL);
+        var before = streams.ExportState();
+        var error = Assert.Throws<ArgumentOutOfRangeException>(() => streams.ForSequence(6));
+        Assert.Contains("five", error.Message, StringComparison.Ordinal);
+        Assert.Throws<ArgumentOutOfRangeException>(() => streams.ForSequence(0));
+        Assert.Equal(before, streams.ExportState());
+        Assert.Same(streams.Environment, streams.ForSequence(RngStreams.EnvironmentSequence));
+        Assert.Same(streams.Events, streams.ForSequence(RngStreams.EventsSequence));
+    }
+
+    [Fact]
     public void DistinctSeedsProduceDistinctEnvironmentState()
     {
         var zero = RngStreams.Create(0UL).Environment.ExportState();

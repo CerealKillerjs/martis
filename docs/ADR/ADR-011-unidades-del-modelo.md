@@ -8,15 +8,15 @@
 
 H-05: el paso de tiempo del TDD es 1 sol y el campo de edad se llamaba en días. Un sol no es un día terrestre. H-18: `ResourcePool` no tenía unidad ni matriz de composición. El agua aparecía a la vez como depósito y como estado ambiental sin una frontera comprobable.
 
-La elección de unidad de un campo es `MODEL_ASSUMPTION`. La clasificación (`SCIENTIFIC_MEASURED`, `SCIENTIFIC_ESTIMATED`, `MODEL_ASSUMPTION`, `GAME_BALANCE`, `SPECULATIVE`), la fuente y el ámbito van **por valor** en el JSON del escenario (TDD §10.2), no pegadas al tipo. El cargador de T03 rechaza un valor sin `classification` o sin `source`, y avisa si una celda `Regional` lleva un valor `planetary_mean`. Eso se documenta aquí; no se implementa en T02. El ámbito principal sigue siendo el `Scope` de cada celda.
+La elección de unidad de un campo es `MODEL_ASSUMPTION`. La clasificación (`SCIENTIFIC_MEASURED`, `SCIENTIFIC_ESTIMATED`, `MODEL_ASSUMPTION`, `GAME_BALANCE`, `SPECULATIVE`), la fuente y el ámbito van **por valor** en el JSON del escenario (TDD §10.2), no pegadas al tipo. El cargador de T03 rechaza un valor sin `classification`, y `SCIENTIFIC_*` sin DOI o URL, y avisa si una celda `Regional` lleva un valor `planetary_mean`. Eso se documenta aquí; no se implementa en T02. El ámbito principal sigue siendo el `Scope` de cada celda.
 
 ## Decisiones
 
 ### Tiempo
 
-1 tick = 1 sol. `SecondsPerSol` = 88 775 s es un redondeo de modelo (`MODEL_ASSUMPTION`) del día solar medio de Marte. Fuente de la medición (`SCIENTIFIC_MEASURED`): D. R. Williams, NASA NSSDCA, Mars Fact Sheet, tabla «Orbital parameters», fila «Length of day (hrs)» 24,6597 h ≈ 88 774,92 s (https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html; consultado el 2026-11-16; la página no tiene fecha de actualización). Contraste: Allison & McEwen (2000), Planet. Space Sci. 48, 215–235, doi:10.1016/S0032-0633(99)00092-6, 88 775,244 s (NASA GISS Mars24, https://www.giss.nasa.gov/tools/mars24/help/notes.html). La diferencia es ≤ 0,25 s por sol (< 3·10⁻⁶). No es el periodo sideral (24,6229 h ≈ 88 642,4 s).
+1 tick = 1 sol. `SecondsPerSol` = 88 775 s es un redondeo de modelo (`MODEL_ASSUMPTION`) del día solar medio de Marte. Fuente de la medición (`SCIENTIFIC_MEASURED`): D. R. Williams, NASA NSSDCA, Mars Fact Sheet, tabla «Orbital parameters», fila «Length of day (hrs)» 24,6597 h ≈ 88 774,92 s (https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html; consultado el 2026-11-16; la página no tiene fecha de actualización). Contraste: Allison & McEwen (2000), Planet. Space Sci. 48, 215–235, doi:10.1016/S0032-0633(99)00092-6, 88 775,244 s (NASA GISS Mars24, https://www.giss.nasa.gov/tools/mars24/help/notes.html). El redondeo 88 775 s difiere ≤ 0,25 s de cada fuente (0,08 s de NSSDCA; 0,244 s de Allison & McEwen); entre las dos fuentes hay 0,32 s. No es el periodo sideral (24,6229 h ≈ 88 642,4 s).
 
-La cifra entera está solo en `MartianTime.SecondsPerSol`. En el código no existe `DeltaTimeDays`. La edad media de la población es `AgeDistributionMeanSols`, en soles. Cuando llegue la configuración, su paso también irá en soles.
+La cifra entera está solo en `MartianTime.SecondsPerSol`. En el código no existe `DeltaTimeDays`. La edad media de la población es `AgeDistributionMeanSols`, en soles. La configuración usa DeltaTimeSols.
 
 ### Depósitos y matriz A
 

@@ -58,10 +58,11 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 
 - Rechazar un valor sin `classification`. Rechazar `SCIENTIFIC_*` sin una fuente que tenga DOI o URL. Un `GAME_BALANCE` puede ir con `source: null`: es el ejemplo `mutation_rate` del TDD §10.2 y lo que permite ADR-000 R5. T03a lo aplica en el cargador genérico.
 - Avisar si una celda `Regional` usa un valor `planetary_mean`. T03a lo hace con `NoteRegionalCellUse`: avisa, nombra el id y no reescribe el número. El cargador no ve celdas al leer el JSON.
-- `UNCLASSIFIED_PENDING` solo entra si `status` es PENDING y `value` es null. Leerlo es un error que nombra el id. No se inventa un cero. HISTORICAL y `used_in_v0: false` se cargan y no se entregan.
+- T03b: pasar el sitio de la celda al aviso y avisar si `regional:A` se usa en una celda de B, o si se usa `analog:`. T03a no lo implementa (R5-07).
+- `UNCLASSIFIED_PENDING` solo entra si `status` es PENDING y `value` es null. Leerlo es un error que nombra el id. No se inventa un cero. PENDING, HISTORICAL, SUPERADO y `used_in_v0: false` se cargan y no se entregan. Cualquier otro status es texto.
 - Convertir datos intensivos a kg por celda con la geometría del escenario. Sigue pendiente: H-07 no tiene metros por celda y T03a no trae escenario.
 - Rellenar explícitamente todos los campos de `EnvironmentState` (R2-10). Sigue pendiente de T03b: este hito no carga un escenario.
-- Guardar el valor nativo de la fuente con su clasificación y el valor derivado aparte, con la conversión `MODEL_ASSUMPTION` (R3-07). T03a lo guarda como dos entradas unidas por `derived_from`. No calcula el número y no copia cifras de Marte.
+- Guardar el valor nativo de la fuente con su clasificación y el valor derivado aparte (R3-07). El derivado es `SCIENTIFIC_ESTIMATED` si la nativa es científica; nunca es `SCIENTIFIC_MEASURED`. Si la nativa no es `SCIENTIFIC_*`, el derivado tampoco. La conversión es un objeto cuya clasificación de factor es `MODEL_ASSUMPTION`. T03a no calcula el número y no copia cifras de Marte.
 - Citar el UV de REMS con Viúdez-Moreiras et al. 2025, doi:10.1073/pnas.2426611122 (R3-09). Sigue solo anotado: no hay escenario en T03a.
 - La fluencia UV diaria (J/m² por sol) queda pendiente de T03/T05. No se suma tick a tick como si fuera la media del sol.
 

@@ -16,7 +16,11 @@ public enum ParameterClassification
     /// <summary>Estimate based on evidence. A source with a DOI or URL is required.</summary>
     ScientificEstimated,
 
-    /// <summary>Modelling choice, including a conversion from a native source value.</summary>
+    /// <summary>
+    /// Modelling choice. The factor inside a conversion is classified this way.
+    /// A derived value is not forced to this label: a converted measurement can
+    /// stay <see cref="ScientificEstimated"/> when the native value is scientific.
+    /// </summary>
     ModelAssumption,
 
     /// <summary>Value chosen for play. It is not a measurement.</summary>

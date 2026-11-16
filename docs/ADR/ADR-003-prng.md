@@ -33,6 +33,8 @@ Cada flujo es `pcg32_srandom_r(WorldSeed, secuencia)` de pcg-c (`pcg_setseq_64_s
 
 `RandomState` guarda el estado interno y el incremento ya impar, no el `initseq`. Restaurar esos dos enteros reproduce la continuación. La etiqueta `WorldSeed` viaja al lado, pero el generador sigue el estado restaurado.
 
+No hay un sexto flujo. `ForSequence` solo acepta las secuencias 1..5 y lanza si se pide otra. Añadir un flujo nuevo cambiaría `pcg32-v1` o exigiría otro ADR; no se crea al lado de los cinco.
+
 ## Conversión de pcg32-v1
 
 La salida oficial es la palabra de 32 bits XSH-RR (`pcg_setseq_64_xsh_rr_32_random_r`, multiplicador `6364136223846793005`). Encima de eso, y solo como parte de `pcg32-v1`:

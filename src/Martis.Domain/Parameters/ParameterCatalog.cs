@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using System.Text.Json;
 
 namespace Martis.Domain.Parameters;
@@ -13,7 +14,6 @@ namespace Martis.Domain.Parameters;
 /// </summary>
 public sealed class ParameterCatalog
 {
-    private const string ModelAssumptionConversion = "MODEL_ASSUMPTION";
     private readonly Dictionary<string, ParameterDefinition> _byId;
     private readonly List<ParameterWarning> _warnings = [];
 
@@ -153,6 +153,11 @@ public sealed class ParameterCatalog
             throw new ParameterUnavailableException(id, ParameterUnavailableReason.Historical);
         }
 
+        if (string.Equals(definition.Status, "SUPERADO", StringComparison.Ordinal))
+        {
+            throw new ParameterUnavailableException(id, ParameterUnavailableReason.Superseded);
+        }
+
         if (definition.UsedInV0 == false)
         {
             throw new ParameterUnavailableException(id, ParameterUnavailableReason.NotUsedInV0);
@@ -172,7 +177,11 @@ public sealed class ParameterCatalog
             definition.Scope,
             definition.Version,
             definition.Status,
-            definition.Sources);
+            definition.Sources,
+            definition.DerivedFrom,
+            definition.Conversion,
+            definition.Uncertainty,
+            definition.Range);
     }
 
     private static ParameterUnavailableException WrongKind(string id, string expected)
@@ -237,7 +246,7 @@ public sealed class ParameterCatalog
         return new ParameterCatalog(metadata.GetRawText(), location.GetRawText(), definitions, byId);
     }
 
-    private static (string? DerivedFrom, string? Conversion) ResolveDerivation(Draft draft, List<Draft> drafts)
+    private static (string? DerivedFrom, ParameterConversion? Conversion) ResolveDerivation(Draft draft, List<Draft> drafts)
     {
         if (draft.DerivedFrom is null)
         {
@@ -273,22 +282,28 @@ public sealed class ParameterCatalog
                 draft.Id);
         }
 
-        if (draft.Classification != ParameterClassification.ModelAssumption)
+        if (draft.Classification == ParameterClassification.ScientificMeasured)
         {
             throw new ParameterLoadException(
-                $"Parameter '{draft.Id}' is derived from '{draft.DerivedFrom}' and its classification must be MODEL_ASSUMPTION.",
+                $"Parameter '{draft.Id}' is derived from '{draft.DerivedFrom}' and cannot be SCIENTIFIC_MEASURED.",
                 draft.Id);
         }
 
-        if (draft.Conversion is not null
-            && !string.Equals(draft.Conversion, ModelAssumptionConversion, StringComparison.Ordinal))
+        if (IsScientific(draft.Classification) && !IsScientific(native.Classification))
         {
             throw new ParameterLoadException(
-                $"Parameter '{draft.Id}' has conversion '{draft.Conversion}'. A derived conversion is MODEL_ASSUMPTION.",
+                $"Parameter '{draft.Id}' is {draft.Classification} and derives from '{draft.DerivedFrom}', which is not SCIENTIFIC_*.",
                 draft.Id);
         }
 
-        return (draft.DerivedFrom, ModelAssumptionConversion);
+        if (draft.Conversion is null)
+        {
+            throw new ParameterLoadException(
+                $"Parameter '{draft.Id}' has derived_from and needs a conversion object.",
+                draft.Id);
+        }
+
+        return (draft.DerivedFrom, draft.Conversion);
     }
 
     private static Draft ReadDraft(JsonElement entry, int index)
@@ -317,11 +332,11 @@ public sealed class ParameterCatalog
         var usedInV0 = ReadOptionalBool(properties, "used_in_v0", id);
         var sources = ReadSources(properties, id);
         var range = ReadRange(properties, id);
-        var uncertainty = ReadOptionalText(properties, "uncertainty", id);
+        var uncertainty = ReadUncertainty(properties, id);
         var note = ReadOptionalText(properties, "note", id);
         var rationale = ReadOptionalText(properties, "rationale", id);
         var derivedFrom = ReadOptionalString(properties, "derived_from", id);
-        var conversion = ReadOptionalString(properties, "conversion", id);
+        var conversion = ReadConversion(properties, id);
 
         if (classification == ParameterClassification.UnclassifiedPending
             && (!string.Equals(status, "PENDING", StringComparison.Ordinal) || value is not ParameterLiteral.None))
@@ -342,6 +357,30 @@ public sealed class ParameterCatalog
         {
             throw new ParameterLoadException(
                 $"Parameter '{id}' is {classification} and needs a source with a DOI or a URL.",
+                id);
+        }
+
+        if (!IsScientific(classification)
+            && sources.Count == 0
+            && string.IsNullOrWhiteSpace(note)
+            && string.IsNullOrWhiteSpace(rationale))
+        {
+            throw new ParameterLoadException(
+                $"Parameter '{id}' is {classification} without a source and needs a rationale or a note.",
+                id);
+        }
+
+        if (range is ParameterRange.Interval bounds && bounds.Minimum > bounds.Maximum)
+        {
+            throw new ParameterLoadException(
+                $"Parameter '{id}' has a range whose minimum is greater than its maximum.",
+                id);
+        }
+
+        if (range is ParameterRange.Interval accepted && !LiesInside(value, accepted, id))
+        {
+            throw new ParameterLoadException(
+                $"Parameter '{id}' is outside its range.",
                 id);
         }
 
@@ -690,5 +729,167 @@ public sealed class ParameterCatalog
         string? Note,
         string? Rationale,
         string? DerivedFrom,
-        string? Conversion);
+        ParameterConversion? Conversion);
+
+    private static bool LiesInside(ParameterLiteral value, ParameterRange.Interval bounds, string id)
+    {
+        switch (value)
+        {
+            case ParameterLiteral.Number number:
+                return number.Value >= bounds.Minimum && number.Value <= bounds.Maximum;
+            case ParameterLiteral.Interval interval:
+                if (interval.Minimum > interval.Maximum)
+                {
+                    throw new ParameterLoadException(
+                        $"Parameter '{id}' has an interval value whose minimum is greater than its maximum.",
+                        id);
+                }
+
+                return interval.Minimum >= bounds.Minimum
+                    && interval.Maximum <= bounds.Maximum;
+            default:
+                throw new ParameterLoadException(
+                    $"Parameter '{id}' has a numeric range and a value that is not a number or an interval.",
+                    id);
+        }
+    }
+
+    private static string? ReadUncertainty(Dictionary<string, JsonElement> properties, string id)
+    {
+        if (!properties.TryGetValue("uncertainty", out var element) || element.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+
+        if (element.ValueKind == JsonValueKind.String)
+        {
+            return element.GetString();
+        }
+
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            return CanonicalJson(element);
+        }
+
+        throw new ParameterLoadException(
+            $"Parameter '{id}' has uncertainty that is not a string or an object.",
+            id);
+    }
+
+    /// <summary>
+    /// Compact JSON with object keys sorted by ordinal name.
+    /// Leaf tokens are copied as written, so a number is not reinterpreted.
+    /// </summary>
+    private static string CanonicalJson(JsonElement element)
+    {
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            WriteCanonical(writer, element);
+        }
+
+        return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    private static void WriteCanonical(Utf8JsonWriter writer, JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                writer.WriteStartObject();
+                foreach (var property in element.EnumerateObject().OrderBy(property => property.Name, StringComparer.Ordinal))
+                {
+                    writer.WritePropertyName(property.Name);
+                    WriteCanonical(writer, property.Value);
+                }
+
+                writer.WriteEndObject();
+                break;
+            case JsonValueKind.Array:
+                writer.WriteStartArray();
+                foreach (var item in element.EnumerateArray())
+                {
+                    WriteCanonical(writer, item);
+                }
+
+                writer.WriteEndArray();
+                break;
+            default:
+                writer.WriteRawValue(element.GetRawText().Trim());
+                break;
+        }
+    }
+
+    private static ParameterConversion? ReadConversion(Dictionary<string, JsonElement> properties, string id)
+    {
+        if (!properties.TryGetValue("conversion", out var element) || element.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            throw new ParameterLoadException($"Parameter '{id}' has a conversion that is not an object.", id);
+        }
+
+        var fields = ReadProperties(element, $"parameter '{id}' conversion");
+        var expression = ReadRequiredString(fields, "expression", $"parameter '{id}' conversion");
+        if (!fields.TryGetValue("factor", out var factorElement) || factorElement.ValueKind != JsonValueKind.Number)
+        {
+            throw new ParameterLoadException($"Parameter '{id}' conversion needs a numeric factor.", id);
+        }
+
+        if (!factorElement.TryGetDouble(out var factor) || !double.IsFinite(factor) || factor <= 0.0)
+        {
+            throw new ParameterLoadException(
+                $"Parameter '{id}' conversion factor must be finite and greater than 0.",
+                id);
+        }
+
+        if (!fields.TryGetValue("factor_classification", out var classificationElement))
+        {
+            throw new ParameterLoadException(
+                $"Parameter '{id}' conversion is missing factor_classification.",
+                id);
+        }
+
+        var factorClassification = classificationElement.ValueKind == JsonValueKind.String
+            ? classificationElement.GetString() ?? string.Empty
+            : string.Empty;
+        if (!string.Equals(factorClassification, "MODEL_ASSUMPTION", StringComparison.Ordinal))
+        {
+            throw new ParameterLoadException(
+                $"Parameter '{id}' conversion factor_classification must be MODEL_ASSUMPTION.",
+                id);
+        }
+
+        if (!fields.TryGetValue("assumptions", out var assumptionsElement) || assumptionsElement.ValueKind != JsonValueKind.Array)
+        {
+            throw new ParameterLoadException(
+                $"Parameter '{id}' conversion needs an assumptions array.",
+                id);
+        }
+
+        var assumptions = new List<string>();
+        foreach (var item in assumptionsElement.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(item.GetString()))
+            {
+                throw new ParameterLoadException(
+                    $"Parameter '{id}' conversion assumptions must be non-empty strings.",
+                    id);
+            }
+
+            assumptions.Add(item.GetString() ?? string.Empty);
+        }
+
+        if (assumptions.Count == 0)
+        {
+            throw new ParameterLoadException(
+                $"Parameter '{id}' conversion assumptions must not be empty.",
+                id);
+        }
+
+        return new ParameterConversion(expression, factor, factorClassification, assumptions);
+    }
 }

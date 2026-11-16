@@ -1,4 +1,5 @@
 using Martis.Contracts.Commands;
+using Martis.Domain.Validation;
 using Martis.Domain.World;
 using Martis.Simulation.Commands;
 using Martis.Simulation.Engine;
@@ -91,6 +92,25 @@ public sealed class SimulationEngineTests
         var error = Assert.Throws<InvalidOperationException>(() => engine.Advance(1));
         Assert.Contains("orphan", error.Message, StringComparison.Ordinal);
         Assert.Equal(0, engine.CurrentTick);
+    }
+
+    [Fact]
+    public void ACorruptStateFailsTheTickAndListsTheViolations()
+    {
+        var engine = Engine();
+        engine.State.Resources[0].Water = -1;
+        var error = Assert.Throws<SimulationInvariantException>(() => engine.Advance(1));
+        Assert.Contains(error.Violations, violation => violation.InvariantId == InvariantIds.NoNegativeResource);
+        Assert.Contains("VAL-001", error.Message, StringComparison.Ordinal);
+        Assert.Equal(0, engine.CurrentTick);
+
+        var balance = Engine();
+        balance.State.Resources[0].Water = 5;
+        balance.State.Environment[0].WaterIce = 5;
+        balance.State.WaterBudgets[0].RecordedTotalKg = 5;
+        var broken = Assert.Throws<SimulationInvariantException>(() => balance.Advance(1));
+        Assert.Contains(broken.Violations, violation => violation.InvariantId == InvariantIds.WaterPartition);
+        Assert.Equal(0, balance.CurrentTick);
     }
 
     [Fact]
