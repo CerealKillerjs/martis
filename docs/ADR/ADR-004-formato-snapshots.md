@@ -35,4 +35,4 @@ Además el TDD usa «snapshot» para dos cosas distintas (hueco H-03): el **snap
 - Tamaño y tiempo de snapshot completo se **miden** (BenchmarkDotNet); el objetivo «< 1 s» de §7.4 es objetivo, no medición.
 
 ## Nota de aprobación (2026-11-16)
-Dani aprueba binario versionado con cabecera para el guardado, y JSON solo para la exportación del CLI y la depuración. Los JSON de definiciones de §9 no cambian. El checksum es SHA-256 sobre el cuerpo sin comprimir. La compresión forma parte del formato objetivo; se activa cuando el benchmark inicial la mida.
+Dani aprueba binario versionado con cabecera para el guardado, y JSON solo para la exportación del CLI y la depuración. Los JSON de definiciones de §9 no cambian. El checksum es SHA-256 sobre el cuerpo sin comprimir. La compresión forma parte del formato objetivo; se activa cuando el benchmark la mida.

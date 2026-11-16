@@ -28,7 +28,7 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 | H-22 | B | §5.1, §5.5 | `Initialize(config)` solo valida, pero el constructor ya recibe estado y configuración; no está claro cuál construye el mundo. | Definir `SimulationEngineFactory`; `Initialize` crea el estado desde configuración y escenario. | Motor |
 | H-23 | B | §1.1, §18 | El TDD no menciona CI, licencia ni estructura de ramas/PR (solo «Ramas de funcionalidades»). | CI mínima en Linux (S1-06) y decisión de licencia antes de publicar el repo. | Dani |
 | H-24 | B | §20 | La referencia Jakosky & Edwards (2018) está sin identificar bibliográficamente. | Registrar DOI/versión/fecha/página en el modelo científico de S1-16 antes de usarla. | Ciencia |
-| H-25 | A | §1.1, §17 DT-001/002 | «Fijar .NET según Godot» choca con el estado actual: Godot 4.7.x exige mínimo `net8.0`, y .NET 8/9 están fuera de soporte desde el 10-nov-2026; Godot 4.8 (beta) sube el mínimo a `net10.0`. | ADR-001/002: SDK 10 LTS, libs `net10.0`, decisión final de Game en T08. | Dani |
+| H-25 | A | §1.1, §17 DT-001/002 | «Fijar .NET según Godot» choca con el estado actual: Godot 4.7.x exige mínimo `net8.0`, y .NET 8/9 están fuera de soporte desde el 10-nov-2026; Godot 4.8 (beta) sube el mínimo a `net10.0`. | **Cerrado** (2026-11-16) en [ADR-001](ADR/ADR-001-version-godot.md) y [ADR-002](ADR/ADR-002-version-dotnet.md): SDK 10.0.404 (LTS), librerías y CLI en `net10.0`; la versión definitiva de `Martis.Game` se fija en T08. | Dani |
 | H-26 | B | §7.1 | `GridIndex` fija `Width=64`/`Height=64` como constantes, pero la configuración admite `MapWidth/MapHeight`. | Usar dimensiones de configuración. | Motor |
 | H-27 | B | §1.2 | No hay proyectos de test para Contracts ni Cli. | Añadir `Martis.Contracts.Tests`/`Martis.Cli.Tests` o cubrirlos desde Integration.Tests (propuesta Sprint 1). | QA |
 | H-28 | M | §5.4 | Se listan 8 interfaces de sistema y 15 pasos de tick; no se define el orden/registro canónico ni qué sistema ejecuta cada paso (p. ej. «Publicar snapshot», «Actualizar estadísticas»). | Pipeline fijo y versionado de sistemas (S1-22) con test de orden. | Motor |
@@ -38,3 +38,9 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 - Los objetivos de §7.4 (10.000 poblaciones, 1.000 ticks < 10 s, snapshot < 1 s, < 256 MB) son **objetivos de ingeniería, no mediciones** (el propio TDD lo dice). Ningún documento de planificación los trata como resultados.
 - Los números de ejemplo del TDD (genoma A01, 10.000 → 9.900 + 100, `mutation_rate` 0,0001, límite 32) son **ilustrativos** y no valores científicos.
 - Las versiones de Godot y .NET de ADR-001/002 están verificadas contra fuentes oficiales con fecha 2026-11-16; las versiones de paquetes NuGet **no** se han verificado.
+
+## Deuda documental
+
+- `GDD.md` — pendiente.
+- `SCIENCE_MODEL.md` — la hace MARTIS Ciencia en T05/T06.
+- `DATA_DICTIONARY.md` — empieza en T02 y se completa en T03. Los tipos que introduce T02 están en [DATA_DICTIONARY.md](DATA_DICTIONARY.md).
