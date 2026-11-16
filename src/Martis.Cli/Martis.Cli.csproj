@@ -3,6 +3,10 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <!-- SDK that built the executable, recorded in metadata.json (ADR-002). -->
+    <AssemblyMetadata Include="BuildSdkVersion" Value="$(NETCoreSdkVersion)" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Martis.Simulation\Martis.Simulation.csproj" />
     <ProjectReference Include="..\Martis.Persistence\Martis.Persistence.csproj" />
   </ItemGroup>

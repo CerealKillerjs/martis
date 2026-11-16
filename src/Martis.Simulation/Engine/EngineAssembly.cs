@@ -15,6 +15,12 @@ public static class EngineAssembly
         typeof(EngineAssembly).Assembly.GetName().Name ?? string.Empty;
 
     /// <summary>
+    /// Product version of the engine (<c>Version</c> in <c>Directory.Build.props</c>),
+    /// without a <c>+</c> source-revision suffix. Stored beside snapshots and run metadata.
+    /// </summary>
+    public static string Version { get; } = ReadVersion();
+
+    /// <summary>
     /// Assembly name of <c>Martis.Domain</c>.
     /// Reading a domain type forces the compiler to emit the project reference.
     /// An unused project reference would be missing from <c>GetReferencedAssemblies</c>.
@@ -28,4 +34,20 @@ public static class EngineAssembly
     /// </summary>
     public static string ContractsAssemblyName =>
         typeof(Martis.Contracts.ContractsAssembly).Assembly.GetName().Name ?? string.Empty;
+
+    private static string ReadVersion()
+    {
+        var informational = typeof(EngineAssembly).Assembly
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+            .OfType<System.Reflection.AssemblyInformationalVersionAttribute>()
+            .FirstOrDefault()
+            ?.InformationalVersion;
+        if (string.IsNullOrWhiteSpace(informational))
+        {
+            return "0.0.0";
+        }
+
+        var plus = informational.IndexOf('+', StringComparison.Ordinal);
+        return plus < 0 ? informational : informational[..plus];
+    }
 }

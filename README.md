@@ -2,7 +2,7 @@
 
 Motor de simulación científica en C# / .NET. Este repositorio contiene el motor y el ejecutable sin interfaz. La aplicación Godot (`Martis.Game`) no forma parte de la solución: el motor se compila y se prueba sin Godot.
 
-Este árbol corresponde al hito **T01 Infrastructure**, al modelo de dominio de **T02** y a la base de motor de **T03a**: cargador genérico de parámetros, configuración en soles, PRNG `pcg32-v1`, cinco flujos, motor con sistemas stub y el comando `simulate`. No hay escenario de Marte ni ficheros en `data/scenarios/*.json`.
+Este árbol corresponde al hito **T01 Infrastructure**, al modelo de dominio de **T02**, a la base de motor de **T03a**, al escenario MarsBaseline v0.4 de **T03b** y al prototipo CLI del TDD §19 (S1-31 a S1-33): snapshot completo del estado, exportación JSON canónica y el comando `simulate` que carga el escenario, avanza los ticks, valida y guarda los resultados.
 
 ## Requisitos
 
@@ -41,13 +41,31 @@ Versión del motor:
 dotnet run --project src/Martis.Cli -c Release -- --version
 ```
 
-Salida esperada: `MARTIS 0.1.0` y código de salida 0. Un argumento que no sea `--version` ni un `simulate` válido termina con código 1. `0.1.0` es la versión de producto del motor (`Version` en `Directory.Build.props`), no un dato científico.
+Salida esperada: `MARTIS 0.1.0` y código de salida 0. Un argumento que no sea `--version` ni un `simulate` válido termina con código 2. `0.1.0` es la versión de producto del motor (`Version` en `Directory.Build.props`), no un dato científico.
 
-`simulate` crea un mundo vacío de 64×64, avanza los ticks con sistemas stub e imprime el tick final. Acepta `--scenario` y `--output` y no lee ni escribe ficheros.
+`simulate` ejecuta el flujo del TDD §19: carga `mars_baseline` desde `data/scenarios/MarsBaseline`, crea el mundo de 64×64, inicializa el ambiente y los cinco flujos `pcg32-v1`, avanza `--ticks` con la validación activada, toma el snapshot completo y escribe los resultados en `--output`. Imprime el tick final.
 
 ```bash
-dotnet run --project src/Martis.Cli -- simulate --scenario mars_baseline --seed 12345 --ticks 1000 --output /tmp/m2
+dotnet run --project src/Martis.Cli -c Release -- simulate --scenario mars_baseline --seed 12345 --ticks 1000 --output results/experiment_001
 ```
+
+Opciones extra: `--root <dir>` apunta a la raíz del repositorio si el comando no se lanza desde dentro de él (por defecto busca `data/scenarios/MarsBaseline` subiendo desde el directorio actual y desde el ejecutable). `--history-interval <n>` fija cada cuántos ticks se escribe una fila de historial (por defecto 30, la frecuencia orientativa de TDD §8.1; es un valor de ingeniería, no del modelo).
+
+Códigos de salida: **0** éxito; **1** fallo de ejecución (violación de invariante, datos del escenario ausentes o error de escritura); **2** argumentos inválidos (convención de `docs/SPRINT_01.md`).
+
+Ficheros de `--output` (H-16):
+
+| Fichero | Contenido |
+| --- | --- |
+| `metadata.json` | estado, semilla (texto, para no perder bits de `ulong`), ticks, escenario y versión de datos, versión del motor, del pipeline, del esquema de snapshot y del PRNG, runtime, SDK de compilación, RID y SHA-256 del snapshot |
+| `final_snapshot.json` | `StateSnapshot` completo en JSON canónico (`martis-state-v1`): configuración, tick, estado de los cinco flujos, todas las celdas y todas las poblaciones con su genoma |
+| `resource_history.csv` | totales de los nueve depósitos y del hielo (kg) en el tick 0, cada `--history-interval` ticks y en el último |
+| `population_history.csv` | número de poblaciones, abundancia y biomasa totales en los mismos ticks (todo 0 hasta T05) |
+| `simulation.log` | escenario, semilla, pipeline, avisos del cargador y resultado; ante un fallo, una línea por violación con VAL-id, semilla, tick, celda (índice y x, y), población, paso y valor |
+
+Ninguna salida lleva hora, ruta ni nombre de máquina: dos ejecuciones con la misma semilla en la misma plataforma y runtime escriben los mismos bytes (VAL-010, TDD §6). Si una validación falla, el CLI escribe igualmente los cinco ficheros; el snapshot es el último tick confirmado y `metadata.json` dice `"status": "failed"`. `mutations.csv` y `mass_balance.csv` llegan con T06 y T04.
+
+El JSON de `final_snapshot.json` es exportación y depuración (ADR-004). El formato binario de guardado en SQLite llega en T07.
 
 ## Grafo de dependencias
 
@@ -121,7 +139,7 @@ En `tests/Martis.Integration.Tests`, con el rasgo `Category=Architecture`:
 
 - Por reflexión (`Assembly.GetReferencedAssemblies`): `Martis.Domain` no referencia ensamblados `Godot*`, `Microsoft.Data.Sqlite*`, `SQLitePCL*` ni `Martis.*`. Simulation referencia Domain y Contracts, y no referencia Persistence, Cli, Godot ni SQLite. Contracts referencia solo Domain: nunca Simulation, Persistence, Cli, SQLite ni Godot.
 - Por los `.csproj` (BCL, sin paquetes extra): el grafo de arriba, sin ciclos. La reflexión no ve una referencia de proyecto que ningún método usa; el examen del `.csproj` sí.
-- El código de `src/` no llama a `System.Random`, `Random.Shared`, `GetHashCode()`, `Parallel.*`, `AsParallel()`, `Task.Run`, `DateTime.Now`, `DateTime.UtcNow` ni `Guid.NewGuid()`. En Domain y Simulation tampoco llama a `Environment.TickCount` ni a `Stopwatch`. Los comentarios pueden nombrarlas; el escáner los quita antes de buscar. El comando `simulate` no es el prototipo del TDD §19: no carga un escenario ni guarda resultados.
+- El código de `src/` no llama a `System.Random`, `Random.Shared`, `GetHashCode()`, `Parallel.*`, `AsParallel()`, `Task.Run`, `DateTime.Now`, `DateTime.UtcNow` ni `Guid.NewGuid()`. En Domain y Simulation tampoco llama a `Environment.TickCount` ni a `Stopwatch`. Los comentarios pueden nombrarlas; el escáner los quita antes de buscar.
 
 `dotnet test` puede imprimir `VSTEST_ARTIFACTS_DIRECTORY environment variable was not found... outdated Microsoft.NET.Test.Sdk`. Sale de `testhost` 18.12.0 (el paquete fijado, que es el último estable) cuando el proceso no define esa variable. No es un aviso del compilador: `dotnet build -c Release` termina con 0 avisos. Definir la variable apunta el directorio de artefactos del host y el texto desaparece. La CI la define.
 
@@ -131,11 +149,11 @@ GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest
 
 ## Fuera de este hito
 
-- El CLI `simulate` sigue creando un mundo vacío: todavía no abre el escenario (S1-32). La biblioteca sí carga MarsBaseline v0.4, con `EnvironmentSystem` a temperatura constante. VAL-004 se comprueba en `NextBool`. VAL-010 se comprueba en la misma plataforma. VAL-006..008 siguen pendientes. El trasvase de agua entre compartimentos llega en T04.
+- `EnvironmentSystem` mantiene la temperatura constante (sin ciclos diurno ni estacional). VAL-004 se comprueba en `NextBool`. VAL-010 se comprueba en la misma plataforma. VAL-006..008 siguen pendientes. El trasvase de agua entre compartimentos llega en T04.
 - `Martis.Game`, escenas y el SDK de Godot (T08).
 - `benchmarks/` (T10).
 - Esquema SQLite, migraciones y partidas guardadas (T07). El proyecto de persistencia solo abre una base en memoria para comprobar el paquete.
-- `metadata.json` con la versión del runtime y del SDK (lo pide ADR-002 para cada ejecución; no hay ejecución de escenario todavía).
+- Matriz de invariantes VAL-001..010 (S1-34) y benchmark inicial (S1-35).
 
 ## Regla de Contracts
 

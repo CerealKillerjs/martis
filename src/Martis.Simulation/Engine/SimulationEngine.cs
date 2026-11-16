@@ -61,6 +61,22 @@ public sealed class SimulationEngine : ISimulationEngine
 
     public IReadOnlyList<string> SystemNames { get; }
 
+    /// <summary>
+    /// Step id reported for a failure found by <see cref="SimulationValidator"/>
+    /// after every system of the tick has returned. It is not a pipeline step.
+    /// </summary>
+    public const string ValidationStepName = "validate-state";
+
+    /// <summary>
+    /// Name of the step that failed in the last <see cref="Advance"/> call, or null
+    /// when the last tick committed. It is <see cref="ValidationStepName"/> when the
+    /// end-of-tick validation failed. Diagnostics read it (TDD §11).
+    /// </summary>
+    public string? FailedStep { get; private set; }
+
+    /// <summary>Commands queued for a later tick. A full snapshot needs an empty queue.</summary>
+    public int PendingCommandCount => _commands.Count;
+
     public void Initialize(SimulationConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
@@ -89,6 +105,8 @@ public sealed class SimulationEngine : ISimulationEngine
             // The copy is discarded when the tick commits. A failure puts the
             // world, the PRNG and the queue back, so the tick is not half-applied.
             var checkpoint = StateCheckpoint.Capture(State, _random, _commands);
+            FailedStep = null;
+            string? running = null;
             try
             {
                 var context = new SimulationContext(
@@ -100,9 +118,11 @@ public sealed class SimulationEngine : ISimulationEngine
                     _handlers);
                 foreach (var system in _systems)
                 {
+                    running = system.Name;
                     system.Execute(context, _configuration.DeltaTimeSols);
                 }
 
+                running = ValidationStepName;
                 if (_configuration.EnableValidation)
                 {
                     var violations = SimulationValidator.Validate(State);
@@ -112,6 +132,7 @@ public sealed class SimulationEngine : ISimulationEngine
                     }
                 }
 
+                running = null;
                 checked
                 {
                     State.Tick++;
@@ -119,6 +140,7 @@ public sealed class SimulationEngine : ISimulationEngine
             }
             catch (Exception)
             {
+                FailedStep = running;
                 checkpoint.Restore(State, _random, _commands);
                 throw;
             }
