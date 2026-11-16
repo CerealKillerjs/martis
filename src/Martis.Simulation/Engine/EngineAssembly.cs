@@ -3,8 +3,8 @@ namespace Martis.Simulation.Engine;
 /// <summary>
 /// Names this assembly and records the project references the engine is allowed to keep:
 /// <c>Martis.Domain</c> and <c>Martis.Contracts</c>.
-/// Contracts stay data-only. Command handlers that change simulation state will live here,
-/// not in Contracts. T01 does not declare those handlers.
+/// Contracts stay data-only. Command handlers that change simulation state live here,
+/// not in Contracts.
 /// Later milestones must not call System.Random, GetHashCode(), Parallel.*, AsParallel(),
 /// Task.Run, DateTime.Now, DateTime.UtcNow or Guid.NewGuid() from this project.
 /// </summary>

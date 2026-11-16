@@ -19,6 +19,29 @@ Referencia del algoritmo: implementación mínima de PCG32 de M. E. O'Neill (Apa
 
 **PCG32**, identificador de algoritmo versionado `pcg32-v1` guardado en snapshots y `metadata.json`. Cinco flujos independientes (Environment, Mutation, Reproduction, GeneticDrift, Events). Mecanismo de derivación de cada flujo a partir de `WorldSeed` (distinto incremento por flujo y/o mezcla de bits de la semilla) **documentado y fijado en S1-20**; requisitos: determinista, sin `GetHashCode`, y probado con un test de aislamiento entre flujos. Las reglas de conversión (`NextDouble` en [0,1), `NextInt` sin sesgo de módulo, `NextBool(p)` con `p` en [0,1]) forman parte de `pcg32-v1`; cambiarlas implica `pcg32-v2`.
 
+## Derivación fijada en S1-20
+
+Cada flujo es `pcg32_srandom_r(WorldSeed, secuencia)` de pcg-c (`pcg_setseq_64_srandom_r`): el estado inicial es 0, el incremento queda en `(secuencia << 1) | 1`, se avanza una vez, se suma `WorldSeed` y se avanza otra vez. La secuencia no sale de un hash.
+
+| Flujo | initseq |
+| --- | --- |
+| Environment | 1 |
+| Mutation | 2 |
+| Reproduction | 3 |
+| GeneticDrift | 4 |
+| Events | 5 |
+
+`RandomState` guarda el estado interno y el incremento ya impar, no el `initseq`. Restaurar esos dos enteros reproduce la continuación. La etiqueta `WorldSeed` viaja al lado, pero el generador sigue el estado restaurado.
+
+## Conversión de pcg32-v1
+
+La salida oficial es la palabra de 32 bits XSH-RR (`pcg_setseq_64_xsh_rr_32_random_r`, multiplicador `6364136223846793005`). Encima de eso, y solo como parte de `pcg32-v1`:
+
+- `NextUInt64`: la primera palabra de 32 bits ocupa los bits bajos; la segunda, los altos.
+- `NextDouble`: los 53 bits altos de `NextUInt64`, divididos por 2^53. El intervalo es [0, 1).
+- `NextInt`: el `boundedrand` oficial. Se descartan los valores por debajo de `2^32 mod n` y el resto se reduce con el módulo. Así no hay sesgo.
+- `NextBool(p)`: `p` tiene que ser finito y estar en [0, 1]. Si no, lanza (VAL-004). `p = 0` devuelve falso y `p = 1` devuelve verdadero sin consumir un número. El resto compara `NextDouble()` con `p`.
+
 ## Consecuencias
 
 - Cambiar cualquier detalle del algoritmo invalida los resultados de referencia: obliga a subir la versión de algoritmo.

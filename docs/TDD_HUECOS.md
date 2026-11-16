@@ -7,8 +7,8 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 | H-01 | A | §1.2 tabla vs [docs/tdd/image1.png](tdd/image1.png) | La tabla del TDD dice *Simulation → Domain* solo y *Cli → Simulation, Persistence*. El diagrama dibuja *Simulation → Contracts* y *Cli → Simulation* solo. | **Cerrado** (2026-11-16) en [ADR-000](ADR/ADR-000-reglas-de-arquitectura.md): Simulation → Domain y Contracts; Cli → Simulation y Persistence. | MARTIS Lead |
 | H-02 | A | §5.1, §8, §12.2 | El TDD pone `ISimulationCommand.Apply(SimulationState)` en Contracts y no asigna proyecto a `SimulationState`. Si el estado viviera en Simulation, Contracts→Simulation cerraría un ciclo. | **Cerrado** (2026-11-16) en [ADR-000](ADR/ADR-000-reglas-de-arquitectura.md): `SimulationState` en Domain; los comandos son datos en Contracts; un handler en Simulation los aplica sobre ese estado. Contracts no contiene `Apply`. | MARTIS Lead |
 | H-03 | A | §8.1 vs §9.3 | «Snapshot» significa dos cosas: vista agregada para UI (`SimulationSnapshot`, sin genomas ni RNG) y estado completo de guardado (con genomas y estado PRNG). `Restore(SimulationSnapshot)` y VAL-009 requieren estado completo. | Dos tipos: `SimulationSnapshot` (vista, Contracts) y `StateSnapshot`/`SaveSnapshot` (completo, Persistence/Simulation). | Dani |
-| H-04 | A | §5.3, §5.5, §6 | El contexto y el motor reciben **un** `SimulationRandom`, pero §6 exige 5 flujos independientes. No se define cómo derivar cada flujo de `WorldSeed`; `Restore` solo restaura `State`, no el RNG. | Un `RngStreams` (5 flujos) en el contexto; derivación documentada (ADR-003); su estado forma parte del snapshot completo. | Motor/Dani |
-| H-05 | A | §3.1, §12.1, §2.5 | Δt inicial = 1 **sol** (~88.775 s) pero la configuración usa `DeltaTimeDays` y `AgeDistributionMeanDays` («días»). Un sol no es un día terrestre. B.4 pide escalas «desde horas», imposible con Δt = 1 sol sin subpasos. | **Parcial:** 1 tick = 1 sol; SecondsPerSol ≈ 88 775 s (redondeo, MODEL_ASSUMPTION; ver [ADR-011](ADR/ADR-011-unidades-del-modelo.md)). | MARTIS Lead |
+| H-04 | A | §5.3, §5.5, §6 | El contexto y el motor reciben **un** `SimulationRandom`, pero §6 exige 5 flujos independientes. No se define cómo derivar cada flujo de `WorldSeed`; `Restore` solo restaura `State`, no el RNG. | **Parcial (T03a):** `RngStreams` está en el contexto. La derivación queda fijada en [ADR-003](ADR/ADR-003-prng.md): cinco secuencias 1..5, sin hash. El estado se exporta y se restaura. Meterlo en el snapshot completo sigue en H-03 / S1-31. | Motor/Dani |
+| H-05 | A | §3.1, §12.1, §2.5 | Δt inicial = 1 **sol** (~88.775 s) pero la configuración usa `DeltaTimeDays` y `AgeDistributionMeanDays` («días»). Un sol no es un día terrestre. B.4 pide escalas «desde horas», imposible con Δt = 1 sol sin subpasos. | **Parcial:** 1 tick = 1 sol; SecondsPerSol ≈ 88 775 s (redondeo, MODEL_ASSUMPTION; ver [ADR-011](ADR/ADR-011-unidades-del-modelo.md)). La configuración usa `DeltaTimeSols` (T03a, S1-18). Queda B.4 (las escalas «desde horas» necesitan subpasos). El paso en soles de la configuración queda cubierto en T03 y no sigue pendiente para T04. | MARTIS Lead |
 | H-06 | M | §4.4 vs §12.1 | Límite «por especie y celda» vs `MaxVariantsPerCell`. | **Cerrado** (2026-11-16) en [ADR-006](ADR/ADR-006-variantes-por-celda.md): el nombre es `MaxVariantsPerSpeciesPerCell`. | MARTIS Lead |
 | H-07 | A | §7, §7.3 | Tamaño físico de celda sin fijar; imprescindible para difusión (`D·Δt/Δx²`), radiación y calibración regional. | Fijar escala en el escenario como `MODEL_ASSUMPTION`; no usar hasta decidirlo. Para el prototipo, ninguna difusión. | Dani/Ciencia |
 | H-08 | M | §7.3 | Condiciones de contorno de la difusión no definidas. | **Cerrado** (2026-11-16) en [ADR-008](ADR/ADR-008-difusion.md): borde cerrado, sin flujo. | MARTIS Lead |
@@ -31,7 +31,7 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 | H-25 | A | §1.1, §17 DT-001/002 | «Fijar .NET según Godot» choca con el estado actual: Godot 4.7.x exige mínimo `net8.0`, y .NET 8/9 están fuera de soporte desde el 10-nov-2026; Godot 4.8 (beta) sube el mínimo a `net10.0`. | **Cerrado** (2026-11-16) en [ADR-001](ADR/ADR-001-version-godot.md) y [ADR-002](ADR/ADR-002-version-dotnet.md): SDK 10.0.404 (LTS), librerías y CLI en `net10.0`; la versión definitiva de `Martis.Game` se fija en T08. | Dani |
 | H-26 | B | §7.1 | `GridIndex` fija `Width=64`/`Height=64` como constantes, pero la configuración admite `MapWidth/MapHeight`. | Usar dimensiones de configuración. | Motor |
 | H-27 | B | §1.2 | No hay proyectos de test para Contracts ni Cli. | Añadir `Martis.Contracts.Tests`/`Martis.Cli.Tests` o cubrirlos desde Integration.Tests (propuesta Sprint 1). | QA |
-| H-28 | M | §5.4 | Se listan 8 interfaces de sistema y 15 pasos de tick; no se define el orden/registro canónico ni qué sistema ejecuta cada paso (p. ej. «Publicar snapshot», «Actualizar estadísticas»). | Pipeline fijo y versionado de sistemas (S1-22) con test de orden. | Motor |
+| H-28 | M | §5.4 | Se listan 8 interfaces de sistema y 15 pasos de tick; no se define el orden/registro canónico ni qué sistema ejecuta cada paso (p. ej. «Publicar snapshot», «Actualizar estadísticas»). | **Parcial (T03a):** el orden v0 está fijado en `SimulationPipeline` (`pipeline-v0`) y cubierto por test. Los pasos, salvo la cola de comandos, siguen en stub. | Motor |
 
 ## Notas sobre cifras y datos
 
@@ -48,7 +48,7 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 ## Deuda de modelo (ronda 2)
 
 - R2-10. Solo temperatura y presión distinguen «sin asignar». El resto de campos ambientales nace en 0. El cargador de T03 tiene que rellenarlos todos de forma explícita.
-- R2-11. `MaintenanceCost` y `ReproductionRate` están en [0, 1]: el primero es una fracción de `EnergyReserveJ` por sol y el segundo una tasa per cápita por tick (0 significa que no se reproduce). Se calibran en T05/T06.
+- R2-11. `MaintenanceCost` y `ReproductionRate` están en [0, 1] y se leen por sol (1 tick). El primero es una fracción de `EnergyReserveJ`. El segundo es una tasa per cápita (0 significa que no se reproduce). El techo ≤ 1 es una decisión de diseño. Se calibran en T05/T06.
 - R2-12. El agua adsorbida o hidratada queda fuera de v0. DOM-VAL-012 comprueba la contabilidad contra el total registrado y no un doble conteo cuyo total se haya inflado. La conservación entre ticks se comprueba en T04.
 - R2-13. `BiomassKg` tiene pendiente declarar si es masa seca o húmeda, junto a la tabla de especies de los depósitos.
 - R2-14. PAR queda para T05/T06.
@@ -56,9 +56,16 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 
 ## Obligaciones del cargador de T03
 
-- Rechazar valores sin `classification` o sin `source`.
-- Avisar si una celda `Regional` lleva un valor `planetary_mean`.
-- Convertir datos intensivos a kg por celda con la geometría del escenario.
-- Rellenar explícitamente todos los campos de `EnvironmentState` (R2-10).
-- Guardar el valor nativo de la fuente con su clasificación (p. ej. Hassler 0,210 mGy/día, `SCIENTIFIC_MEASURED`) y el valor por sol aparte, como derivado, con la conversión `MODEL_ASSUMPTION` (R3-07). En este PR solo queda anotado.
-- Citar el UV de REMS con Viúdez-Moreiras et al. 2025, doi:10.1073/pnas.2426611122 (R3-09). En este PR solo queda anotado.
+- Rechazar un valor sin `classification`. Rechazar `SCIENTIFIC_*` sin una fuente que tenga DOI o URL. Un `GAME_BALANCE` puede ir con `source: null`: es el ejemplo `mutation_rate` del TDD §10.2 y lo que permite ADR-000 R5. T03a lo aplica en el cargador genérico.
+- Avisar si una celda `Regional` usa un valor `planetary_mean`. T03a lo hace con `NoteRegionalCellUse`: avisa, nombra el id y no reescribe el número. El cargador no ve celdas al leer el JSON.
+- `UNCLASSIFIED_PENDING` solo entra si `status` es PENDING y `value` es null. Leerlo es un error que nombra el id. No se inventa un cero. HISTORICAL y `used_in_v0: false` se cargan y no se entregan.
+- Convertir datos intensivos a kg por celda con la geometría del escenario. Sigue pendiente: H-07 no tiene metros por celda y T03a no trae escenario.
+- Rellenar explícitamente todos los campos de `EnvironmentState` (R2-10). Sigue pendiente de T03b: este hito no carga un escenario.
+- Guardar el valor nativo de la fuente con su clasificación y el valor derivado aparte, con la conversión `MODEL_ASSUMPTION` (R3-07). T03a lo guarda como dos entradas unidas por `derived_from`. No calcula el número y no copia cifras de Marte.
+- Citar el UV de REMS con Viúdez-Moreiras et al. 2025, doi:10.1073/pnas.2426611122 (R3-09). Sigue solo anotado: no hay escenario en T03a.
+- La fluencia UV diaria (J/m² por sol) queda pendiente de T03/T05. No se suma tick a tick como si fuera la media del sol.
+
+## Deuda de T05/T06 anotada en T03a
+
+- R4-01. v0 no modela mortalidad por agotamiento de la reserva de energía (`MODEL_ASSUMPTION`). La alternativa a decidir es un coste de mantenimiento fijo por unidad de biomasa con muerte por inanición.
+- R4-07. El techo `ReproductionRate` ≤ 1 es una decisión de diseño. La calibración de `MaintenanceCost` y `ReproductionRate` sigue en T05/T06. Las dos escalas se leen por sol (1 tick).

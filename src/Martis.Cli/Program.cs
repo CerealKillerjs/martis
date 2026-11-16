@@ -6,7 +6,8 @@ namespace Martis.Cli;
 
 /// <summary>
 /// Headless entry point of the MARTIS engine.
-/// T01 answers <c>--version</c> and does not run a simulation.
+/// <c>--version</c> prints the product version.
+/// <c>simulate</c> advances an empty world and prints the final tick.
 /// </summary>
 public static class Program
 {
@@ -17,10 +18,10 @@ public static class Program
     public static readonly string EngineVersion = ReadEngineVersion();
 
     /// <summary>
-    /// Prints the engine version when the only argument is <c>--version</c>.
+    /// Prints the engine version, or runs <c>simulate</c>.
     /// </summary>
     /// <param name="args">Command-line arguments supplied by the host.</param>
-    /// <returns><c>0</c> when the version was printed; <c>1</c> otherwise.</returns>
+    /// <returns><c>0</c> on success; <c>1</c> when the arguments are not recognised.</returns>
     public static int Main(string[] args)
     {
         // Keep the allowed project references in the assembly manifest.
@@ -34,7 +35,12 @@ public static class Program
             return 0;
         }
 
-        Console.Error.WriteLine("Usage: martis --version");
+        if (args.Length > 0 && string.Equals(args[0], "simulate", StringComparison.Ordinal))
+        {
+            return SimulateCommand.Run(args.AsSpan(1));
+        }
+
+        Console.Error.WriteLine(SimulateCommand.Usage);
         return 1;
     }
 

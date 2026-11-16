@@ -18,6 +18,15 @@ public sealed class ProjectGraphTests
         "coverlet.collector",
     ];
 
+    private static readonly string[] SimulationTestPackages =
+    [
+        "Microsoft.NET.Test.Sdk",
+        "xunit",
+        "xunit.runner.visualstudio",
+        "coverlet.collector",
+        "CsCheck",
+    ];
+
     private static readonly Dictionary<string, string[]> ExpectedProjectReferences = new(StringComparer.Ordinal)
     {
         ["Martis.Domain"] = [],
@@ -72,7 +81,7 @@ public sealed class ProjectGraphTests
             ["Martis.Persistence"] = ["Microsoft.Data.Sqlite"],
             ["Martis.Cli"] = [],
             ["Martis.Domain.Tests"] = TestPackages,
-            ["Martis.Simulation.Tests"] = TestPackages,
+            ["Martis.Simulation.Tests"] = SimulationTestPackages,
             ["Martis.Persistence.Tests"] = TestPackages,
             ["Martis.Integration.Tests"] = TestPackages,
         };
