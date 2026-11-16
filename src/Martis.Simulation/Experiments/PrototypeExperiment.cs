@@ -21,7 +21,18 @@ public sealed record ExperimentRequest(
     ulong Seed,
     int Ticks,
     int HistoryIntervalTicks,
-    HostInfo Host);
+    HostInfo Host)
+{
+    /// <summary>Populations inoculated before the first tick, applied in list order (TDD §5.1).</summary>
+    public IReadOnlyList<PopulationIntroduction> Introductions { get; init; } = [];
+}
+
+/// <summary>
+/// One inoculation for <see cref="ExperimentRequest"/>: <paramref name="BiomassKg"/> of
+/// <paramref name="OrganismId"/> placed in <paramref name="CellIndex"/> before tick 1.
+/// Hosts use this instead of the Contracts command, so they depend on Simulation only.
+/// </summary>
+public sealed record PopulationIntroduction(string OrganismId, int CellIndex, double BiomassKg);
 
 /// <summary>One output file, as bytes. The host decides where to write it.</summary>
 public sealed record ExperimentFile(string Name, byte[] Content);
@@ -58,10 +69,11 @@ public static class PrototypeExperiment
     public const string ResourceHistoryFile = "resource_history.csv";
     public const string PopulationHistoryFile = "population_history.csv";
     public const string LogFile = "simulation.log";
+    public const string MassBalanceFile = "mass_balance.csv";
 
     /// <summary>Files every run produces, in write order.</summary>
     public static IReadOnlyList<string> FileNames { get; } =
-        [MetadataFile, SnapshotFile, ResourceHistoryFile, PopulationHistoryFile, LogFile];
+        [MetadataFile, SnapshotFile, ResourceHistoryFile, PopulationHistoryFile, MassBalanceFile, LogFile];
 
     /// <summary>
     /// Runs the flow. <paramref name="engineFactory"/> defaults to
@@ -71,7 +83,8 @@ public static class PrototypeExperiment
     public static ExperimentResult Run(
         ExperimentRequest request,
         MarsBaselineScenario scenario,
-        Func<MarsBaselineScenario, ulong, SimulationEngine>? engineFactory = null)
+        Func<MarsBaselineScenario, ulong, SimulationEngine>? engineFactory = null,
+        Biology.BiologyCatalog? biology = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(scenario);
@@ -85,7 +98,28 @@ public static class PrototypeExperiment
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(request.HistoryIntervalTicks);
 
         var identity = ScenarioIdentity.From(request.ScenarioId, scenario);
-        var engine = (engineFactory ?? ((s, seed) => MarsBaselineWorld.Create(s, seed)))(scenario, request.Seed);
+        SimulationEngine engine;
+        Biology.MetabolismWorkspace? workspace = null;
+        if (engineFactory is not null)
+        {
+            engine = engineFactory(scenario, request.Seed);
+        }
+        else if (biology is not null)
+        {
+            (engine, workspace) = MarsBaselineWorld.CreateWithBiology(scenario, biology, request.Seed);
+        }
+        else
+        {
+            engine = MarsBaselineWorld.Create(scenario, request.Seed);
+        }
+
+        foreach (var introduction in request.Introductions)
+        {
+            engine.ApplyCommand(new Martis.Contracts.Commands.IntroducePopulationCommand(
+                introduction.OrganismId, introduction.CellIndex, introduction.BiomassKg));
+        }
+
+        var balance = new MassBalanceWriter(biology ?? workspace?.Catalog);
         var log = new Log();
         var resources = new StringBuilder();
         var populations = new StringBuilder();
@@ -105,7 +139,12 @@ public static class PrototypeExperiment
             log.Line($"scenario warning {warning}");
         }
 
-        log.Line($"seed {Num(request.Seed)} prng {Pcg32.AlgorithmId} pipeline {SimulationPipeline.Version}");
+        log.Line($"seed {Num(request.Seed)} prng {Pcg32.AlgorithmId} pipeline {engine.PipelineVersion}");
+        foreach (var introduction in request.Introductions)
+        {
+            log.Line($"introduce {introduction.OrganismId} cell={Num(introduction.CellIndex)} biomass_kg={Num(introduction.BiomassKg)}");
+        }
+
         log.Line($"world {Num(engine.State.Width)}x{Num(engine.State.Height)} cells={Num(engine.State.CellCount)} delta_time_sols={Num(engine.Configuration.DeltaTimeSols)} validation={Bool(engine.Configuration.EnableValidation)}");
         log.Line($"steps {string.Join(' ', engine.SystemNames)}");
         log.Line($"requested_ticks {Num(request.Ticks)} history_interval {Num(request.HistoryIntervalTicks)}");
@@ -120,6 +159,7 @@ public static class PrototypeExperiment
         else
         {
             AppendHistory(resources, populations, engine.State);
+            balance.Row(engine.State, workspace);
             for (var step = 0; step < request.Ticks; step++)
             {
                 try
@@ -132,19 +172,27 @@ public static class PrototypeExperiment
                     LogViolations(log, request.Seed, engine.State, engine.FailedStep, exception.Violations);
                     break;
                 }
-                catch (Exception exception) when (exception is ArithmeticException or ArgumentException or InvalidOperationException)
+                catch (Exception exception) when (exception is ArithmeticException or ArgumentException or InvalidOperationException or KeyNotFoundException)
                 {
                     failure = $"tick {Num(engine.CurrentTick)} failed in {engine.FailedStep ?? "unknown"}: {exception.GetType().Name}";
                     log.Line($"ERROR seed={Num(request.Seed)} tick={Num(engine.CurrentTick)} system={engine.FailedStep ?? "unknown"} error={exception.GetType().Name} message={exception.Message}");
                     break;
                 }
 
+                balance.Accumulate(workspace);
                 var tick = engine.CurrentTick;
                 if (tick % request.HistoryIntervalTicks == 0 || step + 1 == request.Ticks)
                 {
                     AppendHistory(resources, populations, engine.State);
+                    balance.Row(engine.State, workspace);
                 }
             }
+        }
+
+        var discarded = engine.DiscardPendingCommands();
+        if (discarded > 0)
+        {
+            log.Line($"discarded {Num(discarded)} queued commands");
         }
 
         var snapshot = StateSnapshot.Capture(engine, identity);
@@ -163,6 +211,7 @@ public static class PrototypeExperiment
             new ExperimentFile(SnapshotFile, snapshotBytes),
             new ExperimentFile(ResourceHistoryFile, utf8.GetBytes(resources.ToString())),
             new ExperimentFile(PopulationHistoryFile, utf8.GetBytes(populations.ToString())),
+            new ExperimentFile(MassBalanceFile, utf8.GetBytes(balance.ToString())),
             new ExperimentFile(LogFile, utf8.GetBytes(log.ToString())),
         };
         return new ExperimentResult(succeeded, engine.CurrentTick, failure, files);
@@ -260,7 +309,7 @@ public static class PrototypeExperiment
             writer.WriteNumber("delta_time_sols", engine.Configuration.DeltaTimeSols);
             writer.WriteString("engine_version", EngineAssembly.Version);
             writer.WriteString("snapshot_schema", StateSnapshot.CurrentSchemaVersion);
-            writer.WriteString("pipeline_version", SimulationPipeline.Version);
+            writer.WriteString("pipeline_version", engine.PipelineVersion);
             writer.WriteString("prng_algorithm", Pcg32.AlgorithmId);
             writer.WriteString("runtime", request.Host.Runtime);
             if (request.Host.BuildSdk is null)
@@ -303,6 +352,79 @@ public static class PrototypeExperiment
         private readonly StringBuilder _text = new();
 
         public void Line(string line) => _text.Append(line).Append('\n');
+
+        public override string ToString() => _text.ToString();
+    }
+
+    /// <summary>
+    /// mass_balance.csv: element masses summed over the world (kg), the cumulative external
+    /// inflow, and the worst per-cell element error seen since the previous row (VAL-007).
+    /// Without a biology catalog the file has only its header.
+    /// </summary>
+    private sealed class MassBalanceWriter
+    {
+        private readonly Biology.BiologyCatalog? _catalog;
+        private readonly StringBuilder _text = new();
+        private double _inflow;
+        private double _worst;
+        private double _fixed;
+        private double _light;
+
+        public MassBalanceWriter(Biology.BiologyCatalog? catalog)
+        {
+            _catalog = catalog;
+            _text.Append("tick");
+            foreach (var element in catalog?.Elements ?? [])
+            {
+                _text.Append(',').Append(element).Append("_kg");
+            }
+
+            _text.Append(",total_kg,external_inflow_kg,carbon_fixed_mol,light_energy_j,max_element_error_kg\n");
+        }
+
+        public void Accumulate(Biology.MetabolismWorkspace? workspace)
+        {
+            if (workspace is null)
+            {
+                return;
+            }
+
+            _inflow += workspace.Totals.ExternalInflowKg;
+            _worst = Math.Max(_worst, workspace.Totals.MaxElementErrorKg);
+            _fixed += workspace.Totals.CarbonFixedMol;
+            _light += workspace.Totals.LightEnergyJ;
+        }
+
+        public void Row(SimulationState state, Biology.MetabolismWorkspace? workspace)
+        {
+            if (_catalog is null || workspace is null)
+            {
+                return;
+            }
+
+            var perCell = new double[state.CellCount * _catalog.Elements.Count];
+            workspace.ElementTotals(state, perCell);
+            var totals = new double[_catalog.Elements.Count];
+            for (var i = 0; i < perCell.Length; i++)
+            {
+                totals[i % totals.Length] += perCell[i];
+            }
+
+            _text.Append(Num(state.Tick));
+            var sum = 0.0;
+            foreach (var total in totals)
+            {
+                _text.Append(',').Append(Num(total));
+                sum += total;
+            }
+
+            _text.Append(',').Append(Num(sum))
+                .Append(',').Append(Num(_inflow))
+                .Append(',').Append(Num(_fixed))
+                .Append(',').Append(Num(_light))
+                .Append(',').Append(Num(_worst)).Append('\n');
+            _worst = 0;
+        }
 
         public override string ToString() => _text.ToString();
     }

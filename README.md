@@ -2,7 +2,7 @@
 
 Motor de simulación científica en C# / .NET. Este repositorio contiene el motor y el ejecutable sin interfaz. La aplicación Godot (`Martis.Game`) no forma parte de la solución: el motor se compila y se prueba sin Godot.
 
-Este árbol corresponde al hito **T01 Infrastructure**, al modelo de dominio de **T02**, a la base de motor de **T03a**, al escenario MarsBaseline v0.4 de **T03b** y al prototipo CLI del TDD §19 (S1-31 a S1-33): snapshot completo del estado, exportación JSON canónica y el comando `simulate` que carga el escenario, avanza los ticks, valida y guarda los resultados.
+Este árbol corresponde al hito **T01 Infrastructure**, al modelo de dominio de **T02**, a la base de motor de **T03a**, al escenario MarsBaseline v0.4 de **T03b** y al prototipo CLI del TDD §19 (S1-31 a S1-33): snapshot completo del estado, exportación JSON canónica y el comando `simulate` que carga el escenario, avanza los ticks, valida y guarda los resultados. **T04** añade el motor metabólico: especies y reacciones balanceadas en `data/reactions`, organismos en `data/organisms` y la opción `--introduce` para inocular poblaciones ([ADR-012](docs/ADR/ADR-012-modelo-metabolico.md)).
 
 ## Requisitos
 
@@ -47,6 +47,8 @@ Salida esperada: `MARTIS 0.1.0` y código de salida 0. Un argumento que no sea `
 
 ```bash
 dotnet run --project src/Martis.Cli -c Release -- simulate --scenario mars_baseline --seed 12345 --ticks 1000 --output results/experiment_001
+# con biología (pipeline-v1): 0,5 kg del fotótrofo A01 en la celda (32, 32)
+dotnet run --project src/Martis.Cli -c Release -- simulate --scenario mars_baseline --seed 12345 --ticks 300 --output results/experiment_002 --introduce phototroph_a01@32,32:0.5
 ```
 
 Opciones extra: `--root <dir>` apunta a la raíz del repositorio si el comando no se lanza desde dentro de él (por defecto busca `data/scenarios/MarsBaseline` subiendo desde el directorio actual y desde el ejecutable). `--history-interval <n>` fija cada cuántos ticks se escribe una fila de historial (por defecto 30, la frecuencia orientativa de TDD §8.1; es un valor de ingeniería, no del modelo).

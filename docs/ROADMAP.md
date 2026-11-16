@@ -80,6 +80,7 @@ Convención: «Criterio TDD» es el literal de §16; «Criterio verificable» es
 - **Criterio TDD:** Balances verificables.
 - **Criterio verificable:** para cada reacción de `data/reactions/*.json`, test automático `A·S = 0` (VAL-007); tests de consumo ≤ disponibilidad (VAL-006) y energía consumida ≤ disponible (VAL-008); `mass_balance.csv` con error `ε_M ≤ ε_abs + ε_rel·|M|` por tick; asignación proporcional entre poblaciones sin ventaja por orden de iteración.
 - **Depende de:** T02, T03; H-18 (unidades, composición elemental con fuente).
+- **Estado:** implementado en `pipeline-v1` ([ADR-012](ADR/ADR-012-modelo-metabolico.md), propuesto): un fotótrofo (`phototroph_a01`), cuatro reacciones balanceadas, reparto proporcional y VAL-006/007/008 por tick.
 
 ### T05 — Population Engine
 - **Contenido (TDD):** Crecimiento, mortalidad, capacidad y competencia.

@@ -125,7 +125,7 @@ public sealed record StateSnapshot(
         return new StateSnapshot(
             CurrentSchemaVersion,
             EngineAssembly.Version,
-            SimulationPipeline.Version,
+            engine.PipelineVersion,
             Pcg32.AlgorithmId,
             scenario,
             engine.Configuration,

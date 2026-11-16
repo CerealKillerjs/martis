@@ -1,0 +1,306 @@
+{
+  "metadata": {
+    "schema": "martis.metabolism",
+    "name": "MARTIS metabolism v1",
+    "version": "1",
+    "status": "ACCEPTED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (T04)",
+    "review": "Modelo de ADR-012. Especies y reacciones son MODEL_ASSUMPTION; las masas atómicas son IUPAC.",
+    "elements": {
+      "H": "chem.atomic_weight.H",
+      "C": "chem.atomic_weight.C",
+      "N": "chem.atomic_weight.N",
+      "O": "chem.atomic_weight.O",
+      "P": "chem.atomic_weight.P",
+      "S": "chem.atomic_weight.S",
+      "Fe": "chem.atomic_weight.Fe"
+    },
+    "species": [
+      {
+        "id": "CarbonDioxide",
+        "formula": "CO2",
+        "compartment": "pool"
+      },
+      {
+        "id": "Water",
+        "formula": "H2O",
+        "compartment": "pool"
+      },
+      {
+        "id": "Oxygen",
+        "formula": "O2",
+        "compartment": "pool"
+      },
+      {
+        "id": "Nitrogen",
+        "formula": "NH3",
+        "compartment": "pool"
+      },
+      {
+        "id": "Phosphorus",
+        "formula": "H3PO4",
+        "compartment": "pool"
+      },
+      {
+        "id": "Sulfur",
+        "formula": "S",
+        "compartment": "pool"
+      },
+      {
+        "id": "Iron",
+        "formula": "Fe",
+        "compartment": "pool"
+      },
+      {
+        "id": "OrganicCarbon",
+        "formula": "CH2O",
+        "compartment": "pool"
+      },
+      {
+        "id": "MineralCarbon",
+        "formula": "C",
+        "compartment": "pool"
+      },
+      {
+        "id": "Biomass",
+        "formula": "C106H263O110N16P",
+        "compartment": "biomass"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "photoautotrophic_growth",
+        "capability": "photoautotrophy",
+        "inputs": {
+          "CarbonDioxide": 106,
+          "Water": 106,
+          "Nitrogen": 16,
+          "Phosphorus": 1
+        },
+        "outputs": {
+          "Biomass": 1,
+          "Oxygen": 106
+        },
+        "carbon_moles": 106,
+        "energy": "light",
+        "note": "Fijación de C con luz hacia biomasa de composición Redfield (CH2O)106(NH3)16(H3PO4). La energía la aporta la luz, no la reserva."
+      },
+      {
+        "id": "aerobic_respiration",
+        "capability": "aerobic_respiration",
+        "inputs": {
+          "OrganicCarbon": 1,
+          "Oxygen": 1
+        },
+        "outputs": {
+          "CarbonDioxide": 1,
+          "Water": 1
+        },
+        "carbon_moles": 1,
+        "energy": "release",
+        "note": "Oxidación de 1 mol de C orgánico. Libera chem.energy.carbon_fixation a la reserva de la población."
+      },
+      {
+        "id": "heterotrophic_assimilation",
+        "capability": "heterotrophy",
+        "inputs": {
+          "OrganicCarbon": 106,
+          "Nitrogen": 16,
+          "Phosphorus": 1
+        },
+        "outputs": {
+          "Biomass": 1
+        },
+        "carbon_moles": 106,
+        "energy": "cost",
+        "note": "Incorporación de C orgánico y nutrientes a biomasa. Consume energía de la reserva."
+      },
+      {
+        "id": "necromass_breakdown",
+        "capability": "none",
+        "inputs": {
+          "Biomass": 1
+        },
+        "outputs": {
+          "OrganicCarbon": 106,
+          "Nitrogen": 16,
+          "Phosphorus": 1
+        },
+        "carbon_moles": 106,
+        "energy": "none",
+        "note": "La biomasa muerta pasa a C orgánico y nutrientes. Es la inversa exacta de la asimilación; no la ejecuta ninguna población."
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "chem.atomic_weight.H",
+      "field": "atomic_weight_H",
+      "value": 1.008,
+      "unit": "g/mol",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": [
+        {
+          "citation": "Prohaska T. et al. (2022) Standard atomic weights of the elements 2021 (IUPAC Technical Report). Pure Appl. Chem. 94(5):573-600; tabla de pesos atómicos abreviados (CIAAW).",
+          "accessed": "2026-11-16",
+          "doi": "10.1515/pac-2019-0603",
+          "url": "https://www.ciaaw.org/abridged-atomic-weights.htm",
+          "where": "Abridged standard atomic weights, 5 cifras significativas"
+        }
+      ],
+      "note": "Peso atómico abreviado. El modelo lo pasa a kg/mol multiplicando por 1e-3 (ADR-011)."
+    },
+    {
+      "id": "chem.atomic_weight.C",
+      "field": "atomic_weight_C",
+      "value": 12.011,
+      "unit": "g/mol",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": [
+        {
+          "citation": "Prohaska T. et al. (2022) Standard atomic weights of the elements 2021 (IUPAC Technical Report). Pure Appl. Chem. 94(5):573-600; tabla de pesos atómicos abreviados (CIAAW).",
+          "accessed": "2026-11-16",
+          "doi": "10.1515/pac-2019-0603",
+          "url": "https://www.ciaaw.org/abridged-atomic-weights.htm",
+          "where": "Abridged standard atomic weights, 5 cifras significativas"
+        }
+      ],
+      "note": "Peso atómico abreviado. El modelo lo pasa a kg/mol multiplicando por 1e-3 (ADR-011)."
+    },
+    {
+      "id": "chem.atomic_weight.N",
+      "field": "atomic_weight_N",
+      "value": 14.007,
+      "unit": "g/mol",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": [
+        {
+          "citation": "Prohaska T. et al. (2022) Standard atomic weights of the elements 2021 (IUPAC Technical Report). Pure Appl. Chem. 94(5):573-600; tabla de pesos atómicos abreviados (CIAAW).",
+          "accessed": "2026-11-16",
+          "doi": "10.1515/pac-2019-0603",
+          "url": "https://www.ciaaw.org/abridged-atomic-weights.htm",
+          "where": "Abridged standard atomic weights, 5 cifras significativas"
+        }
+      ],
+      "note": "Peso atómico abreviado. El modelo lo pasa a kg/mol multiplicando por 1e-3 (ADR-011)."
+    },
+    {
+      "id": "chem.atomic_weight.O",
+      "field": "atomic_weight_O",
+      "value": 15.999,
+      "unit": "g/mol",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": [
+        {
+          "citation": "Prohaska T. et al. (2022) Standard atomic weights of the elements 2021 (IUPAC Technical Report). Pure Appl. Chem. 94(5):573-600; tabla de pesos atómicos abreviados (CIAAW).",
+          "accessed": "2026-11-16",
+          "doi": "10.1515/pac-2019-0603",
+          "url": "https://www.ciaaw.org/abridged-atomic-weights.htm",
+          "where": "Abridged standard atomic weights, 5 cifras significativas"
+        }
+      ],
+      "note": "Peso atómico abreviado. El modelo lo pasa a kg/mol multiplicando por 1e-3 (ADR-011)."
+    },
+    {
+      "id": "chem.atomic_weight.P",
+      "field": "atomic_weight_P",
+      "value": 30.974,
+      "unit": "g/mol",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": [
+        {
+          "citation": "Prohaska T. et al. (2022) Standard atomic weights of the elements 2021 (IUPAC Technical Report). Pure Appl. Chem. 94(5):573-600; tabla de pesos atómicos abreviados (CIAAW).",
+          "accessed": "2026-11-16",
+          "doi": "10.1515/pac-2019-0603",
+          "url": "https://www.ciaaw.org/abridged-atomic-weights.htm",
+          "where": "Abridged standard atomic weights, 5 cifras significativas"
+        }
+      ],
+      "note": "Peso atómico abreviado. El modelo lo pasa a kg/mol multiplicando por 1e-3 (ADR-011)."
+    },
+    {
+      "id": "chem.atomic_weight.S",
+      "field": "atomic_weight_S",
+      "value": 32.06,
+      "unit": "g/mol",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": [
+        {
+          "citation": "Prohaska T. et al. (2022) Standard atomic weights of the elements 2021 (IUPAC Technical Report). Pure Appl. Chem. 94(5):573-600; tabla de pesos atómicos abreviados (CIAAW).",
+          "accessed": "2026-11-16",
+          "doi": "10.1515/pac-2019-0603",
+          "url": "https://www.ciaaw.org/abridged-atomic-weights.htm",
+          "where": "Abridged standard atomic weights, 5 cifras significativas"
+        }
+      ],
+      "note": "Peso atómico abreviado. El modelo lo pasa a kg/mol multiplicando por 1e-3 (ADR-011)."
+    },
+    {
+      "id": "chem.atomic_weight.Fe",
+      "field": "atomic_weight_Fe",
+      "value": 55.845,
+      "unit": "g/mol",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": [
+        {
+          "citation": "Prohaska T. et al. (2022) Standard atomic weights of the elements 2021 (IUPAC Technical Report). Pure Appl. Chem. 94(5):573-600; tabla de pesos atómicos abreviados (CIAAW).",
+          "accessed": "2026-11-16",
+          "doi": "10.1515/pac-2019-0603",
+          "url": "https://www.ciaaw.org/abridged-atomic-weights.htm",
+          "where": "Abridged standard atomic weights, 5 cifras significativas"
+        }
+      ],
+      "note": "Peso atómico abreviado. El modelo lo pasa a kg/mol multiplicando por 1e-3 (ADR-011)."
+    },
+    {
+      "id": "chem.energy.carbon_fixation",
+      "field": "carbon_fixation_energy",
+      "value": 480000.0,
+      "unit": "J/mol C",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Orden de magnitud de la energía libre para fijar 1 mol de C como CH2O (≈ 1/6 de la oxidación completa de la glucosa). Pendiente de cita por MARTIS Ciencia.",
+      "rationale": "Se usa igual para la energía que libera la respiración aerobia de 1 mol de C orgánico, así el ciclo cierra sin crear energía.",
+      "range": [
+        100000.0,
+        1000000.0
+      ]
+    }
+  ]
+}

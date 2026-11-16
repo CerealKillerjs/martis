@@ -34,6 +34,9 @@ public sealed class CliSmokeTests
         yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "-1", "--ticks", "1", "--output", "out" }];
         yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "1", "--ticks", "1", "--output", "out", "--history-interval", "0" }];
         yield return [new[] { "simulate", "--scenario", "olympus", "--seed", "1", "--ticks", "1", "--output", "out" }];
+        yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "1", "--ticks", "1", "--output", "out", "--introduce", "phototroph_a01@64,0:1" }];
+        yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "1", "--ticks", "1", "--output", "out", "--introduce", "phototroph_a01@1,1:-1" }];
+        yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "1", "--ticks", "1", "--output", "out", "--introduce", "nobody@1,1:1" }];
     }
 
     [Fact]
@@ -139,7 +142,24 @@ public sealed class CliSmokeTests
     }
 
     private static readonly string[] ResultFiles =
-        ["metadata.json", "final_snapshot.json", "resource_history.csv", "population_history.csv", "simulation.log"];
+        ["metadata.json", "final_snapshot.json", "resource_history.csv", "population_history.csv", "mass_balance.csv", "simulation.log"];
+
+    [Fact]
+    public async Task IntroducedPhototrophGrowsAndTheMassBalanceIsWritten()
+    {
+        using var output = new TempDirectory();
+        var result = await RunCli(
+            "simulate", "--scenario", "mars_baseline", "--seed", "3", "--ticks", "60",
+            "--output", output.Path, "--introduce", "phototroph_a01@5,7:0.001");
+
+        Assert.Equal(0, result.ExitCode);
+        var rows = File.ReadAllLines(Path.Combine(output.Path, "population_history.csv"));
+        var last = rows[^1].Split(',');
+        Assert.Equal("60", last[0]);
+        Assert.Equal("1", last[1]);
+        Assert.True(double.Parse(last[3], System.Globalization.CultureInfo.InvariantCulture) > 0.001);
+        Assert.StartsWith("tick,C_kg,", File.ReadAllLines(Path.Combine(output.Path, "mass_balance.csv"))[0], StringComparison.Ordinal);
+    }
 
     private sealed class TempDirectory : IDisposable
     {
@@ -167,7 +187,8 @@ public sealed class CliSmokeTests
     private const string ExpectedUsage =
         "Usage: martis --version\n"
         + "       martis simulate --scenario <id> --seed <ulong> --ticks <int> --output <dir>\n"
-        + "                       [--root <repository dir>] [--history-interval <int>]";
+        + "                       [--root <repository dir>] [--history-interval <int>]\n"
+        + "                       [--introduce <organism>@<x>,<y>:<kg>]...";
 
     private static string Normalize(string text)
     {

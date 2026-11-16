@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Martis.Simulation.Biology;
 using Martis.Simulation.Experiments;
 using Martis.Simulation.Scenarios;
 
@@ -22,7 +23,8 @@ internal static class SimulateCommand
     internal const string Usage =
         "Usage: martis --version\n"
         + "       martis simulate --scenario <id> --seed <ulong> --ticks <int> --output <dir>\n"
-        + "                       [--root <repository dir>] [--history-interval <int>]";
+        + "                       [--root <repository dir>] [--history-interval <int>]\n"
+        + "                       [--introduce <organism>@<x>,<y>:<kg>]...";
 
     internal static int Run(ReadOnlySpan<string> args)
     {
@@ -48,11 +50,13 @@ internal static class SimulateCommand
         }
 
         MarsBaselineScenario scenario;
+        BiologyCatalog biology;
         try
         {
             scenario = MarsBaselineScenario.LoadPublished(root);
+            biology = BiologyCatalog.LoadPublished(root);
         }
-        catch (Exception exception) when (exception is IOException or ScenarioLoadException or FormatException or InvalidOperationException or UnauthorizedAccessException)
+        catch (Exception exception) when (exception is IOException or ScenarioLoadException or FormatException or InvalidOperationException or UnauthorizedAccessException or KeyNotFoundException)
         {
             Console.Error.WriteLine($"Scenario load failed: {exception.Message}");
             return RunFailure;
@@ -63,8 +67,23 @@ internal static class SimulateCommand
             options.Seed,
             options.Ticks,
             options.HistoryInterval,
-            new HostInfo(RuntimeInformation.FrameworkDescription, BuildSdk(), RuntimeInformation.RuntimeIdentifier));
-        var result = PrototypeExperiment.Run(request, scenario);
+            new HostInfo(RuntimeInformation.FrameworkDescription, BuildSdk(), RuntimeInformation.RuntimeIdentifier))
+        {
+            Introductions = options.Introductions
+                .Select(item => new PopulationIntroduction(item.Organism, (item.Y * MarsBaselineWorld.Width) + item.X, item.Kg))
+                .ToArray(),
+        };
+        foreach (var item in options.Introductions)
+        {
+            if (!biology.TryGetOrganism(item.Organism, out _))
+            {
+                Console.Error.WriteLine($"Unknown organism '{item.Organism}'. Known: {string.Join(", ", biology.Organisms.Select(o => o.Id))}.");
+                Console.Error.WriteLine(Usage);
+                return InvalidArguments;
+            }
+        }
+
+        var result = PrototypeExperiment.Run(request, scenario, biology: biology);
 
         try
         {
@@ -123,7 +142,38 @@ internal static class SimulateCommand
             ?.Value;
     }
 
-    private sealed record Options(string Scenario, ulong Seed, int Ticks, string Output, string? Root, int HistoryInterval);
+    private sealed record Introduction(string Organism, int X, int Y, double Kg);
+
+    private sealed record Options(string Scenario, ulong Seed, int Ticks, string Output, string? Root, int HistoryInterval)
+    {
+        public IReadOnlyList<Introduction> Introductions { get; init; } = [];
+    }
+
+    /// <summary>Parses <c>organism@x,y:kg</c>. Coordinates must lie on the 64×64 grid.</summary>
+    private static bool TryParseIntroduction(string text, out Introduction introduction)
+    {
+        introduction = new Introduction(string.Empty, 0, 0, 0);
+        var at = text.IndexOf('@', StringComparison.Ordinal);
+        var colon = text.LastIndexOf(':');
+        if (at <= 0 || colon < at)
+        {
+            return false;
+        }
+
+        var coordinates = text[(at + 1)..colon].Split(',');
+        if (coordinates.Length != 2
+            || !int.TryParse(coordinates[0], NumberStyles.None, CultureInfo.InvariantCulture, out var x)
+            || !int.TryParse(coordinates[1], NumberStyles.None, CultureInfo.InvariantCulture, out var y)
+            || x >= MarsBaselineWorld.Width || y >= MarsBaselineWorld.Height
+            || !double.TryParse(text[(colon + 1)..], NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var kg)
+            || !double.IsFinite(kg) || kg <= 0)
+        {
+            return false;
+        }
+
+        introduction = new Introduction(text[..at], x, y, kg);
+        return true;
+    }
 
     private static bool TryParse(ReadOnlySpan<string> args, out Options options)
     {
@@ -134,6 +184,7 @@ internal static class SimulateCommand
         string? output = null;
         string? root = null;
         int? interval = null;
+        var introductions = new List<Introduction>();
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -196,6 +247,14 @@ internal static class SimulateCommand
 
                     interval = parsedInterval;
                     break;
+                case "--introduce":
+                    if (!TryParseIntroduction(value, out var introduction))
+                    {
+                        return false;
+                    }
+
+                    introductions.Add(introduction);
+                    break;
                 default:
                     return false;
             }
@@ -206,7 +265,10 @@ internal static class SimulateCommand
             return false;
         }
 
-        options = new Options(scenario, seed.Value, ticks.Value, output, root, interval ?? PrototypeExperiment.DefaultHistoryIntervalTicks);
+        options = new Options(scenario, seed.Value, ticks.Value, output, root, interval ?? PrototypeExperiment.DefaultHistoryIntervalTicks)
+        {
+            Introductions = introductions,
+        };
         return true;
     }
 }

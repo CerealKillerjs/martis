@@ -6,7 +6,7 @@ Las cifras que son una medición o una estimación llevan su fuente y su clasifi
 
 VAL-001..005 significan solo lo que dice el TDD §10. Las reglas añadidas en este hito son DOM-VAL-001..016. La columna «se parece a» dice qué VAL del TDD recuerda, sin sustituirlo. La elección de unidad es `MODEL_ASSUMPTION`. La clasificación, la fuente y el ámbito van por valor en el JSON del escenario (TDD §10.2).
 
-VAL-006, VAL-007 y VAL-008 no se comprueban: no hay consumo, balance elemental ni balance de energía.
+VAL-006, VAL-007 y VAL-008 se comprueban en el paso `validate-conservation` del `pipeline-v1` (T04, [ADR-012](ADR/ADR-012-modelo-metabolico.md)).
 
 ## Tiempo
 
@@ -165,3 +165,16 @@ El cargador genérico lee un documento con `metadata`, `location` y `parameters`
 | SimulationSnapshot | vista en Contracts | Celdas, poblaciones y estadísticas copiadas. No sigue los cambios posteriores del mundo |
 
 El CLI `simulate` acepta `--scenario`, `--seed`, `--ticks` y `--output`, crea ese mundo vacío, avanza los ticks e imprime el tick final. No escribe resultados y no abre `data/scenarios`.
+
+## Metabolismo (T04)
+
+| Nombre | Tipo | Unidad | Rango | Invariante |
+| --- | --- | --- | --- | --- |
+| ChemicalFormula | Domain.Chemistry | recuentos de átomos | símbolos de elemento con recuento > 0 | se deriva la masa molar, no se guarda |
+| StoichiometricTerm.Moles | decimal | mol por unidad de avance | > 0 | `A·S = 0` por elemento (VAL-007, al cargar) |
+| ReactionDefinition.CarbonMoles | decimal | mol C por unidad de avance | > 0 | pasa el avance en mol C al avance de la reacción |
+| PopulationIntroduction / IntroducePopulationCommand | Simulation / Contracts | kg de biomasa seca | finito y > 0, organismo conocido, celda en la rejilla | la masa entra como flujo externo en `mass_balance.csv` |
+| mass_balance.csv | archivo | kg, mol, J | una fila por intervalo de historia | `max_element_error_kg ≤ 1e-12 + 1e-9·|M|` |
+| VAL-006 | invariante | kg | consumido ≤ depósito al empezar el tick | por celda y depósito |
+| VAL-007 | invariante | kg | masa de cada elemento conservada | por celda, contando entradas externas |
+| VAL-008 | invariante | J | gasto ≤ reserva inicial + ganancia | por población |

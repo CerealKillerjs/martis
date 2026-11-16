@@ -1,0 +1,263 @@
+{
+  "metadata": {
+    "schema": "martis.organisms",
+    "name": "MARTIS organisms v1",
+    "version": "1",
+    "status": "ACCEPTED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (T04)",
+    "review": "Organismos sintéticos de juego (ADR-012). El genoma A01 es el ejemplo ilustrativo del TDD §4.1, clasificado GAME_BALANCE.",
+    "phenotype_binding": {
+      "UvResistance": "UV_PROTECTION",
+      "ThermalTolerance": "THERMAL_TOLERANCE",
+      "DesiccationTolerance": "DESICCATION_TOLERANCE",
+      "PhotosyntheticEfficiency": "PHOTOSYNTHESIS",
+      "MaintenanceCost": null,
+      "ReproductionRate": "REPRODUCTION_RATE",
+      "BiofilmProduction": "BIOFILM_PRODUCTION"
+    },
+    "organisms": [
+      {
+        "id": "phototroph_a01",
+        "name": "Fotótrofo A01",
+        "category": "phototroph",
+        "capabilities": [
+          "photoautotrophy"
+        ],
+        "growth_reaction": "photoautotrophic_growth",
+        "parameter_prefix": "org.phototroph_a01",
+        "base_genome": {
+          "UV_PROTECTION": 0.8,
+          "THERMAL_TOLERANCE": 0.65,
+          "DESICCATION_TOLERANCE": 0.9,
+          "PHOTOSYNTHESIS": 0.7,
+          "REPAIR_CAPACITY": 0.55,
+          "REPRODUCTION_RATE": 0.4,
+          "BIOFILM_PRODUCTION": 0.3
+        },
+        "genome_classification": "GAME_BALANCE"
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "org.phototroph_a01.individual_mass",
+      "field": "individual_mass",
+      "value": 1e-15,
+      "unit": "kg",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Orden de magnitud de una célula bacteriana pequeña (~1 pg). Sirve para pasar de biomasa a número equivalente de individuos.",
+      "rationale": "Abundance = BiomassKg / individual_mass (ADR-012).",
+      "range": [
+        1e-18,
+        1e-09
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.vmax_carbon",
+      "field": "vmax_carbon",
+      "value": 6.0,
+      "unit": "mol C/(kg·sol)",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "Tasa máxima de fijación por kg de biomasa en condiciones ideales (~0,2 duplicaciones por sol).",
+      "range": [
+        0,
+        100
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.temperature_optimum",
+      "field": "temperature_optimum",
+      "value": 250.0,
+      "unit": "K",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "Óptimo térmico de la curva gaussiana f_T (TDD §3.3). Elegido frío a propósito para el juego.",
+      "range": [
+        150,
+        350
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.temperature_sigma",
+      "field": "temperature_sigma",
+      "value": 25.0,
+      "unit": "K",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "Anchura σ_T de f_T. La tolerancia térmica del fenotipo la ensancha: σ·(1+ThermalTolerance).",
+      "range": [
+        1,
+        200
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.radiation_alpha",
+      "field": "radiation_alpha",
+      "value": 200.0,
+      "unit": "sol/Sv",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "α de f_R = 1/(1+α·R·(1−UvResistance)) con R la dosis equivalente por sol (TDD §3.3).",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.water_half_saturation",
+      "field": "water_half_saturation",
+      "value": 0.1,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "K_W de f_W = W/(K_W+W). La tolerancia a la desecación lo reduce: K_W·(1−0,5·DesiccationTolerance).",
+      "range": [
+        1e-09,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.light_half_saturation",
+      "field": "light_half_saturation",
+      "value": 50.0,
+      "unit": "W/m2",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "K_I de la limitación por luz I/(K_I+I).",
+      "range": [
+        1e-06,
+        10000.0
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.half_saturation.CarbonDioxide",
+      "field": "half_saturation_CarbonDioxide",
+      "value": 0.5,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "Constante de Monod del sustrato CO2 (TDD §3.4).",
+      "range": [
+        1e-12,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.half_saturation.Water",
+      "field": "half_saturation_Water",
+      "value": 0.05,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "Constante de Monod del agua como sustrato.",
+      "range": [
+        1e-12,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.half_saturation.Nitrogen",
+      "field": "half_saturation_Nitrogen",
+      "value": 0.01,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "Constante de Monod del NH3.",
+      "range": [
+        1e-12,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.half_saturation.Phosphorus",
+      "field": "half_saturation_Phosphorus",
+      "value": 0.005,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "Constante de Monod del H3PO4.",
+      "range": [
+        1e-12,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.phototroph_a01.reserve_gain",
+      "field": "reserve_gain",
+      "value": 20000.0,
+      "unit": "J/mol C",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS. No es una medición de ningún microorganismo real.",
+      "rationale": "Energía de la fase luminosa que queda en la reserva por mol de C fijado. La fuente es la luz y se anota en el balance de energía.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    }
+  ]
+}

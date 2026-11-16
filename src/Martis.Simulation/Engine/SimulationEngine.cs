@@ -31,7 +31,8 @@ public sealed class SimulationEngine : ISimulationEngine
         SimulationConfiguration configuration,
         RngStreams random,
         IReadOnlyList<ISimulationSystem> systems,
-        IReadOnlyList<ICommandHandler>? handlers = null)
+        IReadOnlyList<ICommandHandler>? handlers = null,
+        string? pipelineVersion = null)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(configuration);
@@ -49,7 +50,11 @@ public sealed class SimulationEngine : ISimulationEngine
         _systems = CopySystems(systems);
         _handlers = CopyHandlers(handlers ?? []);
         SystemNames = _systems.Select(system => system.Name).ToArray();
+        PipelineVersion = pipelineVersion ?? SimulationPipeline.Version;
     }
+
+    /// <summary>Id of the system list this engine runs, stored in snapshots and metadata.</summary>
+    public string PipelineVersion { get; }
 
     public SimulationState State { get; }
 
@@ -145,6 +150,17 @@ public sealed class SimulationEngine : ISimulationEngine
                 throw;
             }
         }
+    }
+
+    /// <summary>
+    /// Drops the queued commands and returns how many there were. A host calls this after
+    /// a failed tick, when it stops the run and still needs a snapshot of the rolled-back state.
+    /// </summary>
+    public int DiscardPendingCommands()
+    {
+        var count = _commands.Count;
+        _commands.Clear();
+        return count;
     }
 
     public void ApplyCommand(ISimulationCommand command)

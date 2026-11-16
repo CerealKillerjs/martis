@@ -12,5 +12,6 @@
 - [ADR-009 — DT-009: Integración genética (herencia)](ADR-009-integracion-genetica.md) (Aceptado)
 - [ADR-010 — DT-010: Plataforma inicial](ADR-010-plataforma-inicial.md) (Aceptado)
 - [ADR-011 — Unidades del modelo](ADR-011-unidades-del-modelo.md) (Aceptado: decisión de MARTIS Lead tras la validación científica de MARTIS Ciencia (rondas 1-4 del PR #4, head ed68024), 2026-11-16)
+- [ADR-012 — Modelo metabólico v1 (T04)](ADR-012-modelo-metabolico.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).

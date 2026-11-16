@@ -12,6 +12,9 @@ public static class SimulationPipeline
 {
     public const string Version = "pipeline-v0";
 
+    /// <summary>Pipeline with the T04 metabolism steps (ADR-012).</summary>
+    public const string BiologyVersion = "pipeline-v1";
+
     public static IReadOnlyList<string> StepNames { get; } =
     [
         SimulationSteps.ApplyCommands,
@@ -65,6 +68,40 @@ public static class SimulationPipeline
 
         return systems;
     }
+}
+
+/// <summary>Builds the biology pipeline; later milestones extend <see cref="BiologyPipeline.Systems"/>.</summary>
+public static class BiologyPipeline
+{
+    /// <summary>
+    /// Systems of <see cref="SimulationPipeline.BiologyVersion"/> in the §5.4 order. Steps not yet
+    /// owned by a milestone stay stubs.
+    /// </summary>
+    public static IReadOnlyList<ISimulationSystem> Systems(Biology.MetabolismWorkspace workspace)
+    {
+        ArgumentNullException.ThrowIfNull(workspace);
+        var systems = new ISimulationSystem[SimulationPipeline.StepNames.Count];
+        for (var i = 0; i < systems.Length; i++)
+        {
+            var name = SimulationPipeline.StepNames[i];
+            systems[i] = name switch
+            {
+                SimulationSteps.ApplyCommands => new ApplyCommandsSystem(),
+                SimulationSteps.UpdateEnvironment => new EnvironmentSystem(),
+                SimulationSteps.CalculateResourceAvailability => new Biology.ResourceAvailabilitySystem(workspace),
+                SimulationSteps.CalculateMetabolism => new Biology.MetabolismSystem(workspace),
+                SimulationSteps.AllocateSharedResources => new Biology.AllocationSystem(workspace),
+                SimulationSteps.UpdateBiomassAndEnergy => new Biology.BiomassEnergySystem(workspace),
+                SimulationSteps.ValidateConservation => new Biology.ConservationSystem(workspace),
+                _ => new StubSimulationSystem(name),
+            };
+        }
+
+        return systems;
+    }
+
+    public static IReadOnlyList<Commands.ICommandHandler> Handlers(Biology.MetabolismWorkspace workspace)
+        => [new Biology.IntroducePopulationHandler(workspace)];
 }
 
 /// <summary>Ordinal ids for <see cref="SimulationPipeline"/>. The Spanish names live in the data dictionary.</summary>

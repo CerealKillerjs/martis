@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using Martis.Domain.World;
+using Martis.Simulation.Biology;
 using Martis.Simulation.Engine;
 using Martis.Simulation.Experiments;
 using Martis.Simulation.Random;
@@ -19,7 +20,7 @@ public sealed class PrototypeExperimentTests
     private static readonly HostInfo Host = new("test-runtime", "test-sdk", "test-os");
 
     [Fact]
-    public void ThousandTicksOfMarsBaselineCompleteAndWriteTheFiveFiles()
+    public void ThousandTicksOfMarsBaselineCompleteAndWriteTheResultFiles()
     {
         var result = PrototypeExperiment.Run(Request(12345UL, 1000), Published());
 
@@ -123,6 +124,38 @@ public sealed class PrototypeExperimentTests
     }
 
     [Fact]
+    public void AnInoculatedPhototrophGrowsAndTheMassBalanceStaysClosed()
+    {
+        var request = Request(42UL, 200) with { Introductions = [new PopulationIntroduction("phototroph_a01", 2080, 0.5)] };
+
+        var result = PrototypeExperiment.Run(request, Published(), biology: Biology());
+
+        Assert.True(result.Succeeded, result.FailureSummary);
+        var snapshot = StateSnapshotJson.Read(File(result, PrototypeExperiment.SnapshotFile));
+        Assert.Equal(SimulationPipeline.BiologyVersion, snapshot.PipelineVersion);
+        Assert.True(Assert.Single(snapshot.Populations).BiomassKg > 0.5);
+        var rows = Text(result, PrototypeExperiment.MassBalanceFile).TrimEnd('\n').Split('\n');
+        var header = rows[0].Split(',');
+        var error = Array.IndexOf(header, "max_element_error_kg");
+        Assert.True(error > 0);
+        Assert.All(rows.Skip(1), row => Assert.True(double.Parse(row.Split(',')[error], System.Globalization.CultureInfo.InvariantCulture) < 1e-9, row));
+        Assert.Contains("introduce phototroph_a01 cell=2080", Text(result, PrototypeExperiment.LogFile), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ABadIntroductionFailsTickOneAndStillWritesTheSnapshot()
+    {
+        var request = Request(42UL, 10) with { Introductions = [new PopulationIntroduction("phototroph_a01", 0, double.NaN)] };
+
+        var result = PrototypeExperiment.Run(request, Published(), biology: Biology());
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(0, result.FinalTick);
+        Assert.Empty(StateSnapshotJson.Read(File(result, PrototypeExperiment.SnapshotFile)).Populations);
+        Assert.Contains("discarded 1 queued commands", Text(result, PrototypeExperiment.LogFile), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void UnknownScenarioIdIsRejected()
     {
         var request = Request(1UL, 1) with { ScenarioId = "olympus" };
@@ -132,6 +165,8 @@ public sealed class PrototypeExperimentTests
 
     private static ExperimentRequest Request(ulong seed, int ticks)
         => new(PrototypeExperiment.MarsBaselineId, seed, ticks, PrototypeExperiment.DefaultHistoryIntervalTicks, Host);
+
+    private static BiologyCatalog Biology() => BiologyCatalog.LoadPublished(Repo.Root());
 
     private static MarsBaselineScenario Published() => MarsBaselineScenario.LoadPublished(Repo.Root());
 

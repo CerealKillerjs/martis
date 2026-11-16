@@ -9,8 +9,24 @@ namespace Martis.Simulation.Snapshots;
 /// </summary>
 public static class ResourceColumns
 {
-    public static IReadOnlyList<string> Names { get; } =
-        new ResourcePool().Quantities.Select(quantity => quantity.Name).ToArray();
+    public static IReadOnlyList<string> Names { get; } = CreateNames();
+
+    private static string[] CreateNames()
+    {
+        var names = new ResourcePool().Quantities.Select(quantity => quantity.Name).ToArray();
+        string[] expected =
+        [
+            nameof(ResourcePool.CarbonDioxide), nameof(ResourcePool.Water), nameof(ResourcePool.Oxygen),
+            nameof(ResourcePool.Nitrogen), nameof(ResourcePool.Phosphorus), nameof(ResourcePool.Sulfur),
+            nameof(ResourcePool.Iron), nameof(ResourcePool.OrganicCarbon), nameof(ResourcePool.MineralCarbon),
+        ];
+        if (!names.SequenceEqual(expected, StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException("ResourcePool slots changed order; update ResourceColumns.");
+        }
+
+        return names;
+    }
 
     public static void WriteDeposits(ResourcePool pool, IReadOnlyList<double> values)
     {
@@ -62,6 +78,74 @@ public static class ResourceColumns
                 default: throw new InvalidOperationException($"Demand '{Names[i]}' cannot be written.");
             }
         }
+    }
+
+    /// <summary>Slot index of a pool name. Throws for an unknown name.</summary>
+    public static int Slot(string name)
+    {
+        for (var i = 0; i < Names.Count; i++)
+        {
+            if (string.Equals(Names[i], name, StringComparison.Ordinal))
+            {
+                return i;
+            }
+        }
+
+        throw new ArgumentException($"'{name}' is not a resource slot.", nameof(name));
+    }
+
+    public static string Name(int slot) => Names[slot];
+
+    /// <summary>Adds <paramref name="kg"/> (may be negative) to one deposit.</summary>
+    public static void Add(ResourcePool pool, int slot, double kg)
+    {
+        ArgumentNullException.ThrowIfNull(pool);
+        switch (slot)
+        {
+            case 0: pool.CarbonDioxide += kg; break;
+            case 1: pool.Water += kg; break;
+            case 2: pool.Oxygen += kg; break;
+            case 3: pool.Nitrogen += kg; break;
+            case 4: pool.Phosphorus += kg; break;
+            case 5: pool.Sulfur += kg; break;
+            case 6: pool.Iron += kg; break;
+            case 7: pool.OrganicCarbon += kg; break;
+            case 8: pool.MineralCarbon += kg; break;
+            default: throw new ArgumentOutOfRangeException(nameof(slot));
+        }
+    }
+
+    /// <summary>Adds a request to one slot of an allocation buffer.</summary>
+    public static void Add(AllocationBuffer buffer, int slot, double kg)
+    {
+        ArgumentNullException.ThrowIfNull(buffer);
+        switch (slot)
+        {
+            case 0: buffer.CarbonDioxide += kg; break;
+            case 1: buffer.Water += kg; break;
+            case 2: buffer.Oxygen += kg; break;
+            case 3: buffer.Nitrogen += kg; break;
+            case 4: buffer.Phosphorus += kg; break;
+            case 5: buffer.Sulfur += kg; break;
+            case 6: buffer.Iron += kg; break;
+            case 7: buffer.OrganicCarbon += kg; break;
+            case 8: buffer.MineralCarbon += kg; break;
+            default: throw new ArgumentOutOfRangeException(nameof(slot));
+        }
+    }
+
+    public static void Clear(AllocationBuffer buffer)
+    {
+        ArgumentNullException.ThrowIfNull(buffer);
+        buffer.CarbonDioxide = 0;
+        buffer.Water = 0;
+        buffer.Oxygen = 0;
+        buffer.Nitrogen = 0;
+        buffer.Phosphorus = 0;
+        buffer.Sulfur = 0;
+        buffer.Iron = 0;
+        buffer.OrganicCarbon = 0;
+        buffer.MineralCarbon = 0;
     }
 
     private static void RequireLength(IReadOnlyList<double> values)

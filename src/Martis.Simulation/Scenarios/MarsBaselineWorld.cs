@@ -38,4 +38,37 @@ public static class MarsBaselineWorld
             RngStreams.Create(worldSeed),
             SimulationPipeline.CreateV0());
     }
+
+    /// <summary>
+    /// World with the biology pipeline (<see cref="SimulationPipeline.BiologyVersion"/>).
+    /// The workspace is returned so a host can read the tick totals.
+    /// </summary>
+    public static (SimulationEngine Engine, Biology.MetabolismWorkspace Workspace) CreateWithBiology(
+        MarsBaselineScenario scenario,
+        Biology.BiologyCatalog catalog,
+        ulong worldSeed,
+        int width = Width,
+        int height = Height)
+    {
+        ArgumentNullException.ThrowIfNull(scenario);
+        ArgumentNullException.ThrowIfNull(catalog);
+        var state = new SimulationState(width, height);
+        scenario.Apply(state);
+        var configuration = new SimulationConfiguration(
+            width,
+            height,
+            1.0,
+            worldSeed,
+            SimulationConfiguration.DefaultMaxVariantsPerSpeciesPerCell,
+            true);
+        var workspace = new Biology.MetabolismWorkspace(catalog);
+        var engine = new SimulationEngine(
+            state,
+            configuration,
+            RngStreams.Create(worldSeed),
+            BiologyPipeline.Systems(workspace),
+            BiologyPipeline.Handlers(workspace),
+            SimulationPipeline.BiologyVersion);
+        return (engine, workspace);
+    }
 }

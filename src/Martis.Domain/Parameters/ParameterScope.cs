@@ -4,7 +4,7 @@ namespace Martis.Domain.Parameters;
 /// Where a parameter value applies. This is not <c>Martis.Domain.Environment.EnvironmentScope</c>.
 /// Cell scope still has laboratory and game cases (ADR-011). A parameter value does not:
 /// the scenario strings accepted here are only <c>regional:&lt;site&gt;</c>,
-/// <c>planetary_mean</c> and <c>analog:&lt;name&gt;</c>.
+/// <c>planetary_mean</c>, <c>analog:&lt;name&gt;</c> and <c>model</c> (T04, ADR-012).
 /// A planetary mean is not a regional measurement (TDD §10.3).
 /// </summary>
 public abstract record ParameterScope
@@ -31,6 +31,12 @@ public abstract record ParameterScope
 
         public string Site { get; }
     }
+
+    /// <summary>
+    /// A value of the model itself, not tied to a place: atomic weights, reaction
+    /// energies, organism kinetics (ADR-012). It never stands in for a measurement on Mars.
+    /// </summary>
+    public sealed record Model : ParameterScope;
 
     /// <summary>A named analog. The analog is not a site on Mars and not a cell scope.</summary>
     public sealed record Analog : ParameterScope
