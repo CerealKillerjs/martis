@@ -122,6 +122,7 @@ Convención: «Criterio TDD» es el literal de §16; «Criterio verificable» es
 - **Criterio TDD:** Cumplir objetivos acordados.
 - **Criterio verificable:** benchmarks BenchmarkDotNet (`EnvironmentUpdate`, `MetabolismUpdate`, `PopulationUpdate`, `MutationUpdate`, `SnapshotCreation/Restore`, `FullSimulation`) con hardware, runtime, tiempo medio, memoria y GC documentados; comparación con §7.4 (4.096 celdas, 10.000 poblaciones, 3 organismos, ≤ 32 variantes, 1.000 ticks < 10 s, snapshot < 1 s, memoria < 256 MB) **en equipo de referencia documentado (H-20)**. Los objetivos pueden ajustarse con mediciones; ninguna cifra se da por conseguida sin reporte.
 - **Depende de:** T04–T06 y T09 para el cierre; los benchmarks parciales empiezan en el Sprint 1.
+- **Estado:** medido ([BENCHMARK.md](BENCHMARK.md)): suite BenchmarkDotNet en `benchmarks/Martis.Benchmarks` y perfil por paso. FIRST COLONY va a 6 ms/tick. La carga de §7.4 va a 110–175 ms/tick porque las mutaciones llevan las poblaciones a ~80 000 (H-29). Primeras optimizaciones aplicadas; quedan las recomendaciones del informe.
 
 ## Fuera de alcance del MVP (TDD §0, B.5)
 

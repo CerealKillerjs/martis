@@ -105,7 +105,7 @@ graph TD
   Game --> Persistence
 ```
 
-`Martis.Game` (juego 3D, T08) está en `src/Martis.Game` pero no en `MARTIS.sln` (H-17). `benchmarks/` queda para T10.
+`Martis.Game` (juego 3D, T08) está en `src/Martis.Game` pero no en `MARTIS.sln` (H-17). `benchmarks/Martis.Benchmarks` (T10) mide el motor con BenchmarkDotNet; resultados en [docs/BENCHMARK.md](docs/BENCHMARK.md).
 
 ## Estructura
 
@@ -177,10 +177,10 @@ Controles: botón derecho gira la cámara, rueda acerca, botón central o WASD d
 
 ## Fuera de este hito
 
-- `EnvironmentSystem` mantiene la temperatura constante (sin ciclos diurno ni estacional). VAL-004 se comprueba en `NextBool`. VAL-010 se comprueba en la misma plataforma. VAL-006..008 siguen pendientes. El trasvase de agua entre compartimentos llega en T04.
-- `benchmarks/` (T10).
-- Esquema SQLite, migraciones y partidas guardadas (T07). El proyecto de persistencia solo abre una base en memoria para comprobar el paquete.
-- Matriz de invariantes VAL-001..010 (S1-34) y benchmark inicial (S1-35).
+- `EnvironmentSystem` mantiene la temperatura constante (sin ciclos diurno ni estacional) y MarsBaseline es uniforme (H-30).
+- VAL-010 se comprueba en la misma plataforma; la matriz completa está en [docs/INVARIANTES.md](docs/INVARIANTES.md).
+- El rendimiento con la carga de §7.4 está medido pero no cumple el objetivo (H-29, [docs/BENCHMARK.md](docs/BENCHMARK.md)).
+- No hay exportación del juego ni progreso de misión en la partida guardada (H-31).
 
 ## Regla de Contracts
 

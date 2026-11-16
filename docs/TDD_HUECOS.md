@@ -32,6 +32,9 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 | H-26 | B | §7.1 | `GridIndex` fija `Width=64`/`Height=64` como constantes, pero la configuración admite `MapWidth/MapHeight`. | Usar dimensiones de configuración. | Motor |
 | H-27 | B | §1.2 | No hay proyectos de test para Contracts ni Cli. | Añadir `Martis.Contracts.Tests`/`Martis.Cli.Tests` o cubrirlos desde Integration.Tests (propuesta Sprint 1). | QA |
 | H-28 | M | §5.4 | Se listan 8 interfaces de sistema y 15 pasos de tick; no se define el orden/registro canónico ni qué sistema ejecuta cada paso (p. ej. «Publicar snapshot», «Actualizar estadísticas»). | **Parcial (T03a):** el orden v0 está fijado en `SimulationPipeline` (`pipeline-v0`) y cubierto por test. Los pasos, salvo la cola de comandos, siguen en stub. | Motor |
+| H-29 | M | §4.4, §7.4 | El tope de 32 variantes por especie y celda permite 393 216 poblaciones en 64×64, pero §7.4 dimensiona para 10 000. En la carga de prueba, las mutaciones pasan de 10 000 a casi 80 000 poblaciones en 1000 soles y el tick se vuelve 15 veces más lento que el objetivo ([BENCHMARK.md](BENCHMARK.md)). | Fijar un presupuesto global de poblaciones o un umbral de fusión mayor, decidido con Ciencia. | Dani/Ciencia |
+| H-30 | M | §3, B.6 | MarsBaseline es uniforme: las 4096 celdas tienen 222 K, 146,5 W/m² y 0,503 mSv/sol. En el juego, las capas de temperatura y radiación se ven planas y el extremófilo no tiene nicho. | Escenario con gradientes medidos (latitud, albedo, hielo) antes de una segunda misión. | Ciencia |
+| H-31 | B | §9, B.6 | El progreso de la misión (`MissionTracker`) no está en la partida guardada: al cargar, la racha de soles empieza de cero ([ADR-016](ADR/ADR-016-ecosistema-y-first-colony.md)). | Guardar el progreso como evento o en el snapshot, en T07b. | Dani |
 
 ## Notas sobre cifras y datos
 
