@@ -99,7 +99,7 @@ public partial class World3D : Node3D
             var decomp = LogScale(view.DecomposerBiomassKg[i]);
             var overlay = Overlay switch
             {
-                Overlay.Temperature => Mathf.InverseLerp(150f, 300f, view.TemperatureKelvin[i]),
+                Overlay.Temperature => Mathf.InverseLerp(185f, 255f, view.TemperatureKelvin[i]),
                 Overlay.Water => water.Max > water.Min ? Mathf.InverseLerp(water.Min, water.Max, view.WaterKg[i]) : 0.5f,
                 Overlay.Radiation => Mathf.InverseLerp(0f, 0.0015f, view.RadiationSvPerSol[i]),
                 Overlay.Biomass => LogScale(view.BiomassKg[i]),

@@ -1,0 +1,154 @@
+{
+  "metadata": {
+    "schema": "martis.gradient",
+    "id": "gradients",
+    "name": "Gradientes de latitud y relieve",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (H4)",
+    "review": "Gradientes GAME_BALANCE sobre MarsBaseline para dar nichos al capítulo 2 (H-30). No mueven masa: solo temperatura, irradiancia y dosis.",
+    "latitude": {
+      "equator_temperature_delta": "gradient.latitude.equator_temperature_delta_k",
+      "pole_temperature_delta": "gradient.latitude.pole_temperature_delta_k",
+      "equator_irradiance_factor": "gradient.latitude.equator_irradiance_factor",
+      "pole_irradiance_factor": "gradient.latitude.pole_irradiance_factor"
+    },
+    "relief": {
+      "highland_dose_factor": "gradient.relief.highland_dose_factor",
+      "lowland_dose_factor": "gradient.relief.lowland_dose_factor",
+      "ridges": "gradient.relief.ridges"
+    }
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "gradient.latitude.equator_temperature_delta_k",
+      "field": "equator_temperature_delta",
+      "value": 25.0,
+      "unit": "K",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Gradiente de juego propuesto para el capítulo 2 (H4, H-30); Ciencia debe sustituirlo por gradientes medidos.",
+      "rationale": "Ecuador del mapa (fila central): más cálido que la base de Gale.",
+      "range": [
+        -100,
+        100
+      ]
+    },
+    {
+      "id": "gradient.latitude.pole_temperature_delta_k",
+      "field": "pole_temperature_delta",
+      "value": -30.0,
+      "unit": "K",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Gradiente de juego propuesto para el capítulo 2 (H4, H-30); Ciencia debe sustituirlo por gradientes medidos.",
+      "rationale": "Bordes norte y sur del mapa: más fríos que la base.",
+      "range": [
+        -100,
+        100
+      ]
+    },
+    {
+      "id": "gradient.latitude.equator_irradiance_factor",
+      "field": "equator_irradiance_factor",
+      "value": 1.15,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Gradiente de juego propuesto para el capítulo 2 (H4, H-30); Ciencia debe sustituirlo por gradientes medidos.",
+      "rationale": "Luz en el ecuador respecto a la base.",
+      "range": [
+        0,
+        3
+      ]
+    },
+    {
+      "id": "gradient.latitude.pole_irradiance_factor",
+      "field": "pole_irradiance_factor",
+      "value": 0.55,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Gradiente de juego propuesto para el capítulo 2 (H4, H-30); Ciencia debe sustituirlo por gradientes medidos.",
+      "rationale": "Luz en los polos respecto a la base.",
+      "range": [
+        0,
+        3
+      ]
+    },
+    {
+      "id": "gradient.relief.highland_dose_factor",
+      "field": "highland_dose_factor",
+      "value": 1.6,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Gradiente de juego propuesto para el capítulo 2 (H4, H-30); Ciencia debe sustituirlo por gradientes medidos.",
+      "rationale": "Dosis en las mesetas (menos atmósfera encima).",
+      "range": [
+        0,
+        10
+      ]
+    },
+    {
+      "id": "gradient.relief.lowland_dose_factor",
+      "field": "lowland_dose_factor",
+      "value": 0.8,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Gradiente de juego propuesto para el capítulo 2 (H4, H-30); Ciencia debe sustituirlo por gradientes medidos.",
+      "rationale": "Dosis en las cuencas.",
+      "range": [
+        0,
+        10
+      ]
+    },
+    {
+      "id": "gradient.relief.ridges",
+      "field": "ridges",
+      "value": 2.0,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Gradiente de juego propuesto para el capítulo 2 (H4, H-30); Ciencia debe sustituirlo por gradientes medidos.",
+      "rationale": "Mesetas a lo ancho del mapa (ciclos del coseno en x).",
+      "range": [
+        0,
+        16
+      ]
+    }
+  ]
+}

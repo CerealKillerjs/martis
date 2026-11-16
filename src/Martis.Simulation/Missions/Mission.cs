@@ -3,6 +3,7 @@ using System.Text.Json;
 using Martis.Domain.Parameters;
 using Martis.Domain.World;
 using Martis.Simulation.Biology;
+using Martis.Simulation.Snapshots;
 
 namespace Martis.Simulation.Missions;
 
@@ -18,7 +19,7 @@ public enum ObjectiveKind
     /// <summary>Any living population of an organism with the capability.</summary>
     Deploy,
 
-    /// <summary>Total biomass of the capability at or above a minimum for consecutive sols.</summary>
+    /// <summary>Total biomass of the capability (and organism, inside the temperature band when given) at or above a minimum for consecutive sols.</summary>
     Sustain,
 
     /// <summary>A number of new variants created by mutation.</summary>
@@ -29,6 +30,15 @@ public enum ObjectiveKind
 
     /// <summary>Distinct living genomes of the capability at the same time, at or above a count.</summary>
     Diversity,
+
+    /// <summary>Distinct cells with living populations of the capability (or organism), optionally inside a temperature band (H4).</summary>
+    Occupy,
+
+    /// <summary>Dead biomass recycled by decomposers since the mission started, at or above an amount in kg (H4).</summary>
+    Recycle,
+
+    /// <summary>Gain of one pool resource over the whole map since the mission started, at or above an amount in kg (H4).</summary>
+    Accumulate,
 }
 
 /// <summary>One objective. Thresholds are parameters with classification (H-19 pending).</summary>
@@ -41,7 +51,12 @@ public sealed record MissionObjective(
     double MinBiomassKg,
     double Sols,
     double Count,
-    string? Hint = null);
+    string? Hint = null,
+    string? Organism = null,
+    double? MinTemperatureK = null,
+    double? MaxTemperatureK = null,
+    string? Resource = null,
+    double Amount = 0.0);
 
 /// <summary>
 /// A mission loaded from <c>data/missions/*.json</c>. <see cref="Briefing"/> is the story
@@ -85,6 +100,9 @@ public sealed record MissionDefinition(
                 "mutations" => ObjectiveKind.Mutations,
                 "elapsed" => ObjectiveKind.Elapsed,
                 "diversity" => ObjectiveKind.Diversity,
+                "occupy" => ObjectiveKind.Occupy,
+                "recycle" => ObjectiveKind.Recycle,
+                "accumulate" => ObjectiveKind.Accumulate,
                 var other => throw new InvalidDataException($"Unknown objective type '{other}'."),
             };
             objectives.Add(new MissionObjective(
@@ -96,7 +114,17 @@ public sealed record MissionDefinition(
                 Number(item, "min_biomass", parameters),
                 Number(item, "sols", parameters),
                 Number(item, "count", parameters),
-                Text(item, "hint")));
+                Text(item, "hint"),
+                Text(item, "organism"),
+                Optional(item, "min_temperature", parameters),
+                Optional(item, "max_temperature", parameters),
+                Text(item, "resource"),
+                Number(item, "amount", parameters)));
+            var added = objectives[^1];
+            if (kind == ObjectiveKind.Accumulate && (added.Resource is null || ResourceSlot(added.Resource) < 0))
+            {
+                throw new InvalidDataException($"Objective '{added.Id}' needs a pool resource ({string.Join(", ", ResourceColumns.Names)}).");
+            }
         }
 
         if (objectives.Count == 0 || objectives.Select(objective => objective.Id).Distinct(StringComparer.Ordinal).Count() != objectives.Count)
@@ -117,6 +145,23 @@ public sealed record MissionDefinition(
 
     private static double Number(JsonElement item, string name, ParameterCatalog parameters)
         => item.TryGetProperty(name, out var value) ? parameters.RequireNumber(value.GetString()!).Value : 0.0;
+
+    private static double? Optional(JsonElement item, string name, ParameterCatalog parameters)
+        => item.TryGetProperty(name, out var value) ? parameters.RequireNumber(value.GetString()!).Value : null;
+
+    /// <summary>Position of a pool resource in <see cref="ResourceColumns.Names"/>, or -1.</summary>
+    public static int ResourceSlot(string resource)
+    {
+        for (var slot = 0; slot < ResourceColumns.Names.Count; slot++)
+        {
+            if (string.Equals(ResourceColumns.Names[slot], resource, StringComparison.Ordinal))
+            {
+                return slot;
+            }
+        }
+
+        return -1;
+    }
 }
 
 /// <summary>Progress of one objective. <see cref="CompletedTick"/> is null while pending.</summary>
@@ -134,11 +179,13 @@ public sealed record MissionProgress(
     IReadOnlyList<long> MutantIds,
     long Streak,
     long Mutations,
-    IReadOnlyDictionary<string, long> Elapsed)
+    IReadOnlyDictionary<string, long> Elapsed,
+    double Recycled = 0.0,
+    IReadOnlyDictionary<string, double>? Baselines = null)
 {
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = false };
 
-    public string ToJson() => JsonSerializer.Serialize(new Dto(MissionId, new SortedDictionary<string, long>(Completed.ToDictionary(), StringComparer.Ordinal), [.. Actions.Order(StringComparer.Ordinal)], [.. MutantIds.Order()], Streak, Mutations, new SortedDictionary<string, long>(Elapsed.ToDictionary(), StringComparer.Ordinal)), Options);
+    public string ToJson() => JsonSerializer.Serialize(new Dto(MissionId, new SortedDictionary<string, long>(Completed.ToDictionary(), StringComparer.Ordinal), [.. Actions.Order(StringComparer.Ordinal)], [.. MutantIds.Order()], Streak, Mutations, new SortedDictionary<string, long>(Elapsed.ToDictionary(), StringComparer.Ordinal), Recycled, Baselines is null ? null : new SortedDictionary<string, double>(Baselines.ToDictionary(), StringComparer.Ordinal)), Options);
 
     public static MissionProgress FromJson(string json)
     {
@@ -153,12 +200,13 @@ public sealed record MissionProgress(
             throw new InvalidDataException("The mission progress is not valid JSON.", exception);
         }
 
-        if (dto is null || string.IsNullOrWhiteSpace(dto.MissionId) || dto.Streak < 0 || dto.Mutations < 0)
+        if (dto is null || string.IsNullOrWhiteSpace(dto.MissionId) || dto.Streak < 0 || dto.Mutations < 0
+            || !double.IsFinite(dto.Recycled) || dto.Recycled < 0 || (dto.Baselines?.Values.Any(value => !double.IsFinite(value) || value < 0) ?? false))
         {
             throw new InvalidDataException("The mission progress is incomplete.");
         }
 
-        return new MissionProgress(dto.MissionId, dto.Completed ?? new(), dto.Actions ?? [], dto.MutantIds ?? [], dto.Streak, dto.Mutations, dto.Elapsed ?? new());
+        return new MissionProgress(dto.MissionId, dto.Completed ?? new(), dto.Actions ?? [], dto.MutantIds ?? [], dto.Streak, dto.Mutations, dto.Elapsed ?? new(), dto.Recycled, dto.Baselines);
     }
 
     private sealed record Dto(
@@ -168,7 +216,9 @@ public sealed record MissionProgress(
         long[]? MutantIds,
         long Streak,
         long Mutations,
-        SortedDictionary<string, long>? Elapsed);
+        SortedDictionary<string, long>? Elapsed,
+        double Recycled = 0.0,
+        SortedDictionary<string, double>? Baselines = null);
 }
 
 /// <summary>
@@ -188,8 +238,12 @@ public sealed class MissionTracker
 
     /// <summary>Variants born by mutation: they are not player designs.</summary>
     private readonly HashSet<long> _mutantIds = [];
+    private readonly Dictionary<string, double> _baselines = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, double> _gains = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _occupied = new(StringComparer.Ordinal);
     private long _streak;
     private long _mutations;
+    private double _recycled;
     private int _diversity;
 
     public MissionTracker(MissionDefinition definition, BiologyCatalog catalog)
@@ -214,9 +268,24 @@ public sealed class MissionTracker
         CompleteActions(tick);
     }
 
+    /// <summary>
+    /// Takes the map totals that accumulate objectives measure from (H4). Call on a new game
+    /// before the first tick; a resumed mission keeps the totals of its save.
+    /// </summary>
+    public void Begin(SimulationState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        foreach (var objective in Definition.Objectives.Where(objective => objective.Kind == ObjectiveKind.Accumulate))
+        {
+            _baselines.TryAdd(objective.Resource!, Total(state, objective.Resource!));
+        }
+    }
+
     public void Observe(SimulationState state, MetabolismWorkspace? workspace)
     {
         ArgumentNullException.ThrowIfNull(state);
+        Begin(state);
+        _recycled += workspace?.Totals.BiomassRecycledKg ?? 0.0;
         foreach (var item in workspace?.MutationEvents ?? [])
         {
             _mutations++;
@@ -242,7 +311,7 @@ public sealed class MissionTracker
                 case ObjectiveKind.Sustain:
                     if (!counted && (open || !Definition.Sequential))
                     {
-                        var biomass = Living(state, objective.Capability).Sum(population => population.BiomassKg);
+                        var biomass = Matching(state, objective).Sum(population => population.BiomassKg);
                         _streak = biomass >= objective.MinBiomassKg ? _streak + 1 : 0;
                         counted = true;
                     }
@@ -272,6 +341,25 @@ public sealed class MissionTracker
                     }
 
                     break;
+                case ObjectiveKind.Occupy:
+                    var cells = _occupied[objective.Id] = Occupied(state, objective);
+                    if (open && cells >= objective.Count)
+                    {
+                        Complete(objective, state.Tick);
+                    }
+
+                    break;
+                case ObjectiveKind.Recycle when open && _recycled >= objective.Amount:
+                    Complete(objective, state.Tick);
+                    break;
+                case ObjectiveKind.Accumulate:
+                    var gain = _gains[objective.Id] = Total(state, objective.Resource!) - _baselines[objective.Resource!];
+                    if (open && gain >= objective.Amount)
+                    {
+                        Complete(objective, state.Tick);
+                    }
+
+                    break;
             }
         }
 
@@ -291,6 +379,9 @@ public sealed class MissionTracker
                 ObjectiveKind.Mutations => Math.Min(_mutations, objective.Count),
                 ObjectiveKind.Elapsed => Math.Min(_elapsed.GetValueOrDefault(objective.Id), objective.Sols),
                 ObjectiveKind.Diversity => Math.Clamp(_diversity, 0, objective.Count),
+                ObjectiveKind.Occupy => Math.Min(_occupied.GetValueOrDefault(objective.Id), objective.Count),
+                ObjectiveKind.Recycle => Math.Min(_recycled, objective.Amount),
+                ObjectiveKind.Accumulate => Math.Clamp(_gains.GetValueOrDefault(objective.Id), 0, objective.Amount),
                 _ => 0,
             },
             Target(objective),
@@ -307,7 +398,9 @@ public sealed class MissionTracker
             [.. _mutantIds.Order()],
             _streak,
             _mutations,
-            new Dictionary<string, long>(_elapsed, StringComparer.Ordinal));
+            new Dictionary<string, long>(_elapsed, StringComparer.Ordinal),
+            _recycled,
+            _baselines.Count == 0 ? null : new Dictionary<string, double>(_baselines, StringComparer.Ordinal));
 
     /// <summary>Replaces the progress with a saved one of the same mission. Unknown objective ids are refused.</summary>
     public void Restore(MissionProgress progress)
@@ -342,12 +435,19 @@ public sealed class MissionTracker
 
         _streak = progress.Streak;
         _mutations = progress.Mutations;
+        _recycled = progress.Recycled;
+        _baselines.Clear();
+        foreach (var (resource, total) in progress.Baselines ?? new Dictionary<string, double>())
+        {
+            _baselines[resource] = total;
+        }
     }
 
     private static double Target(MissionObjective objective) => objective.Kind switch
     {
         ObjectiveKind.Sustain or ObjectiveKind.Elapsed => objective.Sols,
-        ObjectiveKind.Mutations or ObjectiveKind.Diversity => objective.Count,
+        ObjectiveKind.Mutations or ObjectiveKind.Diversity or ObjectiveKind.Occupy => objective.Count,
+        ObjectiveKind.Recycle or ObjectiveKind.Accumulate => objective.Amount,
         _ => 1,
     };
 
@@ -388,6 +488,43 @@ public sealed class MissionTracker
             population.BiomassKg > 0.0
             && _catalog.TryGetOrganism(population.OrganismId.Value, out var organism)
             && (capability is null || organism!.Capabilities.Contains(capability, StringComparer.Ordinal)));
+
+    private int Occupied(SimulationState state, MissionObjective objective)
+        => Matching(state, objective).Select(population => population.CellIndex).Distinct().Count();
+
+    /// <summary>Living populations of the objective's capability and organism inside its temperature band.</summary>
+    private IEnumerable<Domain.Biology.Population> Matching(SimulationState state, MissionObjective objective)
+        => Living(state, objective.Capability)
+            .Where(population => (objective.Organism is null || string.Equals(population.OrganismId.Value, objective.Organism, StringComparison.Ordinal))
+                && InBand(state.Environment[population.CellIndex], objective));
+
+    private static bool InBand(Domain.Environment.EnvironmentState environment, MissionObjective objective)
+    {
+        if (objective.MinTemperatureK is null && objective.MaxTemperatureK is null)
+        {
+            return true;
+        }
+
+        if (!environment.TemperatureKelvin.IsSet)
+        {
+            return false;
+        }
+
+        var kelvin = environment.TemperatureKelvin.Value;
+        return kelvin >= (objective.MinTemperatureK ?? double.NegativeInfinity) && kelvin <= (objective.MaxTemperatureK ?? double.PositiveInfinity);
+    }
+
+    private static double Total(SimulationState state, string resource)
+    {
+        var slot = MissionDefinition.ResourceSlot(resource);
+        var total = 0.0;
+        for (var cell = 0; cell < state.CellCount; cell++)
+        {
+            total += state.Resources[cell].ValueAt(slot);
+        }
+
+        return total;
+    }
 
     private bool Designed(Domain.Biology.Population population)
         => _catalog.TryGetOrganism(population.OrganismId.Value, out var organism)

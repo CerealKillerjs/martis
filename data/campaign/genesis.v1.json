@@ -35,8 +35,26 @@
       "title": "Ciclo cerrado",
       "summary": "Un ecosistema microbiano: descomponedores, extremófilos en el frío y el primer oxígeno.",
       "grid": 128,
-      "missions": [],
-      "population_budget": "campaign.population_budget.grid_128"
+      "missions": [
+        {
+          "id": "gradients",
+          "file": "gradients.v1.json"
+        },
+        {
+          "id": "closed_cycle",
+          "file": "closed_cycle.v1.json"
+        },
+        {
+          "id": "cold_frontier",
+          "file": "cold_frontier.v1.json"
+        },
+        {
+          "id": "oxygen",
+          "file": "oxygen.v1.json"
+        }
+      ],
+      "population_budget": "campaign.population_budget.grid_128",
+      "gradient": "gradients.v1.json"
     },
     {
       "id": "ch3",
@@ -44,7 +62,8 @@
       "summary": "Endosimbiosis y los primeros organismos multicelulares.",
       "grid": 128,
       "missions": [],
-      "population_budget": "campaign.population_budget.grid_128"
+      "population_budget": "campaign.population_budget.grid_128",
+      "gradient": "gradients.v1.json"
     },
     {
       "id": "ch4",
@@ -52,7 +71,8 @@
       "summary": "Herbívoros, depredadores y el equilibrio de un ecosistema complejo.",
       "grid": 256,
       "missions": [],
-      "population_budget": "campaign.population_budget.grid_256"
+      "population_budget": "campaign.population_budget.grid_256",
+      "gradient": "gradients.v1.json"
     },
     {
       "id": "ch5",
@@ -60,7 +80,8 @@
       "summary": "Sistemas nerviosos, sociedades y una especie inteligente que transforma su mundo.",
       "grid": 256,
       "missions": [],
-      "population_budget": "campaign.population_budget.grid_256"
+      "population_budget": "campaign.population_budget.grid_256",
+      "gradient": "gradients.v1.json"
     }
   ],
   "location": {

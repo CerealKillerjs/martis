@@ -59,9 +59,10 @@ public sealed record SessionEvent(long Tick, string Kind, string Text, int Cell 
 
 /// <summary>
 /// Size of the map and population budget of a run (H3, ADR-021). The campaign gives each
-/// chapter its own: 64, 128 or 256 cells per side.
+/// chapter its own: 64, 128 or 256 cells per side. <see cref="Gradient"/> names a file in
+/// <c>data/scenarios</c> laid over the uniform baseline (H4, H-30); null keeps it uniform.
 /// </summary>
-public sealed record WorldOptions(int GridSize = 64, int? PopulationBudget = null)
+public sealed record WorldOptions(int GridSize = 64, int? PopulationBudget = null, string? Gradient = null)
 {
     public static readonly WorldOptions Default = new();
 }
@@ -81,7 +82,7 @@ public sealed class GameSession
     private readonly HashSet<string> _reportedObjectives = new(StringComparer.Ordinal);
     private readonly Dictionary<string, int> _organismIndex;
 
-    private GameSession(MarsBaselineScenario scenario, BiologyCatalog biology, MissionDefinition? mission, ulong seed, StateSnapshot? resume, MissionProgress? progress = null, WorldOptions? world = null)
+    private GameSession(MarsBaselineScenario scenario, BiologyCatalog biology, MissionDefinition? mission, ulong seed, StateSnapshot? resume, MissionProgress? progress = null, WorldOptions? world = null, EnvironmentGradient? gradient = null)
     {
         world ??= WorldOptions.Default;
         var width = resume?.Configuration.MapWidth ?? world.GridSize;
@@ -92,13 +93,17 @@ public sealed class GameSession
         Scenario = scenario;
         Biology = biology;
         Seed = seed;
-        (Engine, Workspace) = MarsBaselineWorld.CreateWithBiology(scenario, biology, seed, width, height, world.PopulationBudget);
+        (Engine, Workspace) = MarsBaselineWorld.CreateWithBiology(scenario, biology, seed, width, height, world.PopulationBudget, resume is null ? gradient : null);
         if (resume is not null)
         {
             resume.Restore(Engine);
         }
 
         Mission = mission is null ? null : new MissionTracker(mission, biology);
+        if (resume is null)
+        {
+            Mission?.Begin(Engine.State);
+        }
         if (progress is not null)
         {
             if (Mission is null)
@@ -210,7 +215,8 @@ public sealed class GameSession
             seed,
             null,
             null,
-            world);
+            world,
+            GradientOf(repositoryRoot, world));
 
     /// <summary>A new game of one campaign mission (<c>data/missions/<paramref name="missionFile"/></c>).</summary>
     public static GameSession NewGame(string repositoryRoot, ulong seed, string missionFile, WorldOptions? world = null)
@@ -223,7 +229,8 @@ public sealed class GameSession
             seed,
             null,
             null,
-            world);
+            world,
+            GradientOf(repositoryRoot, world));
     }
 
     /// <summary>
@@ -256,6 +263,9 @@ public sealed class GameSession
             null,
             world);
     }
+
+    private static EnvironmentGradient? GradientOf(string repositoryRoot, WorldOptions? world)
+        => world?.Gradient is { } file ? EnvironmentGradient.LoadPublished(repositoryRoot, file) : null;
 
     public int CellIndex(int x, int y) => Engine.State.ToLinearIndex(x, y);
 

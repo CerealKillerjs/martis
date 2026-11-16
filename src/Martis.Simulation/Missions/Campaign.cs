@@ -12,12 +12,12 @@ public sealed record CampaignMission(string Id, string File, string ChapterId, i
 /// One chapter. <see cref="GridSize"/> is the side of the map its missions use (64, 128 or
 /// 256, Daniel 2026-11-16). A chapter with no missions is announced but not playable yet.
 /// </summary>
-public sealed record CampaignChapter(string Id, int Number, string Title, string Summary, int GridSize, IReadOnlyList<CampaignMission> Missions, int? PopulationBudget = null)
+public sealed record CampaignChapter(string Id, int Number, string Title, string Summary, int GridSize, IReadOnlyList<CampaignMission> Missions, int? PopulationBudget = null, string? Gradient = null)
 {
     public bool Playable => Missions.Count > 0;
 
-    /// <summary>Map size and population budget of this chapter's missions (H3).</summary>
-    public WorldOptions World => new(GridSize, PopulationBudget);
+    /// <summary>Map size, population budget (H3) and environment gradient (H4) of this chapter's missions.</summary>
+    public WorldOptions World => new(GridSize, PopulationBudget, Gradient);
 }
 
 /// <summary>
@@ -93,7 +93,8 @@ public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<Ca
                 item.GetProperty("summary").GetString()!,
                 grid,
                 missions,
-                item.TryGetProperty("population_budget", out var budget) ? (int)parameters.RequireNumber(budget.GetString()!).Value : null));
+                item.TryGetProperty("population_budget", out var budget) ? (int)parameters.RequireNumber(budget.GetString()!).Value : null,
+                item.TryGetProperty("gradient", out var gradient) ? gradient.GetString() : null));
         }
 
         return new CampaignDefinition(meta.GetProperty("id").GetString()!, meta.GetProperty("name").GetString()!, chapters);

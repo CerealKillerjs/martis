@@ -1,0 +1,112 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "cold_frontier",
+    "name": "FRONTERA HELADA — 2.3",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (campaña H4)",
+    "review": "Misión del capítulo 2 de la campaña «Génesis» (ADR-022). Umbrales GAME_BALANCE propuestos.",
+    "sequential": false,
+    "briefing": "Los polos son fríos, oscuros y casi vacíos. Allí el descomponedor apenas trabaja, así que cualquier productor que crezca deprisa agota su agua y se apaga. Investiga las cepas extremófilas, frena su fotosíntesis y conquista el frío.",
+    "objectives": [
+      {
+        "id": "cold_colony",
+        "type": "occupy",
+        "organism": "extremophile_e01",
+        "max_temperature": "mission.cold_frontier.cold_k",
+        "count": "mission.cold_frontier.cold_cells",
+        "title": "Lleva extremófilos a la franja polar",
+        "hint": "Investiga «Cepas extremófilas» (tecla R) y siembra cerca del borde norte o sur del mapa."
+      },
+      {
+        "id": "sustain_cold",
+        "type": "sustain",
+        "organism": "extremophile_e01",
+        "max_temperature": "mission.cold_frontier.cold_k",
+        "min_biomass": "mission.cold_frontier.min_biomass_kg",
+        "sols": "mission.cold_frontier.sustain_sols",
+        "title": "Mantén la colonia polar",
+        "hint": "Baja la fotosíntesis en el laboratorio: crecer despacio es sobrevivir en el frío."
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.cold_frontier.cold_k",
+      "field": "max_temperature",
+      "value": 205.0,
+      "unit": "K",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Temperatura máxima de la franja polar.",
+      "range": [
+        0,
+        400
+      ]
+    },
+    {
+      "id": "mission.cold_frontier.cold_cells",
+      "field": "count",
+      "value": 1.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Casillas polares con extremófilos.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.cold_frontier.min_biomass_kg",
+      "field": "min_biomass",
+      "value": 1.5,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa extremófila mínima en la franja polar.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.cold_frontier.sustain_sols",
+      "field": "sols",
+      "value": 60.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles seguidos por encima del mínimo.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    }
+  ]
+}

@@ -16,7 +16,7 @@ public sealed class WorldSizeTests
         var campaign = CampaignDefinition.LoadPublished(Repo.Root());
 
         Assert.Equal([null, 20000, 20000, 30000, 30000], campaign.Chapters.Select(chapter => chapter.PopulationBudget));
-        Assert.Equal(new WorldOptions(128, 20000), campaign.WorldFor(128));
+        Assert.Equal(new WorldOptions(128, 20000, "gradients.v1.json"), campaign.WorldFor(128));
         Assert.Equal(new WorldOptions(64), campaign.WorldFor(64));
         Assert.Null(campaign.WorldFor(100));
     }

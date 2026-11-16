@@ -185,6 +185,10 @@ public partial class CampaignMenu : Control
         "awakening" => "Despertar",
         "first_colony" => "Primera colonia",
         "selection" => "Presión selectiva",
+        "gradients" => "Gradientes",
+        "closed_cycle" => "Ciclo cerrado",
+        "cold_frontier" => "Frontera helada",
+        "oxygen" => "Atmósfera",
         _ => mission.Id.Replace('_', ' '),
     };
 

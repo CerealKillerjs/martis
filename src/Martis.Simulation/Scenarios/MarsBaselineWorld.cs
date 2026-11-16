@@ -49,12 +49,14 @@ public static class MarsBaselineWorld
         ulong worldSeed,
         int width = Width,
         int height = Height,
-        int? populationBudget = null)
+        int? populationBudget = null,
+        EnvironmentGradient? gradient = null)
     {
         ArgumentNullException.ThrowIfNull(scenario);
         ArgumentNullException.ThrowIfNull(catalog);
         var state = new SimulationState(width, height);
         scenario.Apply(state);
+        gradient?.Apply(state);
         var configuration = new SimulationConfiguration(
             width,
             height,

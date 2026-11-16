@@ -21,5 +21,6 @@
 - [ADR-019 — Modo historia: campaña «Génesis» (H1)](ADR-019-modo-historia.md) (Propuesto)
 - [ADR-020 — Economía: investigación y carga del módulo (H2)](ADR-020-economia.md) (Propuesto)
 - [ADR-021 — Mapas grandes: 64, 128 y 256 casillas (H3)](ADR-021-mapas-grandes.md) (Propuesto)
+- [ADR-022 — Capítulo 2 «Ciclo cerrado»: gradientes y nuevos objetivos (H4)](ADR-022-capitulo-2.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).
