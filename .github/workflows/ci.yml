@@ -1,0 +1,47 @@
+# T01: compile and test the engine on Linux and Windows.
+# The SDK comes from global.json (10.0.404, rollForward latestPatch).
+# Godot is not installed. Martis.Game is not part of the solution.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: Compilar y probar (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    env:
+      # testhost 18.12.0 prints a misleading "outdated Test.Sdk" line when this
+      # variable is absent. The package is current; the variable only selects
+      # where collector artifacts would be staged.
+      VSTEST_ARTIFACTS_DIRECTORY: ${{ github.workspace }}/TestResults/vstest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@v7
+
+      - name: Instalar el SDK indicado por global.json
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Mostrar la versión del SDK
+        run: dotnet --version
+
+      - name: Restaurar
+        run: dotnet restore MARTIS.sln
+
+      - name: Compilar
+        run: dotnet build MARTIS.sln -c Release --no-restore
+
+      - name: Probar
+        run: dotnet test MARTIS.sln -c Release --no-build

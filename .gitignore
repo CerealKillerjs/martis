@@ -1,0 +1,36 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Aa]rtifacts/
+[Ll]og/
+[Ll]ogs/
+TestResults/
+[Cc]overage/
+*.trx
+*.coverage
+*.coveragexml
+
+# .NET
+project.lock.json
+project.fragment.lock.json
+*.nuget.props
+*.nuget.targets
+*.snupkg
+*.nupkg
+
+# User and IDE files
+.vs/
+.vscode/
+.idea/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.sln.docstates
+.DS_Store
+
+# Test and local secrets
+*.DotSettings.user
+appsettings.*.local.json
+.env
+.env.*

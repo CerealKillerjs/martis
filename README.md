@@ -1,1 +1,143 @@
-# martis
+# MARTIS
+
+Motor de simulación científica en C# / .NET. Este repositorio contiene el motor y el ejecutable sin interfaz. La aplicación Godot (`Martis.Game`) no forma parte de la solución: el motor se compila y se prueba sin Godot.
+
+Este árbol corresponde al hito **T01 Infrastructure** del TDD v1.0 (§1.2 y §16): solución, proyectos, referencias, identificadores tipados y pruebas de arquitectura. La simulación en sí llega en hitos posteriores.
+
+## Requisitos
+
+- **.NET SDK 10.0.404** (LTS, runtime 10.0.15), fijado en [`global.json`](global.json).
+- `rollForward`: `latestPatch` (misma banda 10.0.4xx; no salta de feature band ni a .NET 11). Decisión del lead, alineada con ADR-002.
+- `allowPrerelease`: `false`.
+- TFM de todos los proyectos: **net10.0** (`Directory.Build.props`).
+
+El 2026-11-15, 10.0.404 es el SDK más alto publicado en el canal 10.0 ([descargas de .NET 10](https://dotnet.microsoft.com/download/dotnet/10.0), metadatos `10.0/releases.json`: `latest-sdk` = `10.0.404`). Con `latestPatch` el SDK activo sigue siendo **10.0.404** mientras no exista un parche posterior de la banda 10.0.4xx.
+
+Instalación del SDK exacto:
+
+```bash
+curl -fsSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
+bash dotnet-install.sh --version 10.0.404
+dotnet --version
+```
+
+En Windows, el instalador equivalente es `dotnet-install.ps1 -Version 10.0.404`.
+
+## Compilar y probar
+
+Desde la raíz del repositorio:
+
+```bash
+dotnet restore MARTIS.sln
+dotnet build MARTIS.sln -c Release
+dotnet test MARTIS.sln -c Release
+```
+
+`Martis.Integration.Tests` tiene una referencia de compilación a Simulation, Persistence y Contracts. Además obliga a compilar `Martis.Cli` (`ReferenceOutputAssembly=false`): el proyecto de tests no usa tipos del CLI, solo necesita el ensamblado ya construido en `src/Martis.Cli/bin/<Configuration>/net10.0/Martis.Cli.dll`.
+
+Versión del motor:
+
+```bash
+dotnet run --project src/Martis.Cli -c Release -- --version
+```
+
+Salida esperada: `MARTIS 0.1.0` y código de salida 0. Cualquier otro argumento termina con código 1. `0.1.0` es la versión de producto del motor (`Version` en `Directory.Build.props`), no un dato científico.
+
+## Grafo de dependencias
+
+La tabla del TDD §1.2 más la arista **Simulation → Contracts**, aprobada por el lead (H-01). Contracts no referencia Simulation.
+
+| Proyecto | Referencias |
+| --- | --- |
+| Martis.Domain | ninguna (solo BCL, sin paquetes) |
+| Martis.Simulation | Domain, Contracts |
+| Martis.Contracts | Domain |
+| Martis.Persistence | Domain, Contracts, paquete Microsoft.Data.Sqlite |
+| Martis.Cli | Simulation, Persistence |
+| Martis.Domain.Tests | Domain |
+| Martis.Simulation.Tests | Simulation |
+| Martis.Persistence.Tests | Persistence |
+| Martis.Integration.Tests | Simulation, Persistence, Contracts |
+
+```mermaid
+graph TD
+  Cli[Martis.Cli] --> Simulation[Martis.Simulation]
+  Cli --> Persistence[Martis.Persistence]
+  Simulation --> Domain[Martis.Domain]
+  Simulation --> Contracts
+  Contracts[Martis.Contracts] --> Domain
+  Persistence --> Contracts
+  Persistence --> Domain
+```
+
+`Martis.Game` no está en `MARTIS.sln` ni en el árbol (H-17). `benchmarks/` queda para T10.
+
+## Estructura
+
+```
+MARTIS.sln
+global.json
+Directory.Build.props
+Directory.Packages.props
+src/Martis.Domain/          Biology/ Genetics/ Ecology/ Environment/ Common/
+src/Martis.Simulation/      Engine/ Systems/ Algorithms/ Random/ Spatial/ Validation/
+src/Martis.Contracts/       Commands/ Snapshots/ Events/
+src/Martis.Persistence/     SQLite/ Serialization/ Migrations/
+src/Martis.Cli/             Commands/ Program.cs
+tests/Martis.Domain.Tests/
+tests/Martis.Simulation.Tests/
+tests/Martis.Persistence.Tests/
+tests/Martis.Integration.Tests/
+data/                       genes/ organisms/ reactions/ environments/ scenarios/
+.github/workflows/ci.yml
+```
+
+Las carpetas vacías reservan el sitio de los hitos siguientes. T01 solo implementa los identificadores tipados de §2.1 y el comando `--version`.
+
+## Versiones de paquetes
+
+Fijadas el 2026-11-15 en [`Directory.Packages.props`](Directory.Packages.props). Central Package Management; los `.csproj` no repiten la versión. Son las últimas estables de cada id compatibles con `net10.0` (el nuspec de `Microsoft.Data.Sqlite` 11.0.0 declara TFM `net10.0`).
+
+| Paquete | Versión |
+| --- | --- |
+| [xunit](https://www.nuget.org/packages/xunit/2.9.3) | 2.9.3 |
+| [xunit.runner.visualstudio](https://www.nuget.org/packages/xunit.runner.visualstudio/4.0.1) | 4.0.1 |
+| [Microsoft.NET.Test.Sdk](https://www.nuget.org/packages/Microsoft.NET.Test.Sdk/18.12.0) | 18.12.0 |
+| [coverlet.collector](https://www.nuget.org/packages/coverlet.collector/10.1.1) | 10.1.1 |
+| [Microsoft.Data.Sqlite](https://www.nuget.org/packages/Microsoft.Data.Sqlite/11.0.0) | 11.0.0 |
+
+El id `xunit` 2.9.3 es la última versión estable de ese paquete (xUnit v2). El adaptador 4.0.1 declara compatibilidad con xUnit.net 1.9.2 y posteriores.
+
+## Pruebas de arquitectura
+
+En `tests/Martis.Integration.Tests`, con el rasgo `Category=Architecture`:
+
+- Por reflexión (`Assembly.GetReferencedAssemblies`): `Martis.Domain` no referencia ensamblados `Godot*`, `Microsoft.Data.Sqlite*`, `SQLitePCL*` ni `Martis.*`. Simulation referencia Domain y Contracts, y no referencia Persistence, Cli, Godot ni SQLite. Contracts referencia solo Domain: nunca Simulation, Persistence, Cli, SQLite ni Godot.
+- Por los `.csproj` (BCL, sin paquetes extra): el grafo de arriba, sin ciclos. La reflexión no ve una referencia de proyecto que ningún método usa; el examen del `.csproj` sí.
+- El código de `src/` no llama a `System.Random`, `GetHashCode()`, `Parallel.*`, `AsParallel()`, `Task.Run`, `DateTime.Now`, `DateTime.UtcNow` ni `Guid.NewGuid()`. Los comentarios pueden nombrarlas; el escáner los quita antes de buscar.
+
+`dotnet test` puede imprimir `VSTEST_ARTIFACTS_DIRECTORY environment variable was not found... outdated Microsoft.NET.Test.Sdk`. Sale de `testhost` 18.12.0 (el paquete fijado, que es el último estable) cuando el proceso no define esa variable. No es un aviso del compilador: `dotnet build -c Release` termina con 0 avisos. Definir la variable apunta el directorio de artefactos del host y el texto desaparece. La CI la define.
+
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest`: `actions/setup-dotnet` lee `global.json`, luego `dotnet restore`, `dotnet build -c Release --no-restore` y `dotnet test -c Release --no-build`. No instala Godot.
+
+## Fuera de este hito
+
+- Lógica de simulación, estado del mundo, PRNG, escenarios y validadores VAL-001..010 (T02 en adelante).
+- `Martis.Game`, escenas y el SDK de Godot (T08).
+- `benchmarks/` (T10).
+- Esquema SQLite, migraciones y partidas guardadas (T07). El proyecto de persistencia solo abre una base en memoria para comprobar el paquete.
+- `metadata.json` con la versión del runtime y del SDK (lo pide ADR-002 para cada ejecución; no hay ejecución de escenario todavía).
+
+## Regla de Contracts
+
+`Martis.Contracts` solo contiene datos: comandos como records sin `Apply`, snapshots y eventos. Los handlers que aplican un comando sobre `SimulationState` vivirán en `Martis.Simulation`. T01 no implementa comandos ni handlers. Contracts referencia únicamente Domain: nunca Simulation, Persistence, Cli, SQLite ni Godot.
+
+## Decisiones del lead en este PR
+
+- **H-01.** Simulation referencia Contracts, además de Domain.
+- **H-02.** El ciclo se evita dejando los datos en Contracts y la aplicación en Simulation. Sin tipos de comando en este hito.
+- **Roll-forward.** `global.json` usa `latestPatch` con la versión 10.0.404, como indica ADR-002. En la revisión el lead lo nombra H-27.
+- **H-17.** `Martis.Game` sigue fuera de `MARTIS.sln`. La CI no depende de Godot.
+- Los cuatro proyectos de test del brief se mantienen. Contracts y el CLI se cubren desde `Martis.Integration.Tests`. ADR-000 lo actualiza el lead; este PR no lo modifica.
