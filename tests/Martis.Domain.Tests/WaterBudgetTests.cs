@@ -26,12 +26,15 @@ public sealed class WaterBudgetTests
     }
 
     [Fact]
-    public void MatrixADeclaresNoMolarMass()
+    public void MatrixAStoresNoNumericMolarMassBecauseItIsDerived()
     {
         var fields = typeof(ElementalCompositionMatrix).GetFields(BindingFlags.Public | BindingFlags.Static);
         var properties = typeof(ElementalCompositionMatrix).GetProperties(BindingFlags.Public | BindingFlags.Static);
         Assert.Empty(fields);
         Assert.Empty(properties);
+        Assert.DoesNotContain(
+            typeof(ElementalCompositionMatrix).GetMembers(),
+            static member => member.Name.Contains("Molar", StringComparison.Ordinal));
     }
 
     private static string[] DoubleNames(Type type)

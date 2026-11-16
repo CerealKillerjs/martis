@@ -22,4 +22,18 @@ public sealed class CellWaterBudget
     /// </summary>
     public static double ComponentSum(double accessibleLiquidKg, double iceKg, double vaporKg)
         => (accessibleLiquidKg + iceKg) + vaporKg;
+
+    /// <summary>
+    /// True when the absolute gap between the component sum and the recorded total
+    /// is within the TDD §10.1 allowance. The allowance is
+    /// <see cref="MassBalanceTolerances.MassBalanceAbsoluteToleranceKg"/>
+    /// plus the relative tolerance times the absolute recorded total.
+    /// </summary>
+    public static bool WithinTolerance(double componentSum, double recordedTotalKg)
+    {
+        var error = Math.Abs(componentSum - recordedTotalKg);
+        var allowance = MassBalanceTolerances.MassBalanceAbsoluteToleranceKg
+            + (MassBalanceTolerances.MassBalanceRelativeTolerance * Math.Abs(recordedTotalKg));
+        return error <= allowance;
+    }
 }

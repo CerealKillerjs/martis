@@ -25,24 +25,34 @@ public sealed class EnvironmentState
     public AssignedDouble PressurePascal { get; set; }
 
     /// <summary>
-    /// Ultraviolet radiation at the surface.
-    /// Unit: W/m², classified MODEL_ASSUMPTION (ADR-011). Finite and at least 0
-    /// (DOM-VAL-004).
+    /// Ultraviolet irradiance at local noon on a horizontal surface, band 200 to 400 nm.
+    /// Unit: W/m². This is not a sol mean and it is not summed as a fluence.
+    /// Daily fluence is pending. Finite and at least 0 (DOM-VAL-004). See ADR-011.
     /// </summary>
     public double UvRadiation { get; set; }
 
     /// <summary>
-    /// Ionizing radiation at the surface, as an energy flux.
-    /// Unit: W/m², classified MODEL_ASSUMPTION (ADR-011). A dosimetric unit is
-    /// not chosen here. Finite and at least 0 (DOM-VAL-004).
-    /// TODO: pendiente MARTIS Ciencia.
+    /// Absorbed dose from galactic cosmic rays at the surface, per sol.
+    /// Unit: gray per sol (Gy = J/kg), in tissue or water, not in silicon.
+    /// It is not added to <see cref="IonizingEquivalentDoseSvPerSol"/>.
+    /// Solar particle events are outside v0. Finite and at least 0 (DOM-VAL-013).
+    /// Reference values stay out of this type; they belong to the scenario (T03).
     /// </summary>
-    public double IonizingRadiation { get; set; }
+    public double IonizingAbsorbedDoseGyPerSol { get; set; }
 
     /// <summary>
-    /// Solar irradiance at the surface, not at the top of the atmosphere.
-    /// Unit: W/m², classified MODEL_ASSUMPTION (ADR-011). Finite and at least 0
-    /// (DOM-VAL-004).
+    /// Equivalent dose at the surface, per sol.
+    /// Unit: sievert per sol (Sv = Gy times a dimensionless quality factor).
+    /// It is never added to or compared with <see cref="IonizingAbsorbedDoseGyPerSol"/>.
+    /// Using sievert for microorganisms is MODEL_ASSUMPTION: the quality factor
+    /// is defined for human tissue (ADR-011). Finite and at least 0 (DOM-VAL-013).
+    /// </summary>
+    public double IonizingEquivalentDoseSvPerSol { get; set; }
+
+    /// <summary>
+    /// Surface solar irradiance averaged over one sol, not the top of the atmosphere.
+    /// Unit: W/m². Energy over the tick is this value times <see cref="MartianTime.SecondsPerSol"/>,
+    /// in J/m². Finite and at least 0 (DOM-VAL-004). See ADR-011.
     /// </summary>
     public double SolarIrradiance { get; set; }
 
@@ -68,11 +78,12 @@ public sealed class EnvironmentState
     public double SoilPorosity { get; set; }
 
     /// <summary>
-    /// Mass of perchlorate in the cell, not a molar concentration.
-    /// Unit: kg per cell, classified MODEL_ASSUMPTION (ADR-011).
-    /// Finite and at least 0 (DOM-VAL-004).
+    /// Mass of perchlorate in the cell after the scenario loader converts a mass fraction.
+    /// The chemical species (perchlorate ion or a calcium or magnesium salt) is not chosen here.
+    /// Unit: kg per cell. Finite and at least 0 (DOM-VAL-004).
+    /// TODO: pendiente MARTIS Ciencia.
     /// </summary>
-    public double PerchlorateConcentration { get; set; }
+    public double PerchlorateMassKg { get; set; }
 
     /// <summary>
     /// Null until a scenario assigns where this cell applies.
@@ -87,12 +98,13 @@ public sealed class EnvironmentState
     public IReadOnlyList<NamedQuantity> Quantities =>
     [
         new(nameof(UvRadiation), UvRadiation),
-        new(nameof(IonizingRadiation), IonizingRadiation),
+        new(nameof(IonizingAbsorbedDoseGyPerSol), IonizingAbsorbedDoseGyPerSol),
+        new(nameof(IonizingEquivalentDoseSvPerSol), IonizingEquivalentDoseSvPerSol),
         new(nameof(SolarIrradiance), SolarIrradiance),
         new(nameof(WaterIce), WaterIce),
         new(nameof(WaterVapor), WaterVapor),
         new(nameof(SoilPorosity), SoilPorosity),
-        new(nameof(PerchlorateConcentration), PerchlorateConcentration),
+        new(nameof(PerchlorateMassKg), PerchlorateMassKg),
     ];
 
     /// <summary>

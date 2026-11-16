@@ -3,7 +3,7 @@ namespace Martis.Domain.Validation;
 /// <summary>
 /// Identifiers written into <see cref="InvariantViolation"/>.
 /// VAL-001..005 are only the invariants named in TDD §10.
-/// DOM-VAL-001..012 are domain rules added here. Each one notes, in
+/// DOM-VAL-001..014 are domain rules added here. Each one notes, in
 /// docs/DATA_DICTIONARY.md, which TDD invariant it resembles.
 /// VAL-004 is declared so the TDD id stays stable. No field in this milestone
 /// is a TDD probability, so the validator does not emit it.
@@ -45,4 +45,10 @@ public static class InvariantIds
     public const string CellIndexInRange = "DOM-VAL-011";
 
     public const string WaterPartition = "DOM-VAL-012";
+
+    /// <summary>Absorbed dose and equivalent dose are each finite and at least 0. They are not combined.</summary>
+    public const string IonizingDoseNonNegative = "DOM-VAL-013";
+
+    /// <summary>Maintenance cost is a fraction of the energy reserve in the closed interval [0, 1].</summary>
+    public const string MaintenanceCostFraction = "DOM-VAL-014";
 }

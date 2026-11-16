@@ -6,8 +6,9 @@ namespace Martis.Domain.Common;
 public static class MartianTime
 {
     /// <summary>
-    /// Seconds in one sol. This is the only copy of the figure.
-    /// TODO: cita exacta NSSDC pendiente de MARTIS Ciencia.
+    /// One tick is one sol. This integer is a model rounding (MODEL_ASSUMPTION)
+    /// of the mean solar day. The measurement and the contrast are in ADR-011.
+    /// This is the only copy of the figure in source.
     /// </summary>
     public const int SecondsPerSol = 88775;
 }

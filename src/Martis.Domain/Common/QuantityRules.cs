@@ -43,6 +43,19 @@ internal static class QuantityRules
         return value;
     }
 
+    public static double ReturnUnitInterval(double value, string name, string invariantId)
+    {
+        if (!IsUnitInterval(value))
+        {
+            throw new ArgumentOutOfRangeException(
+                name,
+                value,
+                invariantId + ": the quantity must be finite and inside the closed interval [0, 1].");
+        }
+
+        return value;
+    }
+
     public static void RequireUnitInterval(double value, string name)
     {
         if (!IsUnitInterval(value))

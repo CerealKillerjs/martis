@@ -1,4 +1,5 @@
 using Martis.Domain.Common;
+using Martis.Domain.Validation;
 
 namespace Martis.Domain.Biology;
 
@@ -6,8 +7,10 @@ namespace Martis.Domain.Biology;
 /// Derived traits of a population (TDD §2.4). This value is calculated. It is not
 /// stored on <see cref="Population"/> and it is not a source of truth.
 /// Each component must be finite and at least 0. No upper bound is declared.
-/// <see cref="MaintenanceCost"/> and <see cref="ReproductionRate"/> are dimensionless
-/// per tick, classified MODEL_ASSUMPTION (ADR-011), until a physical scale is fixed.
+/// <see cref="MaintenanceCost"/> is the fraction of <see cref="Population.EnergyReserveJ"/>
+/// removed per sol, in [0, 1] (DOM-VAL-014).
+/// <see cref="ReproductionRate"/> is a per-individual growth factor per sol, finite and at least 0.
+/// Both scales are MODEL_ASSUMPTION and may later be classified GAME_BALANCE (ADR-011).
 /// The other components still have no unit.
 /// TODO: pendiente MARTIS Ciencia.
 /// </summary>
@@ -64,16 +67,21 @@ public sealed record Phenotype
     }
 
     /// <summary>
-    /// Dimensionless maintenance cost per tick. Classification: MODEL_ASSUMPTION (ADR-011).
+    /// Fraction of the energy reserve removed per sol. Finite and inside [0, 1] (DOM-VAL-014).
+    /// Classification of the scale: MODEL_ASSUMPTION (ADR-011).
     /// </summary>
     public double MaintenanceCost
     {
         get => _maintenanceCost;
-        init => _maintenanceCost = QuantityRules.ReturnNonNegativeFinite(value, nameof(MaintenanceCost));
+        init => _maintenanceCost = QuantityRules.ReturnUnitInterval(
+            value,
+            nameof(MaintenanceCost),
+            InvariantIds.MaintenanceCostFraction);
     }
 
     /// <summary>
-    /// Dimensionless reproduction rate per tick. Classification: MODEL_ASSUMPTION (ADR-011).
+    /// Growth factor per individual per sol. Finite and at least 0. No upper bound is declared.
+    /// Classification of the scale: MODEL_ASSUMPTION (ADR-011).
     /// </summary>
     public double ReproductionRate
     {

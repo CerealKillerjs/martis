@@ -8,11 +8,12 @@ public sealed class EnvironmentStateTests
     private static readonly string[] NonNegativeNames =
     [
         nameof(EnvironmentState.UvRadiation),
-        nameof(EnvironmentState.IonizingRadiation),
+        nameof(EnvironmentState.IonizingAbsorbedDoseGyPerSol),
+        nameof(EnvironmentState.IonizingEquivalentDoseSvPerSol),
         nameof(EnvironmentState.SolarIrradiance),
         nameof(EnvironmentState.WaterIce),
         nameof(EnvironmentState.WaterVapor),
-        nameof(EnvironmentState.PerchlorateConcentration),
+        nameof(EnvironmentState.PerchlorateMassKg),
     ];
 
     [Fact]
@@ -157,7 +158,7 @@ public sealed class EnvironmentStateTests
     {
         var state = new EnvironmentState
         {
-            PerchlorateConcentration = -1,
+            PerchlorateMassKg = -1,
             TemperatureKelvin = AssignedDouble.Set(double.NaN),
         };
 

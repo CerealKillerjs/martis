@@ -146,6 +146,18 @@ public static class SimulationValidator
                     quantity.Name,
                     QuantityRules.IsUnitInterval);
             }
+            else if (quantity.Name is nameof(EnvironmentState.IonizingAbsorbedDoseGyPerSol)
+                or nameof(EnvironmentState.IonizingEquivalentDoseSvPerSol))
+            {
+                CollectOne(
+                    violations,
+                    InvariantIds.IonizingDoseNonNegative,
+                    tick,
+                    index,
+                    quantity.Value,
+                    quantity.Name,
+                    QuantityRules.IsNonNegativeFinite);
+            }
             else
             {
                 CollectOne(
@@ -189,7 +201,7 @@ public static class SimulationValidator
         }
 
         var sum = CellWaterBudget.ComponentSum(resources.Water, environment.WaterIce, environment.WaterVapor);
-        if (sum == budget.RecordedTotalKg)
+        if (CellWaterBudget.WithinTolerance(sum, budget.RecordedTotalKg))
         {
             return;
         }

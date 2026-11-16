@@ -351,6 +351,53 @@ public sealed class SimulationValidatorTests
     }
 
     [Fact]
+    public void DoseFieldsStaySeparateAndRejectNonFiniteOrNegativeValues()
+    {
+        var state = new SimulationState(1, 1);
+        state.Environment[0].IonizingAbsorbedDoseGyPerSol = -1;
+        state.Environment[0].IonizingEquivalentDoseSvPerSol = double.PositiveInfinity;
+
+        var violations = SimulationValidator.Validate(state);
+        Assert.Equal(2, violations.Count);
+        Assert.All(violations, violation => Assert.Equal(InvariantIds.IonizingDoseNonNegative, violation.InvariantId));
+        Assert.Equal(nameof(EnvironmentState.IonizingAbsorbedDoseGyPerSol), violations[0].Quantity);
+        Assert.Equal(nameof(EnvironmentState.IonizingEquivalentDoseSvPerSol), violations[1].Quantity);
+        DoubleBits.Equal(-1, violations[0].Value);
+        DoubleBits.Equal(double.PositiveInfinity, violations[1].Value);
+
+        var finite = new SimulationState(1, 1);
+        finite.Environment[0].IonizingAbsorbedDoseGyPerSol = 1;
+        finite.Environment[0].IonizingEquivalentDoseSvPerSol = 40;
+        Assert.Empty(SimulationValidator.Validate(finite));
+    }
+
+    [Fact]
+    public void WaterBalanceAcceptsTheToleranceBoundaryAndRejectsTheNextValue()
+    {
+        const double recorded = 1.0;
+        var allowance = MassBalanceTolerances.MassBalanceAbsoluteToleranceKg
+            + (MassBalanceTolerances.MassBalanceRelativeTolerance * Math.Abs(recorded));
+        // Adding the allowance to 1 rounds to a double whose gap is just past the allowance.
+        // The previous representable value is the last one still inside.
+        var pastBoundary = recorded + allowance;
+        var onBoundary = Math.BitDecrement(pastBoundary);
+
+        Assert.True(CellWaterBudget.WithinTolerance(CellWaterBudget.ComponentSum(onBoundary, 0, 0), recorded));
+        Assert.False(CellWaterBudget.WithinTolerance(CellWaterBudget.ComponentSum(pastBoundary, 0, 0), recorded));
+
+        var inside = new SimulationState(1, 1);
+        inside.Resources[0].Water = onBoundary;
+        inside.WaterBudgets[0].RecordedTotalKg = recorded;
+        Assert.Empty(SimulationValidator.Validate(inside));
+
+        var outside = new SimulationState(1, 1);
+        outside.Resources[0].Water = pastBoundary;
+        outside.WaterBudgets[0].RecordedTotalKg = recorded;
+        var violation = Assert.Single(SimulationValidator.Validate(outside));
+        Assert.Equal(InvariantIds.WaterPartition, violation.InvariantId);
+    }
+
+    [Fact]
     public void ANegativeResourceDoesNotAlsoFailTheWaterPartition()
     {
         var state = new SimulationState(1, 1);

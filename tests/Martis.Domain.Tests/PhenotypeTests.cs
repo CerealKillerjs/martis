@@ -2,6 +2,7 @@ using System.Reflection;
 using Martis.Domain.Biology;
 using Martis.Domain.Common;
 using Martis.Domain.Genetics;
+using Martis.Domain.Validation;
 using Martis.Domain.World;
 
 namespace Martis.Domain.Tests;
@@ -60,6 +61,19 @@ public sealed class PhenotypeTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new Phenotype(value, 0, 0, 0, 0, 0, 0));
         var valid = new Phenotype(0, 0, 0, 0, 0, 0, 0);
         Assert.Throws<ArgumentOutOfRangeException>(() => valid with { MaintenanceCost = value });
+    }
+
+    [Fact]
+    public void MaintenanceCostRejectsAFractionAboveOne()
+    {
+        var above = Math.BitIncrement(1.0);
+        var error = Assert.Throws<ArgumentOutOfRangeException>(() => new Phenotype(0, 0, 0, 0, above, 2, 0));
+        Assert.Equal(nameof(Phenotype.MaintenanceCost), error.ParamName);
+        Assert.Contains(InvariantIds.MaintenanceCostFraction, error.Message, StringComparison.Ordinal);
+
+        var atOne = new Phenotype(0, 0, 0, 0, 1, 2, 0);
+        DoubleBits.Equal(1, atOne.MaintenanceCost);
+        DoubleBits.Equal(2, atOne.ReproductionRate);
     }
 
     [Fact]
