@@ -60,6 +60,11 @@ public partial class GameRoot : Node
         {
             CallDeferred(MethodName.Showcase, shot);
         }
+        else if (GameLaunch.Instance?.Mode == GameLaunch.LoadLatest)
+        {
+            // Title screen «Cargar partida».
+            Load();
+        }
         else
         {
             _hud.Toast("Bienvenido a Marte. Analiza una región, diseña un microbio y despliega tu primera colonia.");

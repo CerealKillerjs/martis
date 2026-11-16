@@ -3,12 +3,13 @@ config_version=5
 
 [application]
 config/name="MARTIS"
-run/main_scene="res://scenes/Main.tscn"
+run/main_scene="res://scenes/Title.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 
 [autoload]
 
 GameAudio="*res://scripts/GameAudio.cs"
+GameLaunch="*res://scripts/GameLaunch.cs"
 
 [dotnet]
 project/assembly_name="Martis.Game"
