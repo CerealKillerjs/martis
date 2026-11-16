@@ -29,16 +29,69 @@ public sealed class CliSmokeTests
         yield return [new[] { "--Version" }];
         yield return [new[] { "-v" }];
         yield return [new[] { "--version", "extra" }];
+        yield return [new[] { "simulate" }];
+        yield return [new[] { "simulate", "--ticks", "abc" }];
+        yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "-1", "--ticks", "1", "--output", "out" }];
+    }
+
+    [Fact]
+    public async Task SimulatePrintsTheFinalTickAndReturnsZero()
+    {
+        var result = await RunCli(
+            "simulate",
+            "--scenario",
+            "mars_baseline",
+            "--seed",
+            "12345",
+            "--ticks",
+            "1000",
+            "--output",
+            "synthetic-output");
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("1000", result.Stdout.Trim());
+        Assert.Equal(string.Empty, result.Stderr.Trim());
+        Assert.False(Directory.Exists(Path.Combine(RepoLayout.Root, "synthetic-output")));
+        Assert.Empty(Directory.EnumerateFiles(
+            Path.Combine(RepoLayout.Root, "data", "scenarios"),
+            "*.json",
+            SearchOption.AllDirectories));
+    }
+
+    [Fact]
+    public async Task SimulateAcceptsTheFullULongSeed()
+    {
+        var result = await RunCli(
+            "simulate",
+            "--scenario",
+            "mars_baseline",
+            "--seed",
+            ulong.MaxValue.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            "--ticks",
+            "0",
+            "--output",
+            "synthetic-output");
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("0", result.Stdout.Trim());
     }
 
     [Theory]
     [MemberData(nameof(InvalidArguments))]
-    public async Task AnythingOtherThanVersionReturnsOne(string[] args)
+    public async Task InvalidArgumentsReturnOneAndPrintUsage(string[] args)
     {
         var result = await RunCli(args);
         Assert.Equal(1, result.ExitCode);
-        Assert.Equal("Usage: martis --version", result.Stderr.Trim());
+        Assert.Equal(Normalize(ExpectedUsage), Normalize(result.Stderr));
         Assert.Equal(string.Empty, result.Stdout.Trim());
+    }
+
+    private const string ExpectedUsage =
+        "Usage: martis --version\n       martis simulate --scenario <id> --seed <ulong> --ticks <int> --output <dir>";
+
+    private static string Normalize(string text)
+    {
+        return text.Replace("\r\n", "\n", StringComparison.Ordinal).Trim();
     }
 
     private static string EngineVersionFromProps()

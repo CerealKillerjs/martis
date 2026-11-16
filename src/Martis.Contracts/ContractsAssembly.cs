@@ -4,7 +4,7 @@ namespace Martis.Contracts;
 /// Names this assembly and records its only project reference, <c>Martis.Domain</c>.
 /// Contracts hold data: commands as records without an apply method, snapshots and events.
 /// Handlers that apply a command to simulation state live in <c>Martis.Simulation</c>.
-/// T01 does not declare those types or handlers.
+/// The command marker lives in <c>Commands</c>. Handlers do not.
 /// </summary>
 public static class ContractsAssembly
 {

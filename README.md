@@ -2,7 +2,7 @@
 
 Motor de simulación científica en C# / .NET. Este repositorio contiene el motor y el ejecutable sin interfaz. La aplicación Godot (`Martis.Game`) no forma parte de la solución: el motor se compila y se prueba sin Godot.
 
-Este árbol corresponde al hito **T01 Infrastructure** (solución, proyectos, referencias, identificadores tipados y pruebas de arquitectura) y al modelo de dominio de **T02** (S1-10..S1-14): ambiente, recursos, genoma, poblaciones, mundo y validador. El motor de ticks, el PRNG y los escenarios llegan después.
+Este árbol corresponde al hito **T01 Infrastructure**, al modelo de dominio de **T02** y a la base de motor de **T03a**: cargador genérico de parámetros, configuración en soles, PRNG `pcg32-v1`, cinco flujos, motor con sistemas stub y el comando `simulate`. No hay escenario de Marte ni ficheros en `data/scenarios/*.json`.
 
 ## Requisitos
 
@@ -41,7 +41,13 @@ Versión del motor:
 dotnet run --project src/Martis.Cli -c Release -- --version
 ```
 
-Salida esperada: `MARTIS 0.1.0` y código de salida 0. Cualquier otro argumento termina con código 1. `0.1.0` es la versión de producto del motor (`Version` en `Directory.Build.props`), no un dato científico.
+Salida esperada: `MARTIS 0.1.0` y código de salida 0. Un argumento que no sea `--version` ni un `simulate` válido termina con código 1. `0.1.0` es la versión de producto del motor (`Version` en `Directory.Build.props`), no un dato científico.
+
+`simulate` crea un mundo vacío de 64×64, avanza los ticks con sistemas stub e imprime el tick final. Acepta `--scenario` y `--output` y no lee ni escribe ficheros.
+
+```bash
+dotnet run --project src/Martis.Cli -- simulate --scenario mars_baseline --seed 12345 --ticks 1000 --output /tmp/m2
+```
 
 ## Grafo de dependencias
 
@@ -92,7 +98,7 @@ data/                       genes/ organisms/ reactions/ environments/ scenarios
 .github/workflows/ci.yml
 ```
 
-T02 llena Biology, Genetics, Environment, World y Validation. Ecology sigue vacío. El diccionario de esos tipos está en [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md). El comando de CLI sigue siendo `--version`.
+T02 llena Biology, Genetics, Environment, World y Validation. T03a añade `Parameters` en Domain, el PRNG y el motor en Simulation, y el comando `simulate` en el CLI. Ecology sigue vacío. El diccionario está en [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md).
 
 ## Versiones de paquetes
 
@@ -105,8 +111,9 @@ Fijadas el 2026-11-15 en [`Directory.Packages.props`](Directory.Packages.props).
 | [Microsoft.NET.Test.Sdk](https://www.nuget.org/packages/Microsoft.NET.Test.Sdk/18.12.0) | 18.12.0 |
 | [coverlet.collector](https://www.nuget.org/packages/coverlet.collector/10.1.1) | 10.1.1 |
 | [Microsoft.Data.Sqlite](https://www.nuget.org/packages/Microsoft.Data.Sqlite/11.0.0) | 11.0.0 |
+| [CsCheck](https://www.nuget.org/packages/CsCheck/5.0.1) | 5.0.1 |
 
-El id `xunit` 2.9.3 es la última versión estable de ese paquete (xUnit v2). El adaptador 4.0.1 declara compatibilidad con xUnit.net 1.9.2 y posteriores.
+El id `xunit` 2.9.3 es la última versión estable de ese paquete (xUnit v2). El adaptador 4.0.1 declara compatibilidad con xUnit.net 1.9.2 y posteriores. CsCheck 5.0.1 es la última estable publicada en nuget.org el 2026-11-16 y solo la usan las pruebas de propiedades de `Martis.Simulation.Tests`. El motor no la referencia: su azar es `pcg32-v1`.
 
 ## Pruebas de arquitectura
 
@@ -124,7 +131,7 @@ GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest
 
 ## Fuera de este hito
 
-- Motor de ticks, PRNG y escenarios. El estado del mundo, VAL-001, VAL-002, VAL-003, VAL-005 y las reglas DOM-VAL están en `Martis.Domain` ([ADR-011](docs/ADR/ADR-011-unidades-del-modelo.md), [diccionario](docs/DATA_DICTIONARY.md)). VAL-004 no tiene campo en este hito. VAL-006..010 siguen pendientes. El trasvase de agua entre compartimentos llega en T03/T04.
+- Escenario `mars_baseline`, `EnvironmentSystem` con datos de Marte, snapshot y auditoría de `data/` (T03b). El motor de ticks y el PRNG de T03a avanzan un mundo vacío. VAL-004 se comprueba en `NextBool`. VAL-010 se comprueba con un sistema de prueba sobre el flujo Environment, en la misma plataforma. VAL-006..008 siguen pendientes. El trasvase de agua entre compartimentos llega en T03/T04.
 - `Martis.Game`, escenas y el SDK de Godot (T08).
 - `benchmarks/` (T10).
 - Esquema SQLite, migraciones y partidas guardadas (T07). El proyecto de persistencia solo abre una base en memoria para comprobar el paquete.
@@ -132,7 +139,7 @@ GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest
 
 ## Regla de Contracts
 
-`Martis.Contracts` solo contiene datos: comandos como records sin `Apply`, snapshots y eventos. Los handlers que aplican un comando sobre `SimulationState` vivirán en `Martis.Simulation`. T01 no implementa comandos ni handlers. Contracts referencia únicamente Domain: nunca Simulation, Persistence, Cli, SQLite ni Godot.
+`Martis.Contracts` solo contiene datos: `ISimulationCommand` no tiene `Apply`. El handler está en `Martis.Simulation` y el motor aplica la cola al empezar el tick. Contracts referencia únicamente Domain: nunca Simulation, Persistence, Cli, SQLite ni Godot.
 
 ## Decisiones del lead en este PR
 

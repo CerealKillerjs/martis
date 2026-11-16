@@ -8,9 +8,10 @@ namespace Martis.Domain.Biology;
 /// stored on <see cref="Population"/> and it is not a source of truth.
 /// Each component must be finite and at least 0.
 /// <see cref="MaintenanceCost"/> is the fraction of <see cref="Population.EnergyReserveJ"/>
-/// removed per sol, in [0, 1] (DOM-VAL-014). Because it is a fraction of the reserve,
-/// the cost tends to 0 as the reserve is exhausted, and there is no starvation (MODEL_ASSUMPTION).
-/// <see cref="ReproductionRate"/> is a per-capita rate per tick in [0, 1] (DOM-VAL-015).
+/// removed per sol (1 tick), in [0, 1] (DOM-VAL-014). Because it is a fraction of the reserve,
+/// the cost tends to 0 as the reserve is exhausted, and v0 does not model mortality from
+/// exhaustion of the energy reserve (MODEL_ASSUMPTION).
+/// <see cref="ReproductionRate"/> is a per-capita rate per sol (1 tick), in [0, 1] (DOM-VAL-015).
 /// Zero means the population does not reproduce. It is not a multiplicative factor.
 /// Both scales are MODEL_ASSUMPTION and may later be classified GAME_BALANCE (ADR-011).
 /// The other components still have no unit.
@@ -69,7 +70,7 @@ public sealed record Phenotype
     }
 
     /// <summary>
-    /// Fraction of the energy reserve removed per sol. Finite and inside [0, 1] (DOM-VAL-014).
+    /// Fraction of the energy reserve removed per sol (1 tick). Finite and inside [0, 1] (DOM-VAL-014).
     /// Classification of the scale: MODEL_ASSUMPTION (ADR-011).
     /// </summary>
     public double MaintenanceCost
@@ -82,7 +83,8 @@ public sealed record Phenotype
     }
 
     /// <summary>
-    /// Per-capita reproduction rate per tick, in [0, 1] (DOM-VAL-015).
+    /// Per-capita reproduction rate per sol (1 tick), in [0, 1] (DOM-VAL-015).
+    /// The ceiling of 1 is a design decision, calibrated later (T05/T06).
     /// Zero means no reproduction. Classification of the scale: MODEL_ASSUMPTION (ADR-011).
     /// </summary>
     public double ReproductionRate

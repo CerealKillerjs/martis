@@ -1,6 +1,6 @@
 # ADR-011 — Unidades del modelo
 
-- **Estado:** Aceptado: decisión de MARTIS Lead tras la validación científica de MARTIS Ciencia (rondas 1-3 del PR #4), 2026-11-16.
+- **Estado:** Aceptado: decisión de MARTIS Lead tras la validación científica de MARTIS Ciencia (rondas 1-4 del PR #4, head ed68024), 2026-11-16.
 - **H-05:** parcial. 1 tick = 1 sol; SecondsPerSol ≈ 88 775 s (redondeo, MODEL_ASSUMPTION). [H-18](../TDD_HUECOS.md) queda parcial.
 - **Fuente:** TDD v1.0 §2.2, §2.3, §2.5, §3.1, §3.2, §10.1, §10.2.
 
@@ -56,11 +56,11 @@ El buffer de asignación usa kg por celda y no consume el depósito.
 
 No hay un segundo campo de líquido en el ambiente ni de hielo o vapor en el depósito. El agua adsorbida o hidratada queda fuera de v0.
 
-`CellWaterBudget.RecordedTotalKg` no es un cuarto stock. El error es el valor absoluto de la diferencia entre `Water + WaterIce + WaterVapor` (en ese orden) y el total registrado. Pasa si el error es menor o igual que `MassBalanceAbsoluteToleranceKg + MassBalanceRelativeTolerance · |total|`. Las dos constantes son `MODEL_ASSUMPTION`. Lead fija la relativa en `1e-9`. La absoluta es `1e-12` kg, `MODEL_ASSUMPTION`, y se revisa cuando se cierre H-07. Si la misma masa se anota en el líquido y en el hielo y el total no crece, el error supera esa cota y el validador emite **DOM-VAL-012**. Si el total se infla para absorber el doble conteo, esta regla no lo ve. La conservación de un tick al siguiente se comprueba en T04. Transferir agua conservando la masa es un proceso de T03/T04 y no está implementado.
+`CellWaterBudget.RecordedTotalKg` no es un cuarto stock. El error es el valor absoluto de la diferencia entre `Water + WaterIce + WaterVapor` (en ese orden) y el total registrado. Pasa si el error es menor o igual que `MassBalanceAbsoluteToleranceKg + MassBalanceRelativeTolerance · |total|`. Las dos constantes son `MODEL_ASSUMPTION`. Lead fija la relativa en `1e-9`. La absoluta es `1e-12` kg, `MODEL_ASSUMPTION`: por encima del residuo de redondeo (≈ ε_mach · masa máxima de la celda; con stocks ≲ 10³ kg, ~10⁻¹³ kg) y por debajo de cualquier masa de agua con sentido; se revisa con H-07. Si la misma masa se anota en el líquido y en el hielo y el total no crece, el error supera esa cota y el validador emite **DOM-VAL-012**. Si el total se infla para absorber el doble conteo, esta regla no lo ve. La conservación de un tick al siguiente se comprueba en T04. Transferir agua conservando la masa es un proceso de T03/T04 y no está implementado.
 
 ### Fenotipo
 
-`MaintenanceCost` es la fracción de `EnergyReserveJ` que se retira por sol, en [0, 1] (DOM-VAL-014). Como es una fracción de la reserva, el coste tiende a 0 cuando la reserva se agota, y no hay inanición (`MODEL_ASSUMPTION`). `ReproductionRate` es una tasa per cápita por tick en [0, 1] (DOM-VAL-015): 0 significa que no se reproduce, y no es un factor multiplicativo. Las dos escalas son `MODEL_ASSUMPTION` y pueden acabar en `GAME_BALANCE`. Se calibran en T05/T06. El resto de componentes del fenotipo no tiene unidad. DOM-VAL-014 y DOM-VAL-015 los lanza el constructor de `Phenotype`; `SimulationValidator` no los emite.
+`MaintenanceCost` es la fracción de `EnergyReserveJ` que se retira por sol (1 tick), en [0, 1] (DOM-VAL-014). Como es una fracción de la reserva, el coste tiende a 0 cuando la reserva se agota, y v0 no modela mortalidad por agotamiento de la reserva de energía (`MODEL_ASSUMPTION`). `ReproductionRate` es una tasa per cápita por sol (1 tick), en [0, 1] (DOM-VAL-015): 0 significa que no se reproduce, y no es un factor multiplicativo. El techo `ReproductionRate` ≤ 1 es una decisión de diseño. Las dos escalas son `MODEL_ASSUMPTION` y pueden acabar en `GAME_BALANCE`. Se calibran en T05/T06. El resto de componentes del fenotipo no tiene unidad. DOM-VAL-014 y DOM-VAL-015 los lanza el constructor de `Phenotype`; `SimulationValidator` no los emite.
 
 ### Ambiente
 
@@ -78,7 +78,7 @@ La base temporal va por campo. La unidad elegida es `MODEL_ASSUMPTION`, salvo la
 | SoilPorosity | fracción de volumen en [0, 1] | Definición del campo, no un supuesto de Marte. |
 | PerchlorateMassKg | kg por celda, tras convertir una fracción másica | La especie (ClO₄⁻ o una sal de Ca/Mg) está pendiente. El cargador de T03 hace la conversión. |
 
-Referencias de dosis, no valores de Gale y no constantes del código. Clasificación `SCIENTIFIC_ESTIMATED`:
+Referencias de dosis, no valores de Gale y no constantes del código. La clasificación `SCIENTIFIC_ESTIMATED` es la del valor por sol derivado; el valor nativo de Hassler es `SCIENTIFIC_MEASURED`.
 
 - Hassler et al. 2014, Science 343:1244797, doi:10.1126/science.1244797. 0,210 ± 0,040 mGy/día ≈ 2,158·10⁻⁴ Gy/sol.
 - Guo et al. 2021, doi:10.1007/s00159-021-00136-5. 0,49 ± 0,08 mSv/día ≈ 5,03·10⁻⁴ Sv/sol.
@@ -99,7 +99,7 @@ El ejemplo del prototipo es 64×64 celdas. `GridIndex` no fija ese tamaño. H-07
 - DOM-VAL-012: 2 + 3 + 4 con total 9 pasa. 5 en líquido y 5 en hielo con total 5 falla. El valor cuya diferencia cabe en la tolerancia pasa; el `double` siguiente falla.
 - Las dos dosis rechazan negativo, NaN e infinito por separado y no se suman.
 - `MaintenanceCost` y `ReproductionRate` por encima de 1 lanzan DOM-VAL-014 y DOM-VAL-015. 0 y 1 pasan.
-- Con total registrado 0, una suma de 5,55e-17 kg pasa y una de 2e-12 kg no. Un lado no finito no pasa.
+- Con total registrado 0, una suma de 5,55e-17 kg pasa y una de 2e-12 kg no. Una suma de exactamente 1e-12 kg pasa y el double siguiente (`Math.BitIncrement(1e-12)`) no. Un lado no finito no pasa.
 
 ## Pendiente
 

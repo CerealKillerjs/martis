@@ -4,7 +4,7 @@ namespace Martis.Domain.Environment;
 /// Tolerance of TDD §10.1 for a closed mass account:
 /// the absolute error must be at most
 /// <see cref="MassBalanceAbsoluteToleranceKg"/> plus
-/// <see cref="MassBalanceRelativeTolerance"/> times the absolute expected mass.
+/// <see cref="MassBalanceRelativeTolerance"/> times the absolute recorded total.
 /// Both figures are MODEL_ASSUMPTION. MARTIS Lead fixed the relative term.
 /// </summary>
 public static class MassBalanceTolerances
@@ -16,7 +16,9 @@ public static class MassBalanceTolerances
 
     /// <summary>
     /// Absolute term, in kg. MODEL_ASSUMPTION.
-    /// Review this figure when H-07 (metres per cell) is closed.
+    /// It sits above the rounding residue (about machine epsilon times the
+    /// maximum cell mass; with stocks below about 1e3 kg, about 1e-13 kg)
+    /// and below any water mass that would matter. Review it with H-07.
     /// </summary>
     public const double MassBalanceAbsoluteToleranceKg = 1e-12;
 }

@@ -1,0 +1,152 @@
+{
+  "metadata": {
+    "name": "synthetic-parameter-fixture",
+    "loader_rule_T03": "A PENDING value is accepted only when no v0 system reads it. The loader never invents a default."
+  },
+  "location": {
+    "name": "synthetic-site"
+  },
+  "parameters": [
+    {
+      "id": "mutation_rate",
+      "field": "mutation_rate",
+      "value": 0.0001,
+      "unit": "per_reproduction_event",
+      "classification": "GAME_BALANCE",
+      "scope": "analog:fixture",
+      "version": 1,
+      "status": "OK",
+      "source": null,
+      "note": "Illustrative TDD 10.2 example. Not a measured rate."
+    },
+    {
+      "id": "flag_enabled",
+      "field": "flag_enabled",
+      "value": true,
+      "unit": "flag",
+      "classification": "GAME_BALANCE",
+      "scope": "analog:fixture",
+      "version": "0.1",
+      "status": "ACCEPTED",
+      "source": []
+    },
+    {
+      "id": "label_code",
+      "field": "label_code",
+      "value": "synthetic-label",
+      "unit": "text",
+      "classification": "SPECULATIVE",
+      "scope": "regional:site-alpha",
+      "version": "0.1",
+      "status": "CONTEXTO",
+      "source": [
+        {
+          "citation": "Synthetic citation",
+          "accessed": "2026-01-01",
+          "where": "fixture"
+        }
+      ]
+    },
+    {
+      "id": "band",
+      "field": "band",
+      "value": [0.25, 0.75],
+      "range": [0.0, 1.0],
+      "unit": "fraction",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "analog:bench",
+      "version": 2,
+      "status": "FALLBACK",
+      "source": null
+    },
+    {
+      "id": "native_count",
+      "field": "count",
+      "value": 4,
+      "unit": "synthetic_per_day",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:site-alpha",
+      "version": 1,
+      "status": "REFERENCE",
+      "source": [
+        {
+          "citation": "Synthetic measured source",
+          "doi": "10.0000/synthetic.measured",
+          "accessed": "2026-01-02"
+        }
+      ]
+    },
+    {
+      "id": "derived_count",
+      "field": "count",
+      "value": 5,
+      "unit": "synthetic_per_sol",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "regional:site-alpha",
+      "version": 1,
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Synthetic conversion note",
+          "url": "https://example.invalid/conversion",
+          "accessed": "2026-01-02"
+        }
+      ],
+      "derived_from": "native_count",
+      "conversion": "MODEL_ASSUMPTION",
+      "rationale": "The derived number is stored apart from the native number. The loader does not compute it."
+    },
+    {
+      "id": "pending_gap",
+      "field": "gap",
+      "value": null,
+      "unit": "synthetic_unit",
+      "classification": "UNCLASSIFIED_PENDING",
+      "scope": "planetary_mean",
+      "version": "0.1",
+      "status": "PENDING",
+      "source": null
+    },
+    {
+      "id": "old_note",
+      "field": "old_note",
+      "value": 9,
+      "unit": "synthetic_unit",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "analog:archive",
+      "version": 1,
+      "status": "HISTORICAL",
+      "source": null
+    },
+    {
+      "id": "unused_knob",
+      "field": "unused_knob",
+      "value": 8,
+      "unit": "synthetic_unit",
+      "classification": "GAME_BALANCE",
+      "scope": "analog:fixture",
+      "version": 1,
+      "status": "OK",
+      "used_in_v0": false,
+      "source": null
+    },
+    {
+      "id": "mean_level",
+      "field": "level",
+      "value": 11,
+      "unit": "synthetic_unit",
+      "classification": "SCIENTIFIC_ESTIMATED",
+      "scope": "planetary_mean",
+      "version": "1.5",
+      "status": "OK",
+      "uncertainty": "synthetic",
+      "source": [
+        {
+          "citation": "Synthetic estimate",
+          "url": "https://example.invalid/estimate",
+          "accessed": "2026-01-03"
+        }
+      ]
+    }
+  ]
+}

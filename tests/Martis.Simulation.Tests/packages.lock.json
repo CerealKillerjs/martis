@@ -8,6 +8,12 @@
         "resolved": "10.1.1",
         "contentHash": "iRWGpNzKG6/pA0VzAt+WDzFAPMHvs/E4ZxeSYiEaAa7MzFhAcWcIWd7RDNLhCBenpSNdJCwm42UcQP4nGUbwJQ=="
       },
+      "CsCheck": {
+        "type": "Direct",
+        "requested": "[5.0.1, )",
+        "resolved": "5.0.1",
+        "contentHash": "dsWFbaTkF7SdDlKTbnZWeQbNRLVKubJmIRJ/xDPR/ydMTLL1iSHMna9JfJqyC22siT7Tq9tKiQZyfxUOl9RRzA=="
+      },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
         "requested": "[18.12.0, )",

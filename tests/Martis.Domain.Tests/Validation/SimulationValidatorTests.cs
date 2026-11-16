@@ -366,7 +366,8 @@ public sealed class SimulationValidatorTests
         DoubleBits.Equal(double.PositiveInfinity, violations[1].Value);
 
         var finite = new SimulationState(1, 1);
-        finite.Environment[0].IonizingAbsorbedDoseGyPerSol = 1;
+        // dato de prueba; Sv = Gy × Q con Q ≥ 1
+        finite.Environment[0].IonizingAbsorbedDoseGyPerSol = 2e-4;
         finite.Environment[0].IonizingEquivalentDoseSvPerSol = 5e-4;
         Assert.Empty(SimulationValidator.Validate(finite));
     }
@@ -407,7 +408,7 @@ public sealed class SimulationValidatorTests
     }
 
     [Fact]
-    public void ZeroRecordedTotalRejectsASumOfTwoPicogramsPerCell()
+    public void ZeroRecordedTotalRejectsASumOfTwoNanogramsPerCell()
     {
         var state = new SimulationState(1, 1);
         state.Resources[0].Water = 2e-12;
@@ -415,6 +416,21 @@ public sealed class SimulationValidatorTests
         var violation = Assert.Single(SimulationValidator.Validate(state));
         Assert.Equal(InvariantIds.WaterPartition, violation.InvariantId);
         DoubleBits.Equal(0, violation.Value);
+    }
+
+    [Fact]
+    public void ZeroRecordedTotalAcceptsExactlyOneNanogramAndRejectsTheNextDouble()
+    {
+        var onBoundary = new SimulationState(1, 1);
+        onBoundary.Resources[0].Water = 1e-12;
+        onBoundary.WaterBudgets[0].RecordedTotalKg = 0;
+        Assert.Empty(SimulationValidator.Validate(onBoundary));
+
+        var pastBoundary = new SimulationState(1, 1);
+        pastBoundary.Resources[0].Water = Math.BitIncrement(1e-12);
+        pastBoundary.WaterBudgets[0].RecordedTotalKg = 0;
+        var violation = Assert.Single(SimulationValidator.Validate(pastBoundary));
+        Assert.Equal(InvariantIds.WaterPartition, violation.InvariantId);
     }
 
     public static IEnumerable<object[]> NonFiniteWaterBalances()
