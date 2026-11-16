@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Godot;
+using Martis.Simulation.Economy;
 using Martis.Simulation.Missions;
 using Martis.Simulation.Sessions;
 
@@ -43,6 +44,14 @@ public partial class Hud : Control
     private OptionButton _overlay = null!;
     private PanelContainer _banner = null!;
     private double _toastTime;
+    private Label _points = null!;
+    private Label _inoculum = null!;
+    private ProgressBar _inoculumBar = null!;
+    private Button _researchButton = null!;
+    private PanelContainer _researchPanel = null!;
+    private VBoxContainer _researchRows = null!;
+    private Label _researchPoints = null!;
+    private ResearchState? _limits;
 
     public event Action<int>? SpeedChanged;
 
@@ -61,6 +70,12 @@ public partial class Hud : Control
     public event Action? ExperimentRequested;
 
     public event Action<bool>? DeployToggled;
+
+    public event Action<string>? ResearchChosen;
+
+    public event Action? ResearchRequested;
+
+    public bool ResearchOpen => _researchPanel.Visible;
 
     public string SelectedOrganism => _organisms.Count == 0 ? string.Empty : _organisms[_organism.Selected].Id;
 
@@ -102,6 +117,103 @@ public partial class Hud : Control
         BuildLab();
         BuildFeed();
         BuildToast();
+        BuildResearch();
+    }
+
+    /// <summary>
+    /// Applies the campaign research to the laboratory (H2): locked organisms, gene sliders
+    /// limited to the editing range, forecast length and the inoculum the bioreactor holds.
+    /// Null (free play) lifts every limit and hides the economy.
+    /// </summary>
+    public void SetLimits(ResearchState? research)
+    {
+        _limits = research;
+        _points.Visible = _inoculum.Visible = _inoculumBar.Visible = _researchButton.Visible = research is not null;
+        for (var i = 0; i < _organisms.Count; i++)
+        {
+            var locked = research is not null && !research.IsOrganismAvailable(_organisms[i].Id);
+            _organism.SetItemDisabled(i, locked);
+            _organism.SetItemText(i, $"{(locked ? "🔒 " : string.Empty)}{_organisms[i].Name}  ·  {Category(_organisms[i].Category)}");
+        }
+
+        if (_organism.IsItemDisabled(_organism.Selected))
+        {
+            _organism.Select(0);
+        }
+
+        _sols.MaxValue = research?.ForecastSols ?? 200;
+        _sols.Value = Math.Min(_sols.Value, _sols.MaxValue);
+        _kg.MaxValue = research?.InoculumCapacityKg ?? 5;
+        RebuildGenes();
+        if (research is not null && _researchPanel.Visible)
+        {
+            ShowResearch(research);
+        }
+    }
+
+    public void ShowEconomy(ResearchState? research, double inoculumKg)
+    {
+        if (research is null)
+        {
+            return;
+        }
+
+        _points.Text = string.Create(CultureInfo.InvariantCulture, $"⚗ {research.Points:0} PI");
+        _inoculum.Text = string.Create(CultureInfo.InvariantCulture, $"Inóculo {inoculumKg:0.00}/{research.InoculumCapacityKg:0.00} kg");
+        _inoculumBar.MaxValue = research.InoculumCapacityKg;
+        _inoculumBar.Value = inoculumKg;
+    }
+
+    public void ToggleResearch(ResearchState? research)
+    {
+        if (research is null)
+        {
+            _researchPanel.Visible = false;
+            return;
+        }
+
+        _researchPanel.Visible = !_researchPanel.Visible;
+        if (_researchPanel.Visible)
+        {
+            ShowResearch(research);
+        }
+    }
+
+    /// <summary>Rebuilds the technology list: researched, available with its cost, or locked by a requirement.</summary>
+    public void ShowResearch(ResearchState research)
+    {
+        _researchPoints.Text = string.Create(CultureInfo.InvariantCulture, $"{research.Points:0} PI disponibles");
+        foreach (var child in _researchRows.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        foreach (var technology in research.Definition.Technologies)
+        {
+            var done = research.IsUnlocked(technology.Id);
+            var blocker = research.Blocker(technology.Id);
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 12);
+            var text = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+            var title = new Label { Text = (done ? "✔  " : string.Empty) + technology.Title };
+            title.AddThemeFontSizeOverride("font_size", 16);
+            title.AddThemeColorOverride("font_color", done ? Bio : Colors.White);
+            var description = new Label { Text = technology.Description, AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(330, 0) };
+            description.AddThemeFontSizeOverride("font_size", 12);
+            description.AddThemeColorOverride("font_color", new Color(1, 1, 1, 0.65f));
+            text.AddChild(title);
+            text.AddChild(description);
+            row.AddChild(text);
+            var id = technology.Id;
+            var button = Action(
+                done ? "Investigada" : string.Create(CultureInfo.InvariantCulture, $"{technology.Cost:0} PI"),
+                () => ResearchChosen?.Invoke(id),
+                blocker ?? "Investigar");
+            button.CustomMinimumSize = new Vector2(110, 34);
+            button.Disabled = blocker is not null;
+            row.AddChild(button);
+            _researchRows.AddChild(row);
+        }
     }
 
     public void SetOrganisms(IReadOnlyList<OrganismInfo> organisms)
@@ -282,6 +394,8 @@ public partial class Hud : Control
 
     public bool BannerVisible => _banner.Visible;
 
+    public void CloseBanner() => _banner.Visible = false;
+
     /// <summary>
     /// Centred message (mission briefing, mission complete). Each button closes the banner and
     /// then runs its action; with no buttons there is a single «Seguir explorando».
@@ -343,6 +457,17 @@ public partial class Hud : Control
         _clock = Small(row);
         _biomass = Small(row);
         _populations = Small(row);
+        _points = Small(row);
+        _points.AddThemeColorOverride("font_color", new Color(0.65f, 0.85f, 1f));
+        var inoculum = new VBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+        inoculum.AddThemeConstantOverride("separation", 2);
+        _inoculum = new Label();
+        _inoculum.AddThemeFontSizeOverride("font_size", 13);
+        _inoculum.AddThemeColorOverride("font_color", new Color(1, 1, 1, 0.75f));
+        _inoculumBar = new ProgressBar { ShowPercentage = false, CustomMinimumSize = new Vector2(130, 5) };
+        inoculum.AddChild(_inoculum);
+        inoculum.AddChild(_inoculumBar);
+        row.AddChild(inoculum);
         row.AddChild(new Control { SizeFlagsHorizontal = SizeFlags.ExpandFill });
 
         var speeds = new[] { ("❚❚", "Pausa (Espacio)"), ("▶", "1 sol cada 2 s"), ("▶▶", "2 soles/s"), ("▶▶▶", "8 soles/s") };
@@ -363,6 +488,8 @@ public partial class Hud : Control
 
         _overlay.ItemSelected += index => OverlayChanged?.Invoke((Overlay)(int)index);
         row.AddChild(_overlay);
+        _researchButton = Action("Investigación", () => ResearchRequested?.Invoke(), "Árbol tecnológico (R)");
+        row.AddChild(_researchButton);
         row.AddChild(Action("Guardar", () => SaveRequested?.Invoke(), "Guarda la partida (F5)"));
         row.AddChild(Action("Cargar", () => LoadRequested?.Invoke(), "Carga la última partida (F9)"));
         row.AddChild(Action("Nueva", () => NewGameRequested?.Invoke(), "Reinicia la misión con otra semilla"));
@@ -531,6 +658,35 @@ public partial class Hud : Control
         AddChild(_banner);
     }
 
+    private void BuildResearch()
+    {
+        _researchPanel = Panel(new Vector2(500, 0));
+        _researchPanel.SetAnchorsPreset(LayoutPreset.Center);
+        _researchPanel.OffsetLeft = -250;
+        _researchPanel.OffsetRight = 250;
+        _researchPanel.OffsetTop = -230;
+        _researchPanel.GrowHorizontal = GrowDirection.Both;
+        _researchPanel.GrowVertical = GrowDirection.Both;
+        _researchPanel.Visible = false;
+        var box = new VBoxContainer();
+        box.AddThemeConstantOverride("separation", 10);
+        _researchPanel.AddChild(box);
+        var header = new HBoxContainer();
+        var caption = Caption("INVESTIGACIÓN · ÁRBOL TECNOLÓGICO");
+        caption.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        header.AddChild(caption);
+        header.AddChild(Action("✕", () => _researchPanel.Visible = false, "Cerrar (R)"));
+        box.AddChild(header);
+        _researchPoints = new Label();
+        _researchPoints.AddThemeFontSizeOverride("font_size", 20);
+        _researchPoints.AddThemeColorOverride("font_color", new Color(0.65f, 0.85f, 1f));
+        box.AddChild(_researchPoints);
+        _researchRows = new VBoxContainer();
+        _researchRows.AddThemeConstantOverride("separation", 10);
+        box.AddChild(_researchRows);
+        AddChild(_researchPanel);
+    }
+
     private void RebuildGenes()
     {
         foreach (var child in _geneBox.GetChildren())
@@ -549,7 +705,12 @@ public partial class Hud : Control
             var row = new HBoxContainer();
             var name = new Label { Text = Gene(id), CustomMinimumSize = new Vector2(130, 0), TooltipText = id };
             name.AddThemeFontSizeOverride("font_size", 13);
-            var slider = new HSlider { MinValue = 0, MaxValue = 1, Step = 0.01, Value = value, SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(120, 22) };
+            var range = _limits?.GeneRange ?? 1.0;
+            var slider = new HSlider { MinValue = Math.Max(0, value - range), MaxValue = Math.Min(1, value + range), Step = 0.01, Value = value, SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(120, 22) };
+            if (range < 1.0)
+            {
+                slider.TooltipText = string.Create(CultureInfo.InvariantCulture, $"Edición limitada a ±{range:0.00}: investiga edición génica");
+            }
             var shown = new Label { Text = value.ToString("0.00", CultureInfo.InvariantCulture), CustomMinimumSize = new Vector2(38, 0) };
             shown.AddThemeFontSizeOverride("font_size", 13);
             var baseValue = value;

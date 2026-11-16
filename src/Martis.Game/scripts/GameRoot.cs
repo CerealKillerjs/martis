@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Godot;
+using Martis.Simulation.Economy;
 using Martis.Simulation.Missions;
 using Martis.Simulation.Sessions;
 
@@ -35,6 +36,7 @@ public partial class GameRoot : Node
     private CampaignMission? _mission;
     private CampaignMenu _menu = null!;
     private bool _playing;
+    private double _savedPoints = double.NaN;
 
     /// <summary>Chapter of the mission being played (<c>ch1</c>…<c>ch5</c>), null in free play. Music picks its mood from it.</summary>
     public string? ChapterId => _mission?.ChapterId;
@@ -129,16 +131,17 @@ public partial class GameRoot : Node
     private CampaignProgress LoadCampaign()
     {
         var campaign = CampaignDefinition.LoadPublished(_dataRoot);
+        var economy = EconomyDefinition.LoadPublished(_dataRoot);
         try
         {
             return System.IO.File.Exists(ProgressPath)
-                ? CampaignProgress.FromJson(campaign, System.IO.File.ReadAllText(ProgressPath))
-                : new CampaignProgress(campaign);
+                ? CampaignProgress.FromJson(campaign, System.IO.File.ReadAllText(ProgressPath), economy)
+                : new CampaignProgress(campaign) { Research = new ResearchState(economy) };
         }
         catch (Exception exception) when (exception is System.IO.IOException or System.IO.InvalidDataException or UnauthorizedAccessException)
         {
             GD.PushWarning($"Campaign progress ignored: {exception.Message}");
-            return new CampaignProgress(campaign);
+            return new CampaignProgress(campaign) { Research = new ResearchState(economy) };
         }
     }
 
@@ -147,6 +150,7 @@ public partial class GameRoot : Node
         try
         {
             System.IO.File.WriteAllText(ProgressPath, _campaign.ToJson());
+            _savedPoints = _campaign.Research?.Points ?? 0;
         }
         catch (Exception exception) when (exception is System.IO.IOException or UnauthorizedAccessException)
         {
@@ -176,7 +180,9 @@ public partial class GameRoot : Node
         _mission = mission;
         _saves.CurrentId = null;
         _hud.ClearEvents();
-        StartSession(GameSession.NewGame(_dataRoot, seed ?? _session.Seed, mission.File));
+        var session = GameSession.NewGame(_dataRoot, seed ?? _session.Seed, mission.File);
+        session.AttachEconomy(_campaign.Research!);
+        StartSession(session);
         _playing = true;
         CloseMenu();
         SetSpeed(0);
@@ -262,6 +268,9 @@ public partial class GameRoot : Node
                 case Key.F5:
                     Save();
                     break;
+                case Key.R:
+                    _hud.ToggleResearch(_session.Research);
+                    break;
                 case Key.F9:
                     Load();
                     break;
@@ -311,6 +320,8 @@ public partial class GameRoot : Node
             _hud.LoadRequested += Load;
             _hud.NewGameRequested += NewGame;
             _hud.MenuRequested += OpenMenu;
+            _hud.ResearchRequested += () => _hud.ToggleResearch(_session.Research);
+            _hud.ResearchChosen += Research;
             _world.Camera.Used += Act;
             _menu = new CampaignMenu { Name = "CampaignMenu", Visible = false };
             layer.AddChild(_menu);
@@ -323,6 +334,12 @@ public partial class GameRoot : Node
             _hud.DeployToggled += on => _hud.Toast(on ? "Elige una celda para la colonia." : "Despliegue cancelado.");
             _hud.SetOrganisms(session.Organisms);
             SetSpeed(1);
+        }
+
+        _hud.SetLimits(session.Research);
+        if (session.Research is null)
+        {
+            _hud.ToggleResearch(null);
         }
 
         Select(session.Width / 2, session.Height / 2);
@@ -339,6 +356,15 @@ public partial class GameRoot : Node
         _view = _session.View();
         _world.Show(_view);
         _hud.ShowMission(_session.Mission, MissionCaption());
+        _hud.ShowEconomy(_session.Research, _session.InoculumKg);
+        if (_session.Research is { } research && research.Points != _savedPoints)
+        {
+            SaveCampaign();
+            if (_hud.ResearchOpen)
+            {
+                _hud.ShowResearch(research);
+            }
+        }
         if (_selected.X >= 0)
         {
             _hud.ShowCell(_session.Inspect(_selected.X, _selected.Y));
@@ -399,6 +425,22 @@ public partial class GameRoot : Node
             ? $"Siguiente: misión {chapter.Number}.{next.Number}."
             : $"Se abre el capítulo {chapter.Number}: {chapter.Title}.";
         _hud.Banner(title, $"{done} {teaser}", ("Siguiente misión", () => StartMission(next)), ("Seguir explorando", () => SetSpeed(1)));
+    }
+
+    private void Research(string technologyId)
+    {
+        if (_session.ResearchTechnology(technologyId, out var error))
+        {
+            var technology = _session.Research!.Definition.Technology(technologyId);
+            _hud.Toast($"Investigado: {technology.Title}. {technology.Description}");
+            _hud.SetLimits(_session.Research);
+            SaveCampaign();
+            Refresh();
+        }
+        else
+        {
+            _hud.Toast(error ?? "No se puede investigar.", bad: true);
+        }
     }
 
     private void SetSpeed(int index)
@@ -488,6 +530,7 @@ public partial class GameRoot : Node
         try
         {
             var id = _saves.Save(_session, _mission?.File);
+            SaveCampaign();
             _hud.Toast($"Partida guardada ({id}, sol {_session.Tick}).");
         }
         catch (Exception exception) when (exception is System.Data.Common.DbException or System.IO.IOException or InvalidOperationException)
@@ -500,10 +543,15 @@ public partial class GameRoot : Node
     {
         try
         {
-            var loaded = _saves.LoadLatest(out var message, out var missionFile);
+            var loaded = _saves.LoadLatest(out var message, out var record);
             if (loaded is not null)
             {
-                _mission = _campaign.Campaign.Missions.FirstOrDefault(item => item.File == missionFile);
+                _mission = _campaign.Campaign.Missions.FirstOrDefault(item => item.File == record?.MissionFile);
+                if (_mission is not null)
+                {
+                    loaded.AttachEconomy(_campaign.Research!, record!.Economy);
+                }
+
                 _hud.ClearEvents();
                 StartSession(loaded);
                 _playing = true;
@@ -548,6 +596,18 @@ public partial class GameRoot : Node
         if (_options.TryGetValue("briefing", out var id))
         {
             StartMission(_campaign.Campaign.Mission(id));
+        }
+
+        if (_options.ContainsKey("research"))
+        {
+            _hud.Banner(string.Empty, string.Empty);
+            _hud.CloseBanner();
+            _campaign.Research!.Earn(62);
+            _session.ResearchTechnology("gene_editing_1", out _);
+            _session.ResearchTechnology("long_forecast", out _);
+            _hud.SetLimits(_session.Research);
+            Refresh();
+            _hud.ToggleResearch(_session.Research);
         }
 
         for (var i = 0; i < 40; i++)
@@ -619,9 +679,9 @@ public partial class GameRoot : Node
         _session.RecordAction("analyze-region");
         _saves.CurrentId = null;
         var id = _saves.Save(_session, MissionDefinition.FirstColonyFile);
-        var loaded = _saves.LoadLatest(out var message, out var missionFile);
+        var loaded = _saves.LoadLatest(out var message, out var record);
         ok &= loaded is not null && loaded.Tick == 30 && Math.Abs(loaded.View().TotalBiomassKg - biomass) < 1e-12;
-        ok &= missionFile == MissionDefinition.FirstColonyFile
+        ok &= record?.MissionFile == MissionDefinition.FirstColonyFile
             && loaded!.Mission!.Status().Single(status => status.Id == "analyze_region").CompletedTick is not null;
         GD.Print($"MARTIS smoke ok={ok} save={id} tick={_session.Tick} biomass={biomass:0.######} {message} {error}");
         GetTree().Quit(ok ? 0 : 1);

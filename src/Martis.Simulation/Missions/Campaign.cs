@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Martis.Simulation.Economy;
 
 namespace Martis.Simulation.Missions;
 
@@ -103,6 +104,9 @@ public sealed class CampaignProgress
 
     public CampaignDefinition Campaign { get; }
 
+    /// <summary>Research points and technologies of the campaign (H2); null when the host plays without an economy.</summary>
+    public ResearchState? Research { get; set; }
+
     public IReadOnlyCollection<string> Completed => _completed;
 
     /// <summary>The first unfinished mission, or null when every playable mission is done.</summary>
@@ -130,10 +134,13 @@ public sealed class CampaignProgress
     }
 
     public string ToJson()
-        => JsonSerializer.Serialize(new Dto(Campaign.Id, [.. _completed.Order(StringComparer.Ordinal)]));
+        => JsonSerializer.Serialize(new Dto(Campaign.Id, [.. _completed.Order(StringComparer.Ordinal)], Research?.ToJson()));
 
-    /// <summary>Reads saved progress; ids the campaign no longer has are dropped.</summary>
-    public static CampaignProgress FromJson(CampaignDefinition campaign, string json)
+    /// <summary>
+    /// Reads saved progress; ids the campaign no longer has are dropped. With an economy,
+    /// research comes from the save or starts fresh when the save has none.
+    /// </summary>
+    public static CampaignProgress FromJson(CampaignDefinition campaign, string json, EconomyDefinition? economy = null)
     {
         var progress = new CampaignProgress(campaign);
         Dto? dto;
@@ -153,10 +160,15 @@ public sealed class CampaignProgress
 
         var known = campaign.Missions.Select(mission => mission.Id).ToHashSet(StringComparer.Ordinal);
         progress._completed.UnionWith((dto.Completed ?? []).Where(known.Contains));
+        if (economy is not null)
+        {
+            progress.Research = dto.Research is null ? new ResearchState(economy) : ResearchState.FromJson(economy, dto.Research);
+        }
+
         return progress;
     }
 
-    private sealed record Dto(string CampaignId, string[]? Completed);
+    private sealed record Dto(string CampaignId, string[]? Completed, string? Research = null);
 }
 
 /// <summary>
@@ -164,12 +176,12 @@ public sealed class CampaignProgress
 /// and the tracker progress at that tick. Hosts write it as a <c>mission-progress</c> event
 /// of the save game (ADR-016 left «evento o snapshot» open; an event needs no new migration).
 /// </summary>
-public sealed record MissionSaveRecord(string MissionFile, MissionProgress Progress)
+public sealed record MissionSaveRecord(string MissionFile, MissionProgress Progress, SessionEconomyState? Economy = null)
 {
     public const string EventType = "mission-progress";
 
     public string ToJson()
-        => JsonSerializer.Serialize(new Dto(MissionFile, Progress.ToJson()));
+        => JsonSerializer.Serialize(new Dto(MissionFile, Progress.ToJson(), Economy?.InoculumKg, Economy?.MutationPoints));
 
     public static MissionSaveRecord FromJson(string json)
     {
@@ -188,8 +200,20 @@ public sealed record MissionSaveRecord(string MissionFile, MissionProgress Progr
             throw new InvalidDataException("The saved mission is incomplete.");
         }
 
-        return new MissionSaveRecord(dto.MissionFile, MissionProgress.FromJson(dto.Progress));
+        SessionEconomyState? economy = null;
+        if (dto.InoculumKg is { } inoculum)
+        {
+            var mutation = dto.MutationPoints ?? 0.0;
+            if (!double.IsFinite(inoculum) || inoculum < 0 || !double.IsFinite(mutation) || mutation < 0)
+            {
+                throw new InvalidDataException("The saved economy is not valid.");
+            }
+
+            economy = new SessionEconomyState(inoculum, mutation);
+        }
+
+        return new MissionSaveRecord(dto.MissionFile, MissionProgress.FromJson(dto.Progress), economy);
     }
 
-    private sealed record Dto(string MissionFile, string Progress);
+    private sealed record Dto(string MissionFile, string Progress, double? InoculumKg = null, double? MutationPoints = null);
 }

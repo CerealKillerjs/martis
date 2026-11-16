@@ -58,7 +58,7 @@ public sealed class SaveService
 
         if (missionFile is not null && session.CaptureMission() is { } progress)
         {
-            store.RecordEvent(CurrentId, session.Tick, MissionSaveRecord.EventType, new MissionSaveRecord(missionFile, progress).ToJson());
+            store.RecordEvent(CurrentId, session.Tick, MissionSaveRecord.EventType, new MissionSaveRecord(missionFile, progress, session.CaptureEconomy()).ToJson());
         }
 
         return CurrentId;
@@ -66,12 +66,12 @@ public sealed class SaveService
 
     /// <summary>Loads the newest valid snapshot of the most recent save, or null when there is none.</summary>
     /// <summary>
-    /// <paramref name="missionFile"/> is the campaign mission the save belongs to, or null for
-    /// an older save or free play, which load as before (FIRST COLONY from scratch).
+    /// <paramref name="mission"/> is the campaign mission the save belongs to, with its progress
+    /// and economy, or null for an older save or free play, which load as before.
     /// </summary>
-    public GameSession? LoadLatest(out string message, out string? missionFile)
+    public GameSession? LoadLatest(out string message, out MissionSaveRecord? mission)
     {
-        missionFile = null;
+        mission = null;
         using var store = SaveGameStore.Open(_path);
         var save = store.ListSaveGames().OrderByDescending(item => item.UpdatedAt).FirstOrDefault();
         if (save is null)
@@ -98,7 +98,7 @@ public sealed class SaveService
             try
             {
                 var record = MissionSaveRecord.FromJson(saved.Payload);
-                missionFile = record.MissionFile;
+                mission = record;
                 return GameSession.Resume(_dataRoot, snapshot, record.MissionFile, record.Progress);
             }
             catch (System.IO.InvalidDataException exception)

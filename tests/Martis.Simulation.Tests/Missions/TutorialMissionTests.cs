@@ -1,3 +1,4 @@
+using Martis.Simulation.Economy;
 using Martis.Simulation.Missions;
 using Martis.Simulation.Sessions;
 using Martis.Simulation.Snapshots;
@@ -69,6 +70,10 @@ public sealed class TutorialMissionTests
     public void SelectionIsCompletableWithAColonyAndADecomposer()
     {
         var session = GameSession.NewGame(Repo.Root(), 5UL, "selection.v1.json");
+        var research = new ResearchState(EconomyDefinition.LoadPublished(Repo.Root()));
+        research.Earn(15);
+        session.AttachEconomy(research);
+        Assert.True(session.ResearchTechnology("gene_editing_1", out var error), error);
         Assert.True(session.Introduce("phototroph_a01", 32, 32, 0.5, Design, out _));
         Assert.True(session.Introduce("decomposer_d01", 32, 32, 0.05, null, out _));
 

@@ -36,6 +36,7 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 | H-30 | M | §3, B.6 | MarsBaseline es uniforme: las 4096 celdas tienen 222 K, 146,5 W/m² y 0,503 mSv/sol. En el juego, las capas de temperatura y radiación se ven planas y el extremófilo no tiene nicho. | Escenario con gradientes medidos (latitud, albedo, hielo) antes de una segunda misión. | Ciencia |
 | H-31 | B | §9, B.6 | El progreso de la misión (`MissionTracker`) no está en la partida guardada: al cargar, la racha de soles empieza de cero ([ADR-016](ADR/ADR-016-ecosistema-y-first-colony.md)). | **Cerrado** (2026-11-16) en [ADR-019](ADR/ADR-019-modo-historia.md): el progreso se guarda como evento `mission-progress` en el tick de la instantánea. | Dani |
 | H-32 | B | B.6 | Los umbrales de las misiones de campaña 1.1 (5 soles) y 1.3 (3 mutaciones, 3 genomas, 0,1 kg durante 100 soles) son propuestas de juego ([ADR-019](ADR/ADR-019-modo-historia.md)). | Ajustarlos jugando, junto a H-19. | Dani |
+| H-33 | B | — | Los valores de la economía (recompensas, costes, rangos de edición y biorreactor) son propuestas de juego ([ADR-020](ADR/ADR-020-economia.md)). | Ajustarlos jugando el capítulo 1. | Dani |
 
 ## Notas sobre cifras y datos
 

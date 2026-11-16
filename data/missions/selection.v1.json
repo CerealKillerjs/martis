@@ -9,8 +9,15 @@
     "author": "MARTIS Motor (campaña H1)",
     "review": "Misión de la campaña «Génesis» (ADR-019). Umbrales GAME_BALANCE propuestos.",
     "sequential": true,
-    "briefing": "La colonia sobrevive, pero Marte no perdona. Cada copia del genoma puede cambiar, y la radiación selecciona a las variantes más resistentes. Deja que la evolución trabaje: siembra fotótrofos, deja que muten y mantén una población diversa.",
+    "briefing": "La colonia sobrevive, pero Marte no perdona. Cada copia del genoma puede cambiar, y la radiación selecciona a las variantes más resistentes. Deja que la evolución trabaje: siembra fotótrofos, deja que muten y mantén una población diversa. Ahora tienes puntos de investigación (PI): gástalos para mejorar la sonda.",
     "objectives": [
+      {
+        "id": "first_research",
+        "type": "action",
+        "action": "research-technology",
+        "title": "Invierte en investigación",
+        "hint": "Pulsa «Investigación» (tecla R) y desbloquea una tecnología con tus puntos (PI). «Edición génica I» amplía el rango de los genes."
+      },
       {
         "id": "deploy_phototroph",
         "type": "deploy",

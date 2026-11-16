@@ -1,0 +1,575 @@
+{
+  "metadata": {
+    "schema": "martis.economy",
+    "id": "genesis_economy",
+    "name": "Economía de la campaña Génesis",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (H2)",
+    "review": "Economía elegida por Daniel el 2026-11-16: puntos de investigación y carga del módulo. Valores GAME_BALANCE pendientes (H-33).",
+    "start": {
+      "research": "eco.start.research",
+      "gene_range": "eco.start.gene_range",
+      "forecast_sols": "eco.start.forecast_sols",
+      "inoculum_capacity": "eco.start.inoculum_capacity_kg",
+      "inoculum_recharge": "eco.start.inoculum_recharge_kg_per_sol",
+      "organisms": [
+        "phototroph_a01",
+        "decomposer_d01"
+      ]
+    },
+    "rewards": {
+      "objective": "eco.reward.objective",
+      "mission": "eco.reward.mission",
+      "mutation": "eco.reward.mutation",
+      "mutation_cap": "eco.reward.mutation_cap"
+    },
+    "technologies": [
+      {
+        "id": "gene_editing_1",
+        "title": "Edición génica I",
+        "description": "Cada gen puede alejarse ±0,20 de su valor base.",
+        "cost": "eco.tech.gene_editing_1.cost",
+        "requires": [],
+        "effects": [
+          {
+            "type": "gene_range",
+            "value": "eco.tech.gene_editing_1.gene_range"
+          }
+        ]
+      },
+      {
+        "id": "gene_editing_2",
+        "title": "Edición génica II",
+        "description": "Cada gen puede alejarse ±0,35 de su valor base.",
+        "cost": "eco.tech.gene_editing_2.cost",
+        "requires": [
+          "gene_editing_1"
+        ],
+        "effects": [
+          {
+            "type": "gene_range",
+            "value": "eco.tech.gene_editing_2.gene_range"
+          }
+        ]
+      },
+      {
+        "id": "gene_editing_3",
+        "title": "Síntesis de genomas",
+        "description": "Control total: cualquier gen entre 0 y 1.",
+        "cost": "eco.tech.gene_editing_3.cost",
+        "requires": [
+          "gene_editing_2"
+        ],
+        "effects": [
+          {
+            "type": "gene_range",
+            "value": "eco.tech.gene_editing_3.gene_range"
+          }
+        ]
+      },
+      {
+        "id": "long_forecast",
+        "title": "Laboratorio de largo plazo",
+        "description": "Experimentos de hasta 200 soles.",
+        "cost": "eco.tech.long_forecast.cost",
+        "requires": [],
+        "effects": [
+          {
+            "type": "forecast_sols",
+            "value": "eco.tech.long_forecast.forecast_sols"
+          }
+        ]
+      },
+      {
+        "id": "bioreactor_1",
+        "title": "Biorreactor ampliado",
+        "description": "Capacidad de 2,5 kg y 0,05 kg/sol de recarga.",
+        "cost": "eco.tech.bioreactor_1.cost",
+        "requires": [],
+        "effects": [
+          {
+            "type": "inoculum_capacity",
+            "value": "eco.tech.bioreactor_1.inoculum_capacity"
+          },
+          {
+            "type": "inoculum_recharge",
+            "value": "eco.tech.bioreactor_1.inoculum_recharge"
+          }
+        ]
+      },
+      {
+        "id": "bioreactor_2",
+        "title": "Biorreactor industrial",
+        "description": "Capacidad de 6 kg y 0,15 kg/sol de recarga.",
+        "cost": "eco.tech.bioreactor_2.cost",
+        "requires": [
+          "bioreactor_1"
+        ],
+        "effects": [
+          {
+            "type": "inoculum_capacity",
+            "value": "eco.tech.bioreactor_2.inoculum_capacity"
+          },
+          {
+            "type": "inoculum_recharge",
+            "value": "eco.tech.bioreactor_2.inoculum_recharge"
+          }
+        ]
+      },
+      {
+        "id": "extremophiles",
+        "title": "Cepas extremófilas",
+        "description": "Desbloquea el Extremófilo E01, que resiste frío, UV y sequía.",
+        "cost": "eco.tech.extremophiles.cost",
+        "requires": [
+          "gene_editing_1"
+        ],
+        "effects": [
+          {
+            "type": "organism",
+            "organism": "extremophile_e01"
+          }
+        ]
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "eco.start.research",
+      "field": "research",
+      "value": 0.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Puntos de investigación al empezar la campaña.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "eco.start.gene_range",
+      "field": "gene_range",
+      "value": 0.1,
+      "unit": "expresión",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Distancia máxima de cada gen a su valor base en el laboratorio inicial.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "eco.start.forecast_sols",
+      "field": "forecast_sols",
+      "value": 40.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Soles máximos de un experimento con el laboratorio inicial.",
+      "range": [
+        1,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.start.inoculum_capacity_kg",
+      "field": "inoculum_capacity_kg",
+      "value": 1.0,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Inóculo que cabe en el biorreactor inicial de la sonda.",
+      "range": [
+        1e-06,
+        1000.0
+      ]
+    },
+    {
+      "id": "eco.start.inoculum_recharge_kg_per_sol",
+      "field": "inoculum_recharge_kg_per_sol",
+      "value": 0.02,
+      "unit": "kg/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Inóculo que el biorreactor inicial cultiva cada sol.",
+      "range": [
+        0,
+        1000.0
+      ]
+    },
+    {
+      "id": "eco.reward.objective",
+      "field": "objective",
+      "value": 5.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Puntos por cada objetivo de misión cumplido.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.reward.mission",
+      "field": "mission",
+      "value": 15.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Puntos extra al completar una misión.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.reward.mutation",
+      "field": "mutation",
+      "value": 1.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Puntos por cada variante nueva observada.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.reward.mutation_cap",
+      "field": "mutation_cap",
+      "value": 20.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Máximo de puntos por mutaciones en una misión, para que esperar no sea la mejor estrategia.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.tech.gene_editing_1.gene_range",
+      "field": "gene_range",
+      "value": 0.2,
+      "unit": "expresión",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Rango de edición tras la mejora.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "eco.tech.gene_editing_1.cost",
+      "field": "cost",
+      "value": 15.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Coste de Edición génica I.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.tech.gene_editing_2.gene_range",
+      "field": "gene_range",
+      "value": 0.35,
+      "unit": "expresión",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Rango de edición tras la mejora.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "eco.tech.gene_editing_2.cost",
+      "field": "cost",
+      "value": 40.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Coste de Edición génica II.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.tech.gene_editing_3.gene_range",
+      "field": "gene_range",
+      "value": 1.0,
+      "unit": "expresión",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Rango de edición tras la mejora.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "eco.tech.gene_editing_3.cost",
+      "field": "cost",
+      "value": 90.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Coste de Síntesis de genomas.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.tech.long_forecast.forecast_sols",
+      "field": "forecast_sols",
+      "value": 200.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Soles máximos de un experimento.",
+      "range": [
+        1,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.tech.long_forecast.cost",
+      "field": "cost",
+      "value": 10.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Coste de Laboratorio de largo plazo.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.tech.bioreactor_1.inoculum_capacity",
+      "field": "inoculum_capacity",
+      "value": 2.5,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Capacidad del biorreactor.",
+      "range": [
+        1e-06,
+        1000.0
+      ]
+    },
+    {
+      "id": "eco.tech.bioreactor_1.inoculum_recharge",
+      "field": "inoculum_recharge",
+      "value": 0.05,
+      "unit": "kg/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Recarga del biorreactor.",
+      "range": [
+        0,
+        1000.0
+      ]
+    },
+    {
+      "id": "eco.tech.bioreactor_1.cost",
+      "field": "cost",
+      "value": 20.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Coste de Biorreactor ampliado.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.tech.bioreactor_2.inoculum_capacity",
+      "field": "inoculum_capacity",
+      "value": 6.0,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Capacidad del biorreactor.",
+      "range": [
+        1e-06,
+        1000.0
+      ]
+    },
+    {
+      "id": "eco.tech.bioreactor_2.inoculum_recharge",
+      "field": "inoculum_recharge",
+      "value": 0.15,
+      "unit": "kg/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Recarga del biorreactor.",
+      "range": [
+        0,
+        1000.0
+      ]
+    },
+    {
+      "id": "eco.tech.bioreactor_2.cost",
+      "field": "cost",
+      "value": 55.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Coste de Biorreactor industrial.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.tech.extremophiles.cost",
+      "field": "cost",
+      "value": 30.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Coste de Cepas extremófilas.",
+      "range": [
+        0,
+        100000.0
+      ]
+    }
+  ]
+}

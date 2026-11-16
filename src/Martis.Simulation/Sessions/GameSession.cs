@@ -2,6 +2,7 @@ using Martis.Contracts.Commands;
 using Martis.Domain.Biology;
 using Martis.Domain.World;
 using Martis.Simulation.Biology;
+using Martis.Simulation.Economy;
 using Martis.Simulation.Engine;
 using Martis.Simulation.Missions;
 using Martis.Simulation.Scenarios;
@@ -133,6 +134,47 @@ public sealed class GameSession
 
     public int Height => Engine.State.Height;
 
+    /// <summary>Campaign research (H2). Null in free play: no limits and no inoculum.</summary>
+    public ResearchState? Research { get; private set; }
+
+    /// <summary>Inoculum left in the lander's bioreactor, in kg. Infinite without an economy.</summary>
+    public double InoculumKg { get; private set; } = double.PositiveInfinity;
+
+    private double _mutationPoints;
+
+    /// <summary>
+    /// Plays this session under the campaign economy (H2, ADR-020): deployments spend
+    /// inoculum, the laboratory obeys the research limits and play earns research points.
+    /// Without <paramref name="state"/> the bioreactor starts full.
+    /// </summary>
+    public void AttachEconomy(ResearchState research, SessionEconomyState? state = null)
+    {
+        Research = research ?? throw new ArgumentNullException(nameof(research));
+        InoculumKg = Math.Min(state?.InoculumKg ?? research.InoculumCapacityKg, research.InoculumCapacityKg);
+        _mutationPoints = state?.MutationPoints ?? 0.0;
+    }
+
+    public SessionEconomyState? CaptureEconomy() => Research is null ? null : new SessionEconomyState(InoculumKg, _mutationPoints);
+
+    /// <summary>Spends research points on a technology. Counts as the <c>research-technology</c> action.</summary>
+    public bool ResearchTechnology(string technologyId, out string? error)
+    {
+        if (Research is null)
+        {
+            error = "La investigación solo existe en la campaña";
+            return false;
+        }
+
+        if (!Research.TryResearch(technologyId, out error))
+        {
+            return false;
+        }
+
+        Add("research", $"Investigado: {Research.Definition.Technology(technologyId).Title}");
+        RecordAction("research-technology");
+        return true;
+    }
+
     /// <summary>Set when a tick failed; the session then refuses to advance.</summary>
     public string? Failure { get; private set; }
 
@@ -208,6 +250,17 @@ public sealed class GameSession
             return false;
         }
 
+        if (Research is not null)
+        {
+            if (biomassKg > InoculumKg + 1e-12)
+            {
+                error = $"Inóculo insuficiente: quedan {InoculumKg:0.###} kg en el biorreactor";
+                return false;
+            }
+
+            InoculumKg = Math.Max(0.0, InoculumKg - biomassKg);
+        }
+
         Engine.ApplyCommand(new IntroducePopulationCommand(organismId, CellIndex(x, y), biomassKg, genes));
         Add("deploy", $"Desplegados {biomassKg:0.###} kg de {Biology.Organism(organismId).Definition.Name} en ({x}, {y})", CellIndex(x, y));
         return true;
@@ -231,8 +284,14 @@ public sealed class GameSession
                 break;
             }
 
+            if (Research is not null)
+            {
+                InoculumKg = Math.Min(Research.InoculumCapacityKg, InoculumKg + Research.InoculumRechargeKgPerSol);
+            }
+
             foreach (var item in Workspace.MutationEvents)
             {
+                Pay(Math.Min(Research?.Definition.Rewards.Mutation ?? 0.0, (Research?.Definition.Rewards.MutationCap ?? 0.0) - _mutationPoints), mutation: true);
                 var genes = string.Join(", ", item.Changes.Select(change => $"{change.GeneId} {change.Before:0.00}→{change.After:0.00}"));
                 Add("mutation", $"Nueva variante #{item.ChildId} de {Name(item.OrganismId)} en ({item.CellIndex % Width}, {item.CellIndex / Width}): {genes}", item.CellIndex);
             }
@@ -349,6 +408,11 @@ public sealed class GameSession
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sols);
         var error = Check(organismId, x, y, biomassKg, genes);
+        if (error is null && Research is not null && sols > Research.ForecastSols)
+        {
+            error = $"El laboratorio solo prevé {Research.ForecastSols} soles";
+        }
+
         if (error is not null)
         {
             return new ExperimentForecast(organismId, 0, [], false, error);
@@ -423,11 +487,22 @@ public sealed class GameSession
             return "La biomasa tiene que ser positiva";
         }
 
+        if (Research is not null && !Research.IsOrganismAvailable(organismId))
+        {
+            return $"{organism!.Definition.Name} no está investigado todavía";
+        }
+
+        var baseGenome = organism!.Definition.BaseGenome.BaseGenome.Expressions.ToDictionary(gene => gene.GeneId.Value, gene => gene.Expression, StringComparer.Ordinal);
         foreach (var (gene, value) in genes ?? new Dictionary<string, double>())
         {
             if (!organism!.HasGene(gene) || value is < 0.0 or > 1.0 || double.IsNaN(value))
             {
                 return $"Gen no válido: {gene}={value}";
+            }
+
+            if (Research is not null && Math.Abs(value - baseGenome[gene]) > Research.GeneRange + 1e-9)
+            {
+                return $"{gene}={value:0.00} se aleja más de ±{Research.GeneRange:0.00} del genoma base: investiga edición génica";
             }
         }
 
@@ -449,12 +524,32 @@ public sealed class GameSession
             if (status.CompletedTick is not null && _reportedObjectives.Add(status.Id))
             {
                 Add("mission", $"Objetivo cumplido: {status.Title}");
+                Pay(Research?.Definition.Rewards.Objective ?? 0.0);
             }
         }
 
         if (Mission.IsComplete && _reportedObjectives.Add("*"))
         {
             Add("mission", $"¡Misión {Mission.Definition.Name} completada!");
+            Pay(Research?.Definition.Rewards.Mission ?? 0.0);
+        }
+    }
+
+    private void Pay(double points, bool mutation = false)
+    {
+        if (Research is null || points <= 0.0)
+        {
+            return;
+        }
+
+        Research.Earn(points);
+        if (mutation)
+        {
+            _mutationPoints += points;
+        }
+        else
+        {
+            Add("research", $"+{points:0} PI");
         }
     }
 

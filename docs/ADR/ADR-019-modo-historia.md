@@ -23,7 +23,7 @@ Las misiones se juegan en orden: una misión se desbloquea cuando está completa
 | --- | --- | --- |
 | 1.1 Despertar | `awakening.v1.json` | tutorial secuencial: girar la cámara, zoom, capa de datos, inspeccionar, analizar y dejar correr 5 soles |
 | 1.2 Primera colonia | `first_colony.v1.json` | FIRST COLONY sin cambios en los objetivos (ADR-016), ahora con texto de presentación y pistas |
-| 1.3 Presión selectiva | `selection.v1.json` | secuencial: desplegar un fotótrofo, ver 3 mutaciones, tener 3 genomas fotótrofos vivos a la vez y mantener ≥ 0,1 kg durante 100 soles |
+| 1.3 Presión selectiva | `selection.v1.json` | secuencial: invertir en investigación ([ADR-020](ADR-020-economia.md)), desplegar un fotótrofo, ver 3 mutaciones, tener 3 genomas fotótrofos vivos a la vez y mantener ≥ 0,1 kg durante 100 soles |
 
 ### Formato de misión (compatible con v1)
 
