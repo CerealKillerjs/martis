@@ -90,14 +90,16 @@ public sealed class MetabolismTests
     [Fact]
     public void WithoutPhosphorusNothingGrows()
     {
-        var (engine, _) = World(seed: 3);
+        var (engine, workspace) = World(seed: 3);
         engine.State.Resources[0].Phosphorus = 0;
         engine.State.MassLedgers[0].RestoreRecorded(CellMassLedger.Read(engine.State.Resources[0], engine.State.Environment[0].WaterIce));
         engine.ApplyCommand(new IntroducePopulationCommand(Phototroph, 0, 1e-3));
 
-        engine.Advance(30);
+        engine.Advance(1);
 
-        Assert.Equal(1e-3, Assert.Single(engine.State.Populations).BiomassKg);
+        // Recycled necromass returns phosphate later; on the first tick there is none.
+        Assert.Equal(0.0, workspace.Totals.CarbonFixedMol);
+        Assert.True(Assert.Single(engine.State.Populations).BiomassKg < 1e-3);
     }
 
     [Fact]
@@ -214,8 +216,10 @@ public sealed class MetabolismTests
         engine.ApplyCommand(new IntroducePopulationCommand(Phototroph, 1, first));
         engine.ApplyCommand(new IntroducePopulationCommand(Phototroph, 1, second));
         engine.Advance(1);
-        var small = workspace.Fluxes.Single(flux => engine.State.Populations.Single(p => p.Id.Value == flux.PopulationId).BiomassKg < 10000);
-        var large = workspace.Fluxes.Single(flux => flux != small);
+        // Ids follow introduction order: id 1 got `first`.
+        var smallId = first < second ? 1L : 2L;
+        var small = workspace.Fluxes.Single(flux => flux.PopulationId == smallId);
+        var large = workspace.Fluxes.Single(flux => flux.PopulationId != smallId);
         return (small.AllocatedExtent, large.AllocatedExtent);
     }
 
@@ -226,6 +230,12 @@ public sealed class MetabolismTests
         var scenario = MarsBaselineScenario.Load(ScenarioFixtures.Science, ScenarioFixtures.Deposits);
         var state = new SimulationState(8, 8);
         scenario.Apply(state);
+        foreach (var environment in state.Environment)
+        {
+            // The fixture's 0.5 Sv/sol is a stress value; biology tests use a Mars-like 0.5 mSv/sol.
+            environment.IonizingEquivalentDoseSvPerSol = 5e-4;
+        }
+
         return state;
     }
 

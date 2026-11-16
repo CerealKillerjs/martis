@@ -47,6 +47,15 @@ public sealed class TickTotals
     /// <summary>Largest per-cell, per-element mass error of this tick (kg).</summary>
     public double MaxElementErrorKg { get; set; }
 
+    /// <summary>New individuals counted by the reproduction step (aggregated, not an integer).</summary>
+    public double NewIndividuals { get; set; }
+
+    /// <summary>Energy paid from reserves for maintenance (J).</summary>
+    public double MaintenanceJ { get; set; }
+
+    /// <summary>Maintenance that no reserve could pay (J): the starvation signal.</summary>
+    public double UnpaidMaintenanceJ { get; set; }
+
     public int Births { get; set; }
 
     public int Extinctions { get; set; }
@@ -64,6 +73,9 @@ public sealed class TickTotals
         BiomassDiedKg = 0;
         BiomassRecycledKg = 0;
         MaxElementErrorKg = 0;
+        NewIndividuals = 0;
+        MaintenanceJ = 0;
+        UnpaidMaintenanceJ = 0;
         Births = 0;
         Extinctions = 0;
         Mutations = 0;
@@ -115,6 +127,18 @@ public sealed class MetabolismWorkspace
     /// <summary>Energy drawn from each reserve this tick, by population id.</summary>
     public Dictionary<long, double> ReserveSpent { get; } = [];
 
+    /// <summary>Abundance at the start of the tick, by population id (T05 age and birth account).</summary>
+    public Dictionary<long, double> AbundanceAtStart { get; } = [];
+
+    /// <summary>Fraction that survived this tick's mortality step, by population id.</summary>
+    public Dictionary<long, double> Survival { get; } = [];
+
+    /// <summary>Ids of the populations that went extinct this tick, in removal order.</summary>
+    public List<long> Extinct { get; } = [];
+
+    /// <summary>Dead biomass waiting for the recycling step (kg), by cell.</summary>
+    public double[] DeadKg { get; private set; } = [];
+
     /// <summary>Inoculated biomass waiting for the next account (kg). Set by the command handler.</summary>
     public double PendingInflowKg { get; set; }
 
@@ -133,17 +157,22 @@ public sealed class MetabolismWorkspace
             StartElements = new double[_cells * ElementCount];
             Demand = new double[_cells * Slots];
             Consumed = new double[_cells * Slots];
+            DeadKg = new double[_cells];
         }
         else
         {
             Array.Clear(Demand);
             Array.Clear(Consumed);
+            Array.Clear(DeadKg);
         }
 
         Fluxes.Clear();
         ReserveAtStart.Clear();
         ReserveGained.Clear();
         ReserveSpent.Clear();
+        AbundanceAtStart.Clear();
+        Survival.Clear();
+        Extinct.Clear();
         Totals.Reset();
         Totals.ExternalInflowKg = PendingInflowKg;
         PendingInflowKg = 0;
@@ -163,6 +192,7 @@ public sealed class MetabolismWorkspace
             ReserveAtStart[population.Id.Value] = population.EnergyReserveJ;
             ReserveGained[population.Id.Value] = 0;
             ReserveSpent[population.Id.Value] = 0;
+            AbundanceAtStart[population.Id.Value] = population.Abundance;
         }
 
         AccountOpen = true;
@@ -204,6 +234,14 @@ public sealed class MetabolismWorkspace
         }
 
         var biomass = Catalog.Biomass.ElementMassFractions;
+        for (var cell = 0; cell < DeadKg.Length && cell < state.CellCount; cell++)
+        {
+            for (var e = 0; e < elements; e++)
+            {
+                target[(cell * elements) + e] += DeadKg[cell] * biomass[e];
+            }
+        }
+
         foreach (var population in state.Populations)
         {
             if (population.CellIndex < 0 || population.CellIndex >= state.CellCount)

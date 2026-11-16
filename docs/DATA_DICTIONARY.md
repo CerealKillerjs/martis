@@ -6,7 +6,7 @@ Las cifras que son una medición o una estimación llevan su fuente y su clasifi
 
 VAL-001..005 significan solo lo que dice el TDD §10. Las reglas añadidas en este hito son DOM-VAL-001..016. La columna «se parece a» dice qué VAL del TDD recuerda, sin sustituirlo. La elección de unidad es `MODEL_ASSUMPTION`. La clasificación, la fuente y el ámbito van por valor en el JSON del escenario (TDD §10.2).
 
-VAL-006, VAL-007 y VAL-008 se comprueban en el paso `validate-conservation` del `pipeline-v1` (T04, [ADR-012](ADR/ADR-012-modelo-metabolico.md)).
+VAL-006, VAL-007 y VAL-008 se comprueban en el paso `validate-conservation` del pipeline con biología (`pipeline-v2` desde T05; T04, [ADR-012](ADR/ADR-012-modelo-metabolico.md)).
 
 ## Tiempo
 
@@ -178,3 +178,15 @@ El CLI `simulate` acepta `--scenario`, `--seed`, `--ticks` y `--output`, crea es
 | VAL-006 | invariante | kg | consumido ≤ depósito al empezar el tick | por celda y depósito |
 | VAL-007 | invariante | kg | masa de cada elemento conservada | por celda, contando entradas externas |
 | VAL-008 | invariante | J | gasto ≤ reserva inicial + ganancia | por población |
+
+## Poblaciones (T05)
+
+| Nombre | Tipo | Unidad | Rango | Invariante |
+| --- | --- | --- | --- | --- |
+| mᵢ (término de mortalidad) | double | probabilidad por tick | [0, 1] | `1 − exp(−r·estrés·Δt)`; fuera de rango es un error |
+| m (mortalidad combinada) | double | probabilidad por tick | [0, 1] | `1 − Π(1 − mᵢ)` |
+| Population.Viability | double | adimensional | [0, 1] | supervivencia del último tick, `1 − m` (DOM-VAL-008) |
+| Population.AgeDistributionMeanSols | double | sol | ≥ 0 | supervivientes +Δt; recién nacidos entran con 0 |
+| K | double | kg por celda | > 0 | `min(K_space, K_C, K_N, K_P)`; no crea recursos |
+| necromasa | double (por tick) | kg por celda | ≥ 0 | se recicla en el mismo tick; VAL-007 la cuenta |
+| extinción | regla | individuos | `N < 1` | la población se quita y su biomasa es necromasa |

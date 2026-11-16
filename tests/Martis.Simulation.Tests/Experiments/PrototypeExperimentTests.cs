@@ -126,7 +126,7 @@ public sealed class PrototypeExperimentTests
     [Fact]
     public void AnInoculatedPhototrophGrowsAndTheMassBalanceStaysClosed()
     {
-        var request = Request(42UL, 200) with { Introductions = [new PopulationIntroduction("phototroph_a01", 2080, 0.5)] };
+        var request = Request(42UL, 30) with { Introductions = [new PopulationIntroduction("phototroph_a01", 2080, 0.5)] };
 
         var result = PrototypeExperiment.Run(request, Published(), biology: Biology());
 

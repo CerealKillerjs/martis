@@ -2,7 +2,7 @@
 
 Motor de simulación científica en C# / .NET. Este repositorio contiene el motor y el ejecutable sin interfaz. La aplicación Godot (`Martis.Game`) no forma parte de la solución: el motor se compila y se prueba sin Godot.
 
-Este árbol corresponde al hito **T01 Infrastructure**, al modelo de dominio de **T02**, a la base de motor de **T03a**, al escenario MarsBaseline v0.4 de **T03b** y al prototipo CLI del TDD §19 (S1-31 a S1-33): snapshot completo del estado, exportación JSON canónica y el comando `simulate` que carga el escenario, avanza los ticks, valida y guarda los resultados. **T04** añade el motor metabólico: especies y reacciones balanceadas en `data/reactions`, organismos en `data/organisms` y la opción `--introduce` para inocular poblaciones ([ADR-012](docs/ADR/ADR-012-modelo-metabolico.md)).
+Este árbol corresponde al hito **T01 Infrastructure**, al modelo de dominio de **T02**, a la base de motor de **T03a**, al escenario MarsBaseline v0.4 de **T03b** y al prototipo CLI del TDD §19 (S1-31 a S1-33): snapshot completo del estado, exportación JSON canónica y el comando `simulate` que carga el escenario, avanza los ticks, valida y guarda los resultados. **T04** añade el motor metabólico: especies y reacciones balanceadas en `data/reactions`, organismos en `data/organisms` y la opción `--introduce` para inocular poblaciones ([ADR-012](docs/ADR/ADR-012-modelo-metabolico.md)). **T05** añade mortalidad, inanición, capacidad de carga, extinción y reciclaje ([ADR-013](docs/ADR/ADR-013-dinamica-de-poblaciones.md)).
 
 ## Requisitos
 
@@ -47,7 +47,7 @@ Salida esperada: `MARTIS 0.1.0` y código de salida 0. Un argumento que no sea `
 
 ```bash
 dotnet run --project src/Martis.Cli -c Release -- simulate --scenario mars_baseline --seed 12345 --ticks 1000 --output results/experiment_001
-# con biología (pipeline-v1): 0,5 kg del fotótrofo A01 en la celda (32, 32)
+# con biología (pipeline-v2): 0,5 kg del fotótrofo A01 en la celda (32, 32)
 dotnet run --project src/Martis.Cli -c Release -- simulate --scenario mars_baseline --seed 12345 --ticks 300 --output results/experiment_002 --introduce phototroph_a01@32,32:0.5
 ```
 

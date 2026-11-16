@@ -87,6 +87,7 @@ Convención: «Criterio TDD» es el literal de §16; «Criterio verificable» es
 - **Criterio TDD:** Dinámica coherente según condiciones.
 - **Criterio verificable (propuesta):** pruebas por escenario con semilla fija: sin recursos ⇒ no hay crecimiento; recursos limitantes ⇒ crecimiento acotado por la capacidad `K = min(...)` sin crear recursos; mortalidad combinada `1 − Π(1 − mᵢ)` ∈ [0,1]; propiedad: abundancia y biomasa nunca negativas. «Coherente» se define con los casos esperados que acuerde MARTIS Ciencia (no con números inventados).
 - **Depende de:** T04.
+- **Estado:** implementado en `pipeline-v2` ([ADR-013](ADR/ADR-013-dinamica-de-poblaciones.md), propuesto): mortalidad combinada de seis términos, mantenimiento e inanición, capacidad `K = min(K_space, K_C, K_N, K_P)`, extinción con menos de un individuo y reciclaje de la necromasa.
 
 ### T06 — Evolution Engine
 - **Contenido (TDD):** Mutación, herencia, selección y deriva.

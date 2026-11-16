@@ -369,6 +369,11 @@ public static class PrototypeExperiment
         private double _worst;
         private double _fixed;
         private double _light;
+        private double _died;
+        private double _recycled;
+        private double _maintenance;
+        private double _unpaid;
+        private int _extinctions;
 
         public MassBalanceWriter(Biology.BiologyCatalog? catalog)
         {
@@ -379,7 +384,7 @@ public static class PrototypeExperiment
                 _text.Append(',').Append(element).Append("_kg");
             }
 
-            _text.Append(",total_kg,external_inflow_kg,carbon_fixed_mol,light_energy_j,max_element_error_kg\n");
+            _text.Append(",total_kg,external_inflow_kg,carbon_fixed_mol,light_energy_j,maintenance_j,unpaid_maintenance_j,biomass_died_kg,biomass_recycled_kg,extinctions,max_element_error_kg\n");
         }
 
         public void Accumulate(Biology.MetabolismWorkspace? workspace)
@@ -393,6 +398,11 @@ public static class PrototypeExperiment
             _worst = Math.Max(_worst, workspace.Totals.MaxElementErrorKg);
             _fixed += workspace.Totals.CarbonFixedMol;
             _light += workspace.Totals.LightEnergyJ;
+            _maintenance += workspace.Totals.MaintenanceJ;
+            _unpaid += workspace.Totals.UnpaidMaintenanceJ;
+            _died += workspace.Totals.BiomassDiedKg;
+            _recycled += workspace.Totals.BiomassRecycledKg;
+            _extinctions += workspace.Totals.Extinctions;
         }
 
         public void Row(SimulationState state, Biology.MetabolismWorkspace? workspace)
@@ -422,6 +432,11 @@ public static class PrototypeExperiment
                 .Append(',').Append(Num(_inflow))
                 .Append(',').Append(Num(_fixed))
                 .Append(',').Append(Num(_light))
+                .Append(',').Append(Num(_maintenance))
+                .Append(',').Append(Num(_unpaid))
+                .Append(',').Append(Num(_died))
+                .Append(',').Append(Num(_recycled))
+                .Append(',').Append(Num(_extinctions))
                 .Append(',').Append(Num(_worst)).Append('\n');
             _worst = 0;
         }
