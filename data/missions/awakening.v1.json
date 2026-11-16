@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "awakening",
+    "name": "DESPERTAR — 1.1",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (campaña H1)",
+    "review": "Misión de la campaña «Génesis» (ADR-019). Umbrales GAME_BALANCE propuestos.",
+    "sequential": true,
+    "briefing": "Sol 0. La sonda MARTIS acaba de posarse en el cráter Gale. Antes de sembrar vida, aprende a leer el planeta: mueve la cámara, consulta las capas de datos e inspecciona el terreno.",
+    "objectives": [
+      {
+        "id": "orbit_camera",
+        "type": "action",
+        "action": "orbit-camera",
+        "title": "Rodea el cráter",
+        "hint": "Mantén pulsado el botón derecho y arrastra, o usa Q/E, para girar la cámara."
+      },
+      {
+        "id": "zoom_camera",
+        "type": "action",
+        "action": "zoom-camera",
+        "title": "Acércate al terreno",
+        "hint": "Usa la rueda del ratón para acercarte o alejarte."
+      },
+      {
+        "id": "select_overlay",
+        "type": "action",
+        "action": "select-overlay",
+        "title": "Mira una capa de datos",
+        "hint": "Pulsa las teclas 1 a 4 o elige una capa en el menú: temperatura, agua, radiación o biomasa."
+      },
+      {
+        "id": "inspect_cell",
+        "type": "action",
+        "action": "inspect-cell",
+        "title": "Inspecciona una celda",
+        "hint": "Haz clic izquierdo en el terreno: el inspector muestra el entorno y los recursos de esa celda."
+      },
+      {
+        "id": "analyze_region",
+        "type": "action",
+        "action": "analyze-region",
+        "title": "Analiza la región",
+        "hint": "Pulsa «Analizar región» para registrar el estado del entorno."
+      },
+      {
+        "id": "run_time",
+        "type": "elapsed",
+        "sols": "mission.awakening.elapsed_sols",
+        "title": "Deja correr el tiempo",
+        "hint": "Pulsa Espacio o un botón de velocidad (▶, ▶▶, ▶▶▶) y observa pasar los soles."
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.awakening.elapsed_sols",
+      "field": "elapsed_sols",
+      "value": 5.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para la campaña (H1); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles que el jugador deja correr para aprender el control del tiempo.",
+      "range": [
+        1,
+        1000000.0
+      ]
+    }
+  ]
+}

@@ -5,6 +5,7 @@ using Godot;
 using Martis.Persistence.SQLite;
 using Martis.Simulation.Engine;
 using Martis.Simulation.Experiments;
+using Martis.Simulation.Missions;
 using Martis.Simulation.Sessions;
 using Martis.Simulation.Snapshots;
 
@@ -29,7 +30,11 @@ public sealed class SaveService
     /// <summary>Id of the save game this run writes to, created on the first save.</summary>
     public string? CurrentId { get; set; }
 
-    public string Save(GameSession session)
+    /// <summary>
+    /// Stores a snapshot and, for a campaign mission, its progress as a
+    /// <see cref="MissionSaveRecord.EventType"/> event at the same tick (H-31).
+    /// </summary>
+    public string Save(GameSession session, string? missionFile = null)
     {
         using var store = SaveGameStore.Open(_path);
         if (CurrentId is null || store.GetSaveGame(CurrentId) is null)
@@ -37,7 +42,7 @@ public sealed class SaveService
             CurrentId = string.Create(CultureInfo.InvariantCulture, $"save-{store.ListSaveGames().Count + 1}");
             store.CreateSaveGame(
                 CurrentId,
-                string.Create(CultureInfo.InvariantCulture, $"FIRST COLONY semilla {session.Seed}"),
+                string.Create(CultureInfo.InvariantCulture, $"{session.Mission?.Definition.Name ?? "Exploración libre"} semilla {session.Seed}"),
                 EngineAssembly.Version,
                 DataVersion,
                 session.Seed,
@@ -45,19 +50,28 @@ public sealed class SaveService
                 SimulationPipeline.BiologyVersion);
         }
 
-        if (store.SnapshotTicks(CurrentId).Contains(session.Tick))
+        if (!store.SnapshotTicks(CurrentId).Contains(session.Tick))
         {
-            return CurrentId;
+            var snapshot = session.Capture();
+            store.SaveSnapshot(CurrentId, session.Tick, snapshot.SchemaVersion, StateSnapshotBinary.Write(snapshot));
         }
 
-        var snapshot = session.Capture();
-        store.SaveSnapshot(CurrentId, session.Tick, snapshot.SchemaVersion, StateSnapshotBinary.Write(snapshot));
+        if (missionFile is not null && session.CaptureMission() is { } progress)
+        {
+            store.RecordEvent(CurrentId, session.Tick, MissionSaveRecord.EventType, new MissionSaveRecord(missionFile, progress).ToJson());
+        }
+
         return CurrentId;
     }
 
     /// <summary>Loads the newest valid snapshot of the most recent save, or null when there is none.</summary>
-    public GameSession? LoadLatest(out string message)
+    /// <summary>
+    /// <paramref name="missionFile"/> is the campaign mission the save belongs to, or null for
+    /// an older save or free play, which load as before (FIRST COLONY from scratch).
+    /// </summary>
+    public GameSession? LoadLatest(out string message, out string? missionFile)
     {
+        missionFile = null;
         using var store = SaveGameStore.Open(_path);
         var save = store.ListSaveGames().OrderByDescending(item => item.UpdatedAt).FirstOrDefault();
         if (save is null)
@@ -77,6 +91,22 @@ public sealed class SaveService
         CurrentId = save.Id;
         var skipped = recovery.RejectedTicks.Count == 0 ? string.Empty : $" ({recovery.RejectedTicks.Count} instantáneas dañadas descartadas)";
         message = $"Cargada «{save.Name}», sol {snapshot.Tick}{skipped}.";
+        var saved = store.Events(save.Id, snapshot.Tick - 1)
+            .LastOrDefault(item => item.Tick == snapshot.Tick && item.EventType == MissionSaveRecord.EventType);
+        if (saved is not null)
+        {
+            try
+            {
+                var record = MissionSaveRecord.FromJson(saved.Payload);
+                missionFile = record.MissionFile;
+                return GameSession.Resume(_dataRoot, snapshot, record.MissionFile, record.Progress);
+            }
+            catch (System.IO.InvalidDataException exception)
+            {
+                message += $" El progreso de la misión no se pudo leer ({exception.Message}) y empieza de cero.";
+            }
+        }
+
         return GameSession.Resume(_dataRoot, snapshot);
     }
 

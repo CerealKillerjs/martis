@@ -8,30 +8,35 @@
     "date": "2026-11-16",
     "author": "MARTIS Motor (T09)",
     "review": "Misión de referencia del TDD B.6. Los umbrales de «mantener varias generaciones» son propuestas (H-19).",
+    "briefing": "Ya sabes leer Marte. Ahora toca sembrarlo: diseña un microbio capaz de soportar la radiación, pruébalo en el laboratorio y despliega la primera colonia de la historia del planeta.",
     "objectives": [
       {
         "id": "analyze_region",
         "type": "action",
         "action": "analyze-region",
-        "title": "Analizar la región"
+        "title": "Analizar la región",
+        "hint": "Pulsa «Analizar región» para conocer el entorno."
       },
       {
         "id": "design_phototroph",
         "type": "design",
         "capability": "photoautotrophy",
-        "title": "Diseñar un fotótrofo"
+        "title": "Diseñar un fotótrofo",
+        "hint": "En el laboratorio, cambia al menos un gen del fotótrofo (por ejemplo, sube UV_PROTECTION). Se cumple cuando tu diseño vive en el mapa."
       },
       {
         "id": "run_experiment",
         "type": "action",
         "action": "run-experiment",
-        "title": "Experimentar antes de desplegar"
+        "title": "Experimentar antes de desplegar",
+        "hint": "Elige una celda y pulsa «Experimentar»: verás la previsión de biomasa sin tocar el mundo real."
       },
       {
         "id": "deploy_colony",
         "type": "deploy",
         "capability": "photoautotrophy",
-        "title": "Desplegar la colonia"
+        "title": "Desplegar la colonia",
+        "hint": "Pulsa «Desplegar» y haz clic en el terreno. Un descomponedor cerca recicla el agua y el carbono."
       },
       {
         "id": "sustain_generations",
@@ -39,13 +44,15 @@
         "capability": "photoautotrophy",
         "min_biomass": "mission.first_colony.min_biomass_kg",
         "sols": "mission.first_colony.sustain_sols",
-        "title": "Mantener la población varias generaciones"
+        "title": "Mantener la población varias generaciones",
+        "hint": "Mantén la biomasa fotótrofa por encima del mínimo durante muchos soles seguidos."
       },
       {
         "id": "observe_mutations",
         "type": "mutations",
         "count": "mission.first_colony.mutations",
-        "title": "Observar mutaciones"
+        "title": "Observar mutaciones",
+        "hint": "Espera a que aparezca una variante nueva en el registro de eventos."
       }
     ]
   },

@@ -71,7 +71,7 @@ public sealed class GameSession
     private readonly HashSet<string> _reportedObjectives = new(StringComparer.Ordinal);
     private readonly Dictionary<string, int> _organismIndex;
 
-    private GameSession(MarsBaselineScenario scenario, BiologyCatalog biology, MissionDefinition? mission, ulong seed, StateSnapshot? resume)
+    private GameSession(MarsBaselineScenario scenario, BiologyCatalog biology, MissionDefinition? mission, ulong seed, StateSnapshot? resume, MissionProgress? progress = null)
     {
         Scenario = scenario;
         Biology = biology;
@@ -83,6 +83,24 @@ public sealed class GameSession
         }
 
         Mission = mission is null ? null : new MissionTracker(mission, biology);
+        if (progress is not null)
+        {
+            if (Mission is null)
+            {
+                throw new InvalidOperationException("Mission progress needs a mission.");
+            }
+
+            Mission.Restore(progress);
+            foreach (var status in Mission.Status().Where(status => status.CompletedTick is not null))
+            {
+                _reportedObjectives.Add(status.Id);
+            }
+
+            if (Mission.IsComplete)
+            {
+                _reportedObjectives.Add("*");
+            }
+        }
         Organisms = biology.Organisms
             .Select(organism => new OrganismInfo(
                 organism.Id,
@@ -131,6 +149,35 @@ public sealed class GameSession
             withMission ? MissionDefinition.LoadPublished(repositoryRoot) : null,
             seed,
             null);
+
+    /// <summary>A new game of one campaign mission (<c>data/missions/<paramref name="missionFile"/></c>).</summary>
+    public static GameSession NewGame(string repositoryRoot, ulong seed, string missionFile)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(missionFile);
+        return new(
+            MarsBaselineScenario.LoadPublished(repositoryRoot),
+            BiologyCatalog.LoadPublished(repositoryRoot),
+            MissionDefinition.LoadPublished(repositoryRoot, missionFile),
+            seed,
+            null);
+    }
+
+    /// <summary>
+    /// Resumes a campaign mission from a snapshot and, when the save has it, the mission
+    /// progress at that tick (H-31). Without progress the mission starts over.
+    /// </summary>
+    public static GameSession Resume(string repositoryRoot, StateSnapshot snapshot, string missionFile, MissionProgress? progress)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        ArgumentException.ThrowIfNullOrWhiteSpace(missionFile);
+        return new(
+            MarsBaselineScenario.LoadPublished(repositoryRoot),
+            BiologyCatalog.LoadPublished(repositoryRoot),
+            MissionDefinition.LoadPublished(repositoryRoot, missionFile),
+            snapshot.Configuration.WorldSeed,
+            snapshot,
+            progress);
+    }
 
     public static GameSession Resume(string repositoryRoot, StateSnapshot snapshot, bool withMission = true)
     {
@@ -206,6 +253,9 @@ public sealed class GameSession
     public void ClearFailure() => Failure = null;
 
     public StateSnapshot Capture() => StateSnapshot.Capture(Engine, null);
+
+    /// <summary>The mission progress to store next to a snapshot (H-31), or null without a mission.</summary>
+    public MissionProgress? CaptureMission() => Mission?.Export();
 
     public WorldView View()
     {

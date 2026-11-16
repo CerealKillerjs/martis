@@ -26,6 +26,8 @@ public partial class Hud : Control
     private Label _clock = null!;
     private VBoxContainer _missionRows = null!;
     private Label _missionTitle = null!;
+    private Label _missionCaption = null!;
+    private HBoxContainer _bannerButtons = null!;
     private RichTextLabel _inspector = null!;
     private RichTextLabel _feed = null!;
     private OptionButton _organism = null!;
@@ -51,6 +53,8 @@ public partial class Hud : Control
     public event Action? LoadRequested;
 
     public event Action? NewGameRequested;
+
+    public event Action? MenuRequested;
 
     public event Action? AnalyzeRequested;
 
@@ -132,8 +136,9 @@ public partial class Hud : Control
         _clock.Text = $"{minutes / 60:00}:{minutes % 60:00} LMST";
     }
 
-    public void ShowMission(MissionTracker? mission)
+    public void ShowMission(MissionTracker? mission, string? caption = null)
     {
+        _missionCaption.Text = caption ?? "MISIÓN";
         foreach (var child in _missionRows.GetChildren())
         {
             child.QueueFree();
@@ -168,6 +173,21 @@ public partial class Hud : Control
                 count.AddThemeFontSizeOverride("font_size", 11);
                 count.AddThemeColorOverride("font_color", new Color(1, 1, 1, 0.5f));
                 row.AddChild(count);
+            }
+
+            if (status.Active && !string.IsNullOrWhiteSpace(status.Hint))
+            {
+                var hint = new PanelContainer();
+                var style = new StyleBoxFlat { BgColor = new Color(1f, 0.55f, 0.25f, 0.14f), BorderColor = Accent, ContentMarginLeft = 8, ContentMarginRight = 8, ContentMarginTop = 5, ContentMarginBottom = 5 };
+                style.BorderWidthLeft = 3;
+                style.SetCornerRadiusAll(4);
+                hint.AddThemeStyleboxOverride("panel", style);
+                var text = new Label { Text = "▸ " + status.Hint, AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(240, 0) };
+                text.AddThemeFontSizeOverride("font_size", 13);
+                text.AddThemeColorOverride("font_color", new Color(1f, 0.85f, 0.7f));
+                hint.AddChild(text);
+                row.AddChild(hint);
+                label.AddThemeColorOverride("font_color", Colors.White);
             }
 
             _missionRows.AddChild(row);
@@ -250,6 +270,8 @@ public partial class Hud : Control
         }
     }
 
+    public void ClearEvents() => _feed.Clear();
+
     public void Toast(string text, bool bad = false)
     {
         _toast.Text = text;
@@ -258,10 +280,35 @@ public partial class Hud : Control
         _toastTime = 4.0;
     }
 
-    public void Banner(string title, string text)
+    public bool BannerVisible => _banner.Visible;
+
+    /// <summary>
+    /// Centred message (mission briefing, mission complete). Each button closes the banner and
+    /// then runs its action; with no buttons there is a single «Seguir explorando».
+    /// </summary>
+    public void Banner(string title, string text, params (string Label, Action Action)[] buttons)
     {
         _banner.GetNode<Label>("Box/Title").Text = title;
         _banner.GetNode<Label>("Box/Text").Text = text;
+        foreach (var child in _bannerButtons.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        if (buttons.Length == 0)
+        {
+            buttons = [("Seguir explorando", () => { })];
+        }
+
+        foreach (var (label, action) in buttons)
+        {
+            _bannerButtons.AddChild(Action(label, () =>
+            {
+                _banner.Visible = false;
+                action();
+            }, string.Empty));
+        }
+
         _banner.Visible = true;
     }
 
@@ -318,7 +365,8 @@ public partial class Hud : Control
         row.AddChild(_overlay);
         row.AddChild(Action("Guardar", () => SaveRequested?.Invoke(), "Guarda la partida (F5)"));
         row.AddChild(Action("Cargar", () => LoadRequested?.Invoke(), "Carga la última partida (F9)"));
-        row.AddChild(Action("Nueva", () => NewGameRequested?.Invoke(), "Empieza con otra semilla"));
+        row.AddChild(Action("Nueva", () => NewGameRequested?.Invoke(), "Reinicia la misión con otra semilla"));
+        row.AddChild(Action("Menú", () => MenuRequested?.Invoke(), "Campaña: capítulos y misiones"));
         AddChild(bar);
     }
 
@@ -333,8 +381,8 @@ public partial class Hud : Control
         var box = new VBoxContainer();
         box.AddThemeConstantOverride("separation", 8);
         panel.AddChild(box);
-        var caption = Caption("MISIÓN");
-        box.AddChild(caption);
+        _missionCaption = Caption("MISIÓN");
+        box.AddChild(_missionCaption);
         _missionTitle = new Label { Text = "FIRST COLONY" };
         _missionTitle.AddThemeFontSizeOverride("font_size", 19);
         box.AddChild(_missionTitle);
@@ -476,7 +524,9 @@ public partial class Hud : Control
         var text = new Label { Name = "Text", HorizontalAlignment = HorizontalAlignment.Center, AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(480, 0) };
         box.AddChild(title);
         box.AddChild(text);
-        box.AddChild(Action("Seguir explorando", () => _banner.Visible = false, string.Empty));
+        _bannerButtons = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+        _bannerButtons.AddThemeConstantOverride("separation", 10);
+        box.AddChild(_bannerButtons);
         _banner.AddChild(box);
         AddChild(_banner);
     }

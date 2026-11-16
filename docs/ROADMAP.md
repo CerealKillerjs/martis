@@ -124,6 +124,18 @@ Convención: «Criterio TDD» es el literal de §16; «Criterio verificable» es
 - **Depende de:** T04–T06 y T09 para el cierre; los benchmarks parciales empiezan en el Sprint 1.
 - **Estado:** medido ([BENCHMARK.md](BENCHMARK.md)): suite BenchmarkDotNet en `benchmarks/Martis.Benchmarks` y perfil por paso. FIRST COLONY va a 6 ms/tick. La carga de §7.4 va a 110–175 ms/tick porque las mutaciones llevan las poblaciones a ~80 000 (H-29). Primeras optimizaciones aplicadas; quedan las recomendaciones del informe.
 
+## Modo historia (campaña «Génesis», [ADR-019](ADR/ADR-019-modo-historia.md))
+
+Cada hito va en una rama y un PR propios, apilados.
+
+- **H1, marco de campaña:** capítulos, desbloqueo en orden, guía paso a paso y progreso guardado (H-31). Capítulo 1 jugable (1.1 Despertar, 1.2 Primera colonia, 1.3 Presión selectiva).
+- **H2, mapas grandes:** tamaño de rejilla por escenario (64, 128 y 256), presupuesto de poblaciones (H-29) y terreno 3D por bloques con LOD.
+- **H3, capítulo 2 (Ciclo cerrado):** escenario con gradientes (H-30), descomponedores, extremófilos y O₂.
+- **H4, capítulo 3 (Cooperación):** transiciones evolutivas (eucariota y multicelular).
+- **H5, capítulo 4 (Cadenas tróficas):** herbivoría, depredación y dispersión activa.
+- **H6, capítulo 5 (Mente):** cognición, socialidad e índice de inteligencia.
+- **H7:** narrativa y equilibrado.
+
 ## Fuera de alcance del MVP (TDD §0, B.5)
 
 Dinámica molecular, individuos celulares como entidades, atmósfera 3D, meteorología global, fluidos avanzados, GPU compute, multijugador, servidores distribuidos, IA generativa, terraformación global físicamente completa, ECS complejo, multithreading masivo (ADR-007).

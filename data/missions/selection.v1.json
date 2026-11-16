@@ -1,0 +1,124 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "selection",
+    "name": "PRESIÓN SELECTIVA — 1.3",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (campaña H1)",
+    "review": "Misión de la campaña «Génesis» (ADR-019). Umbrales GAME_BALANCE propuestos.",
+    "sequential": true,
+    "briefing": "La colonia sobrevive, pero Marte no perdona. Cada copia del genoma puede cambiar, y la radiación selecciona a las variantes más resistentes. Deja que la evolución trabaje: siembra fotótrofos, deja que muten y mantén una población diversa.",
+    "objectives": [
+      {
+        "id": "deploy_phototroph",
+        "type": "deploy",
+        "capability": "photoautotrophy",
+        "title": "Siembra fotótrofos",
+        "hint": "Elige un fotótrofo en el laboratorio, pulsa «Desplegar» y haz clic en el terreno. Añade un descomponedor para cerrar el ciclo."
+      },
+      {
+        "id": "observe_mutations",
+        "type": "mutations",
+        "count": "mission.selection.mutations",
+        "title": "Observa varias mutaciones",
+        "hint": "Las mutaciones aparecen en el registro de eventos. Acelera el tiempo para ver más."
+      },
+      {
+        "id": "reach_diversity",
+        "type": "diversity",
+        "capability": "photoautotrophy",
+        "count": "mission.selection.diversity",
+        "title": "Alcanza una población diversa",
+        "hint": "Cada variante viva cuenta. Haz clic en una celda para ver sus genomas; la capa 4 colorea las variantes."
+      },
+      {
+        "id": "sustain_lineage",
+        "type": "sustain",
+        "capability": "photoautotrophy",
+        "min_biomass": "mission.selection.min_biomass_kg",
+        "sols": "mission.selection.sustain_sols",
+        "title": "Mantén el linaje",
+        "hint": "Si la biomasa cae por debajo del mínimo, la racha vuelve a cero. Equilibra fotótrofos y descomponedores."
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.selection.mutations",
+      "field": "mutations",
+      "value": 3.0,
+      "unit": "variantes",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para la campaña (H1); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Mutaciones que hay que observar.",
+      "range": [
+        1,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.selection.diversity",
+      "field": "diversity",
+      "value": 3.0,
+      "unit": "genomas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para la campaña (H1); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Genomas fotótrofos distintos vivos a la vez.",
+      "range": [
+        1,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.selection.min_biomass_kg",
+      "field": "min_biomass_kg",
+      "value": 0.1,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para la campaña (H1); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa fotótrofa total mínima para contar un sol.",
+      "range": [
+        1e-12,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.selection.sustain_sols",
+      "field": "sustain_sols",
+      "value": 100.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para la campaña (H1); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles seguidos por encima del mínimo.",
+      "range": [
+        1,
+        1000000.0
+      ]
+    }
+  ]
+}

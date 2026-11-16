@@ -22,6 +22,9 @@ public partial class OrbitCamera : Camera3D
 
     public Terrain? Ground { get; set; }
 
+    /// <summary>Raised when the player orbits (<c>orbit-camera</c>) or zooms (<c>zoom-camera</c>); the tutorial listens.</summary>
+    public event Action<string>? Used;
+
     /// <summary>Slow turn when nobody touches the camera (title screen, screenshots).</summary>
     public bool Idle { get; set; }
 
@@ -59,10 +62,12 @@ public partial class OrbitCamera : Camera3D
                 else if (button.Pressed && button.ButtonIndex == MouseButton.WheelUp)
                 {
                     _goalDistance = Math.Max(12f, _goalDistance * 0.88f);
+                    Used?.Invoke("zoom-camera");
                 }
                 else if (button.Pressed && button.ButtonIndex == MouseButton.WheelDown)
                 {
                     _goalDistance = Math.Min(260f, _goalDistance * 1.12f);
+                    Used?.Invoke("zoom-camera");
                 }
 
                 Idle = false;
@@ -70,6 +75,7 @@ public partial class OrbitCamera : Camera3D
             case InputEventMouseMotion motion when _rotating:
                 _goalYaw -= motion.Relative.X * 0.006f;
                 _goalPitch = Math.Clamp(_goalPitch + (motion.Relative.Y * 0.005f), 0.12f, 1.45f);
+                Used?.Invoke("orbit-camera");
                 break;
             case InputEventMouseMotion motion when _panning:
                 Pan(new Vector2(-motion.Relative.X, -motion.Relative.Y) * (_goalDistance * 0.0018f));
@@ -87,6 +93,7 @@ public partial class OrbitCamera : Camera3D
         if (Input.IsKeyPressed(Key.D)) move.X += 1;
         if (Input.IsKeyPressed(Key.Q)) _goalYaw += dt * 1.2f;
         if (Input.IsKeyPressed(Key.E)) _goalYaw -= dt * 1.2f;
+        if (Input.IsKeyPressed(Key.Q) || Input.IsKeyPressed(Key.E)) Used?.Invoke("orbit-camera");
         if (move != Vector2.Zero)
         {
             Pan(move.Normalized() * (_goalDistance * 0.9f * dt));

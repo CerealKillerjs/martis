@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Martis.Domain.Parameters;
 using Martis.Domain.World;
@@ -22,6 +23,12 @@ public enum ObjectiveKind
 
     /// <summary>A number of new variants created by mutation.</summary>
     Mutations,
+
+    /// <summary>Sols that pass while the objective is active (tutorial: «deja correr el tiempo»).</summary>
+    Elapsed,
+
+    /// <summary>Distinct living genomes of the capability at the same time, at or above a count.</summary>
+    Diversity,
 }
 
 /// <summary>One objective. Thresholds are parameters with classification (H-19 pending).</summary>
@@ -33,10 +40,20 @@ public sealed record MissionObjective(
     string? Capability,
     double MinBiomassKg,
     double Sols,
-    double Count);
+    double Count,
+    string? Hint = null);
 
-/// <summary>A mission loaded from <c>data/missions/*.json</c>.</summary>
-public sealed record MissionDefinition(string Id, string Name, IReadOnlyList<MissionObjective> Objectives)
+/// <summary>
+/// A mission loaded from <c>data/missions/*.json</c>. <see cref="Briefing"/> is the story
+/// text the game shows before playing. A <see cref="Sequential"/> mission (tutorial) only
+/// lets the first pending objective complete; the others wait their turn (campaign, H1).
+/// </summary>
+public sealed record MissionDefinition(
+    string Id,
+    string Name,
+    IReadOnlyList<MissionObjective> Objectives,
+    string? Briefing = null,
+    bool Sequential = false)
 {
     public const string FirstColonyFile = "first_colony.v1.json";
 
@@ -66,6 +83,8 @@ public sealed record MissionDefinition(string Id, string Name, IReadOnlyList<Mis
                 "deploy" => ObjectiveKind.Deploy,
                 "sustain" => ObjectiveKind.Sustain,
                 "mutations" => ObjectiveKind.Mutations,
+                "elapsed" => ObjectiveKind.Elapsed,
+                "diversity" => ObjectiveKind.Diversity,
                 var other => throw new InvalidDataException($"Unknown objective type '{other}'."),
             };
             objectives.Add(new MissionObjective(
@@ -76,10 +95,21 @@ public sealed record MissionDefinition(string Id, string Name, IReadOnlyList<Mis
                 Text(item, "capability"),
                 Number(item, "min_biomass", parameters),
                 Number(item, "sols", parameters),
-                Number(item, "count", parameters)));
+                Number(item, "count", parameters),
+                Text(item, "hint")));
         }
 
-        return new MissionDefinition(meta.GetProperty("id").GetString()!, meta.GetProperty("name").GetString()!, objectives);
+        if (objectives.Count == 0 || objectives.Select(objective => objective.Id).Distinct(StringComparer.Ordinal).Count() != objectives.Count)
+        {
+            throw new InvalidDataException("A mission needs at least one objective and unique objective ids.");
+        }
+
+        return new MissionDefinition(
+            meta.GetProperty("id").GetString()!,
+            meta.GetProperty("name").GetString()!,
+            objectives,
+            Text(meta, "briefing"),
+            meta.TryGetProperty("sequential", out var sequential) && sequential.GetBoolean());
     }
 
     private static string? Text(JsonElement item, string name)
@@ -90,24 +120,77 @@ public sealed record MissionDefinition(string Id, string Name, IReadOnlyList<Mis
 }
 
 /// <summary>Progress of one objective. <see cref="CompletedTick"/> is null while pending.</summary>
-public sealed record ObjectiveStatus(string Id, string Title, long? CompletedTick, double Progress, double Target);
+public sealed record ObjectiveStatus(string Id, string Title, long? CompletedTick, double Progress, double Target, string? Hint = null, bool Active = false);
+
+/// <summary>
+/// Everything a <see cref="MissionTracker"/> remembers, so a save can resume a mission where
+/// it was (H-31): completed objectives with their tick, reported actions, variants born by
+/// mutation, the sustain streak, the mutation count and the sols of each elapsed objective.
+/// </summary>
+public sealed record MissionProgress(
+    string MissionId,
+    IReadOnlyDictionary<string, long> Completed,
+    IReadOnlyList<string> Actions,
+    IReadOnlyList<long> MutantIds,
+    long Streak,
+    long Mutations,
+    IReadOnlyDictionary<string, long> Elapsed)
+{
+    private static readonly JsonSerializerOptions Options = new() { WriteIndented = false };
+
+    public string ToJson() => JsonSerializer.Serialize(new Dto(MissionId, new SortedDictionary<string, long>(Completed.ToDictionary(), StringComparer.Ordinal), [.. Actions.Order(StringComparer.Ordinal)], [.. MutantIds.Order()], Streak, Mutations, new SortedDictionary<string, long>(Elapsed.ToDictionary(), StringComparer.Ordinal)), Options);
+
+    public static MissionProgress FromJson(string json)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
+        Dto? dto;
+        try
+        {
+            dto = JsonSerializer.Deserialize<Dto>(json, Options);
+        }
+        catch (JsonException exception)
+        {
+            throw new InvalidDataException("The mission progress is not valid JSON.", exception);
+        }
+
+        if (dto is null || string.IsNullOrWhiteSpace(dto.MissionId) || dto.Streak < 0 || dto.Mutations < 0)
+        {
+            throw new InvalidDataException("The mission progress is incomplete.");
+        }
+
+        return new MissionProgress(dto.MissionId, dto.Completed ?? new(), dto.Actions ?? [], dto.MutantIds ?? [], dto.Streak, dto.Mutations, dto.Elapsed ?? new());
+    }
+
+    private sealed record Dto(
+        string MissionId,
+        SortedDictionary<string, long>? Completed,
+        string[]? Actions,
+        long[]? MutantIds,
+        long Streak,
+        long Mutations,
+        SortedDictionary<string, long>? Elapsed);
+}
 
 /// <summary>
 /// Follows a mission during a run (T09). The host calls <see cref="Observe"/> after every
 /// tick and <see cref="RecordAction"/> for player actions. An objective, once complete,
-/// stays complete. Progress lives here, not in the save: a resumed run restarts the
-/// sustain streak (ADR-016).
+/// stays complete. <see cref="Export"/> and <see cref="Restore"/> carry the progress through
+/// a save (H-31), so a resumed run keeps its sustain streak.
+/// In a sequential mission only <see cref="ActiveObjective"/> can complete; an action the
+/// player did earlier counts as soon as its objective becomes active.
 /// </summary>
 public sealed class MissionTracker
 {
     private readonly BiologyCatalog _catalog;
     private readonly Dictionary<string, long> _completed = new(StringComparer.Ordinal);
     private readonly HashSet<string> _actions = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, long> _elapsed = new(StringComparer.Ordinal);
 
     /// <summary>Variants born by mutation: they are not player designs.</summary>
     private readonly HashSet<long> _mutantIds = [];
     private long _streak;
     private long _mutations;
+    private int _diversity;
 
     public MissionTracker(MissionDefinition definition, BiologyCatalog catalog)
     {
@@ -121,17 +204,14 @@ public sealed class MissionTracker
 
     public long? CompletedTick => IsComplete ? _completed.Values.Max() : null;
 
+    /// <summary>The first pending objective, or null when the mission is complete.</summary>
+    public MissionObjective? ActiveObjective => Definition.Objectives.FirstOrDefault(objective => !_completed.ContainsKey(objective.Id));
+
     public void RecordAction(string action, long tick)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(action);
         _actions.Add(action);
-        foreach (var objective in Definition.Objectives)
-        {
-            if (objective.Kind == ObjectiveKind.Action && objective.Action == action)
-            {
-                Complete(objective, tick);
-            }
-        }
+        CompleteActions(tick);
     }
 
     public void Observe(SimulationState state, MetabolismWorkspace? workspace)
@@ -144,52 +224,164 @@ public sealed class MissionTracker
         }
 
         var counted = false;
+        _diversity = -1;
         foreach (var objective in Definition.Objectives)
         {
+            if (_completed.ContainsKey(objective.Id))
+            {
+                continue;
+            }
+
+            var open = CanComplete(objective);
             switch (objective.Kind)
             {
-                case ObjectiveKind.Design when Living(state, objective.Capability).Any(Designed):
-                case ObjectiveKind.Deploy when Living(state, objective.Capability).Any():
+                case ObjectiveKind.Design when open && Living(state, objective.Capability).Any(Designed):
+                case ObjectiveKind.Deploy when open && Living(state, objective.Capability).Any():
                     Complete(objective, state.Tick);
                     break;
                 case ObjectiveKind.Sustain:
-                    if (!counted)
+                    if (!counted && (open || !Definition.Sequential))
                     {
                         var biomass = Living(state, objective.Capability).Sum(population => population.BiomassKg);
                         _streak = biomass >= objective.MinBiomassKg ? _streak + 1 : 0;
                         counted = true;
                     }
 
-                    if (_streak >= objective.Sols)
+                    if (open && _streak >= objective.Sols)
                     {
                         Complete(objective, state.Tick);
                     }
 
                     break;
-                case ObjectiveKind.Mutations when _mutations >= objective.Count:
+                case ObjectiveKind.Mutations when open && _mutations >= objective.Count:
                     Complete(objective, state.Tick);
+                    break;
+                case ObjectiveKind.Elapsed when open:
+                    var sols = _elapsed[objective.Id] = _elapsed.GetValueOrDefault(objective.Id) + 1;
+                    if (sols >= objective.Sols)
+                    {
+                        Complete(objective, state.Tick);
+                    }
+
+                    break;
+                case ObjectiveKind.Diversity:
+                    _diversity = Genomes(state, objective.Capability);
+                    if (open && _diversity >= objective.Count)
+                    {
+                        Complete(objective, state.Tick);
+                    }
+
                     break;
             }
         }
+
+        CompleteActions(state.Tick);
     }
 
     public IReadOnlyList<ObjectiveStatus> Status()
-        => Definition.Objectives.Select(objective => new ObjectiveStatus(
+    {
+        var active = ActiveObjective;
+        return Definition.Objectives.Select(objective => new ObjectiveStatus(
             objective.Id,
             objective.Title,
             _completed.TryGetValue(objective.Id, out var tick) ? tick : null,
-            objective.Kind switch
+            _completed.ContainsKey(objective.Id) ? Target(objective) : objective.Kind switch
             {
                 ObjectiveKind.Sustain => Math.Min(_streak, objective.Sols),
                 ObjectiveKind.Mutations => Math.Min(_mutations, objective.Count),
-                _ => _completed.ContainsKey(objective.Id) ? 1 : 0,
+                ObjectiveKind.Elapsed => Math.Min(_elapsed.GetValueOrDefault(objective.Id), objective.Sols),
+                ObjectiveKind.Diversity => Math.Clamp(_diversity, 0, objective.Count),
+                _ => 0,
             },
-            objective.Kind switch
+            Target(objective),
+            objective.Hint,
+            ReferenceEquals(objective, active))).ToArray();
+    }
+
+    /// <summary>A copy of the progress for a save (H-31).</summary>
+    public MissionProgress Export()
+        => new(
+            Definition.Id,
+            new Dictionary<string, long>(_completed, StringComparer.Ordinal),
+            [.. _actions.Order(StringComparer.Ordinal)],
+            [.. _mutantIds.Order()],
+            _streak,
+            _mutations,
+            new Dictionary<string, long>(_elapsed, StringComparer.Ordinal));
+
+    /// <summary>Replaces the progress with a saved one of the same mission. Unknown objective ids are refused.</summary>
+    public void Restore(MissionProgress progress)
+    {
+        ArgumentNullException.ThrowIfNull(progress);
+        if (!string.Equals(progress.MissionId, Definition.Id, StringComparison.Ordinal))
+        {
+            throw new InvalidDataException($"The saved progress belongs to mission '{progress.MissionId}', not '{Definition.Id}'.");
+        }
+
+        var ids = Definition.Objectives.Select(objective => objective.Id).ToHashSet(StringComparer.Ordinal);
+        if (progress.Completed.Keys.Concat(progress.Elapsed.Keys).Any(id => !ids.Contains(id)))
+        {
+            throw new InvalidDataException("The saved progress names an objective this mission does not have.");
+        }
+
+        _completed.Clear();
+        _actions.Clear();
+        _mutantIds.Clear();
+        _elapsed.Clear();
+        foreach (var (id, tick) in progress.Completed)
+        {
+            _completed[id] = tick;
+        }
+
+        _actions.UnionWith(progress.Actions);
+        _mutantIds.UnionWith(progress.MutantIds);
+        foreach (var (id, sols) in progress.Elapsed)
+        {
+            _elapsed[id] = sols;
+        }
+
+        _streak = progress.Streak;
+        _mutations = progress.Mutations;
+    }
+
+    private static double Target(MissionObjective objective) => objective.Kind switch
+    {
+        ObjectiveKind.Sustain or ObjectiveKind.Elapsed => objective.Sols,
+        ObjectiveKind.Mutations or ObjectiveKind.Diversity => objective.Count,
+        _ => 1,
+    };
+
+    private bool CanComplete(MissionObjective objective)
+        => !Definition.Sequential || ReferenceEquals(objective, ActiveObjective);
+
+    /// <summary>Completes every reported action whose objective may complete, walking forward in a sequential mission.</summary>
+    private void CompleteActions(long tick)
+    {
+        bool progressed;
+        do
+        {
+            progressed = false;
+            foreach (var objective in Definition.Objectives)
             {
-                ObjectiveKind.Sustain => objective.Sols,
-                ObjectiveKind.Mutations => objective.Count,
-                _ => 1,
-            })).ToArray();
+                if (objective.Kind == ObjectiveKind.Action
+                    && !_completed.ContainsKey(objective.Id)
+                    && objective.Action is not null
+                    && _actions.Contains(objective.Action)
+                    && CanComplete(objective))
+                {
+                    Complete(objective, tick);
+                    progressed = true;
+                }
+            }
+        }
+        while (progressed && Definition.Sequential);
+    }
+
+    private int Genomes(SimulationState state, string? capability)
+        => Living(state, capability)
+            .Select(population => string.Join(';', population.Genome.Expressions.Select(gene => string.Create(CultureInfo.InvariantCulture, $"{gene.GeneId.Value}={gene.Expression:R}"))))
+            .Distinct(StringComparer.Ordinal)
+            .Count();
 
     private IEnumerable<Domain.Biology.Population> Living(SimulationState state, string? capability)
         => state.Populations.Where(population =>

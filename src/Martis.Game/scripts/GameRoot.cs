@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Godot;
+using Martis.Simulation.Missions;
 using Martis.Simulation.Sessions;
 
 namespace Martis.Game;
@@ -30,6 +31,17 @@ public partial class GameRoot : Node
     private (int X, int Y) _selected = (-1, -1);
     private bool _celebrated;
     private Dictionary<string, string> _options = new(StringComparer.Ordinal);
+    private CampaignProgress _campaign = null!;
+    private CampaignMission? _mission;
+    private CampaignMenu _menu = null!;
+    private bool _playing;
+
+    /// <summary>Chapter of the mission being played (<c>ch1</c>…<c>ch5</c>), null in free play. Music picks its mood from it.</summary>
+    public string? ChapterId => _mission?.ChapterId;
+
+    public event Action<string?>? ChapterChanged;
+
+    private string ProgressPath => _options.TryGetValue("campaign", out var path) ? path : ProjectSettings.GlobalizePath("user://campaign.json");
 
     public override void _Ready()
     {
@@ -49,6 +61,7 @@ public partial class GameRoot : Node
 
         _saves = new SaveService(_dataRoot, _options.TryGetValue("db", out var db) ? db : null);
         var seed = _options.TryGetValue("seed", out var text) && ulong.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var parsed) ? parsed : 5UL;
+        _campaign = LoadCampaign();
         StartSession(GameSession.NewGame(_dataRoot, seed));
 
         if (_options.ContainsKey("smoke"))
@@ -57,13 +70,155 @@ public partial class GameRoot : Node
         }
         else if (_options.TryGetValue("shot", out var shot))
         {
+            _mission = _campaign.Campaign.Mission("first_colony");
             CallDeferred(MethodName.Showcase, shot);
+        }
+        else if (_options.TryGetValue("menu-shot", out var menuShot))
+        {
+            CallDeferred(MethodName.MenuShowcase, menuShot);
+        }
+        else if (_options.TryGetValue("mission", out var missionId))
+        {
+            StartMission(_campaign.Campaign.Mission(missionId));
         }
         else
         {
-            _hud.Toast("Bienvenido a Marte. Analiza una región, diseña un microbio y despliega tu primera colonia.");
+            Launch();
         }
     }
+
+    /// <summary>
+    /// Follows the title screen's choice when there is one (autoload <c>/root/GameLaunch</c>,
+    /// string properties <c>Mode</c> = Campaign | Sandbox | Load and optional <c>ChapterId</c>);
+    /// otherwise opens the campaign menu.
+    /// </summary>
+    private void Launch()
+    {
+        var launch = GetNodeOrNull("/root/GameLaunch");
+        var mode = launch?.Get("Mode").AsString() ?? string.Empty;
+        var chapterId = launch?.Get("ChapterId").AsString() ?? string.Empty;
+        switch (mode)
+        {
+            case "Sandbox":
+                FreePlay();
+                return;
+            case "Load":
+                Load();
+                if (!_playing)
+                {
+                    OpenMenu();
+                }
+
+                return;
+            case "Campaign" when chapterId.Length > 0:
+                var chapter = _campaign.Campaign.Chapters.FirstOrDefault(item => item.Id == chapterId);
+                var next = chapter?.Missions.FirstOrDefault(item => _campaign.IsUnlocked(item.Id) && !_campaign.IsComplete(item.Id))
+                    ?? chapter?.Missions.LastOrDefault(item => _campaign.IsUnlocked(item.Id));
+                if (next is not null)
+                {
+                    StartMission(next);
+                    return;
+                }
+
+                break;
+        }
+
+        OpenMenu();
+    }
+
+    private CampaignProgress LoadCampaign()
+    {
+        var campaign = CampaignDefinition.LoadPublished(_dataRoot);
+        try
+        {
+            return System.IO.File.Exists(ProgressPath)
+                ? CampaignProgress.FromJson(campaign, System.IO.File.ReadAllText(ProgressPath))
+                : new CampaignProgress(campaign);
+        }
+        catch (Exception exception) when (exception is System.IO.IOException or System.IO.InvalidDataException or UnauthorizedAccessException)
+        {
+            GD.PushWarning($"Campaign progress ignored: {exception.Message}");
+            return new CampaignProgress(campaign);
+        }
+    }
+
+    private void SaveCampaign()
+    {
+        try
+        {
+            System.IO.File.WriteAllText(ProgressPath, _campaign.ToJson());
+        }
+        catch (Exception exception) when (exception is System.IO.IOException or UnauthorizedAccessException)
+        {
+            _hud.Toast($"No se pudo guardar el progreso de la campaña: {exception.Message}", bad: true);
+        }
+    }
+
+    private void OpenMenu()
+    {
+        SetSpeed(0);
+        _hud.Visible = false;
+        _world.Camera.Idle = true;
+        _menu.Show(_campaign, _playing);
+    }
+
+    private void CloseMenu()
+    {
+        _menu.Visible = false;
+        _hud.Visible = true;
+        _world.Camera.Idle = false;
+    }
+
+    private ulong NextSeed() => ((_session.Seed * 6364136223846793005UL) + 1442695040888963407UL) % 1_000_000UL;
+
+    private void StartMission(CampaignMission mission, ulong? seed = null)
+    {
+        _mission = mission;
+        _saves.CurrentId = null;
+        _hud.ClearEvents();
+        StartSession(GameSession.NewGame(_dataRoot, seed ?? _session.Seed, mission.File));
+        _playing = true;
+        CloseMenu();
+        SetSpeed(0);
+        ChapterChanged?.Invoke(ChapterId);
+        var chapter = _campaign.Campaign.ChapterOf(mission.Id);
+        var definition = _session.Mission!.Definition;
+        _hud.Banner(
+            definition.Name,
+            string.Create(CultureInfo.InvariantCulture, $"Capítulo {chapter.Number} · {chapter.Title}\n\n{definition.Briefing}"),
+            ("Empezar", () => _hud.Toast(definition.Objectives[0].Hint ?? definition.Objectives[0].Title)));
+    }
+
+    private void FreePlay()
+    {
+        _mission = null;
+        _saves.CurrentId = null;
+        _hud.ClearEvents();
+        StartSession(GameSession.NewGame(_dataRoot, _session.Seed, withMission: false));
+        _playing = true;
+        CloseMenu();
+        SetSpeed(1);
+        ChapterChanged?.Invoke(null);
+        _hud.Toast("Exploración libre: sin objetivos, todo el laboratorio a tu disposición.");
+    }
+
+    private void Act(string action)
+    {
+        if (_session.Mission is not { } mission || mission.IsComplete || !_playing)
+        {
+            return;
+        }
+
+        var before = mission.ActiveObjective;
+        _session.RecordAction(action);
+        if (!ReferenceEquals(before, mission.ActiveObjective))
+        {
+            Refresh();
+        }
+    }
+
+    private string? MissionCaption()
+        => _mission is null ? null : string.Create(CultureInfo.InvariantCulture, $"CAPÍTULO {_campaign.Campaign.ChapterOf(_mission.Id).Number} · MISIÓN {_mission.Number}");
 
     public override void _Process(double delta)
     {
@@ -131,6 +286,7 @@ public partial class GameRoot : Node
                 }
 
                 Select(x, y);
+                Act("inspect-cell");
             }
         }
     }
@@ -154,6 +310,14 @@ public partial class GameRoot : Node
             _hud.SaveRequested += Save;
             _hud.LoadRequested += Load;
             _hud.NewGameRequested += NewGame;
+            _hud.MenuRequested += OpenMenu;
+            _world.Camera.Used += Act;
+            _menu = new CampaignMenu { Name = "CampaignMenu", Visible = false };
+            layer.AddChild(_menu);
+            _menu.MissionChosen += mission => StartMission(mission);
+            _menu.FreePlayChosen += FreePlay;
+            _menu.LoadChosen += Load;
+            _menu.ResumeChosen += CloseMenu;
             _hud.AnalyzeRequested += Analyze;
             _hud.ExperimentRequested += Experiment;
             _hud.DeployToggled += on => _hud.Toast(on ? "Elige una celda para la colonia." : "Despliegue cancelado.");
@@ -174,7 +338,7 @@ public partial class GameRoot : Node
     {
         _view = _session.View();
         _world.Show(_view);
-        _hud.ShowMission(_session.Mission);
+        _hud.ShowMission(_session.Mission, MissionCaption());
         if (_selected.X >= 0)
         {
             _hud.ShowCell(_session.Inspect(_selected.X, _selected.Y));
@@ -207,8 +371,34 @@ public partial class GameRoot : Node
         if (!_celebrated && _session.Mission is { IsComplete: true } mission)
         {
             _celebrated = true;
-            _hud.Banner("¡PRIMERA COLONIA!", $"{mission.Definition.Name} completada en el sol {_session.Tick}. La vida terrestre diseñada por ti se sostiene en Marte.");
+            Celebrate(mission);
         }
+    }
+
+    private void Celebrate(MissionTracker mission)
+    {
+        SetSpeed(0);
+        if (_mission is null)
+        {
+            _hud.Banner("¡MISIÓN COMPLETADA!", $"{mission.Definition.Name} completada en el sol {_session.Tick}.");
+            return;
+        }
+
+        _campaign.Complete(_mission.Id);
+        SaveCampaign();
+        var title = _mission.Id == "first_colony" ? "¡PRIMERA COLONIA!" : "¡MISIÓN COMPLETADA!";
+        var done = $"{mission.Definition.Name} completada en el sol {_session.Tick}.";
+        if (_campaign.Next is not { } next)
+        {
+            _hud.Banner(title, done + " Has terminado todas las misiones disponibles: los próximos capítulos llegarán pronto.", ("Seguir explorando", () => { }), ("Menú", OpenMenu));
+            return;
+        }
+
+        var chapter = _campaign.Campaign.ChapterOf(next.Id);
+        var teaser = chapter.Id == _mission.ChapterId
+            ? $"Siguiente: misión {chapter.Number}.{next.Number}."
+            : $"Se abre el capítulo {chapter.Number}: {chapter.Title}.";
+        _hud.Banner(title, $"{done} {teaser}", ("Siguiente misión", () => StartMission(next)), ("Seguir explorando", () => SetSpeed(1)));
     }
 
     private void SetSpeed(int index)
@@ -220,6 +410,11 @@ public partial class GameRoot : Node
     private void SetOverlay(Overlay overlay)
     {
         _world.SetOverlay(overlay);
+        if (overlay != Overlay.None)
+        {
+            Act("select-overlay");
+        }
+
         if (_view is not null)
         {
             _world.Show(_view);
@@ -292,7 +487,7 @@ public partial class GameRoot : Node
     {
         try
         {
-            var id = _saves.Save(_session);
+            var id = _saves.Save(_session, _mission?.File);
             _hud.Toast($"Partida guardada ({id}, sol {_session.Tick}).");
         }
         catch (Exception exception) when (exception is System.Data.Common.DbException or System.IO.IOException or InvalidOperationException)
@@ -305,10 +500,16 @@ public partial class GameRoot : Node
     {
         try
         {
-            var loaded = _saves.LoadLatest(out var message);
+            var loaded = _saves.LoadLatest(out var message, out var missionFile);
             if (loaded is not null)
             {
+                _mission = _campaign.Campaign.Missions.FirstOrDefault(item => item.File == missionFile);
+                _hud.ClearEvents();
                 StartSession(loaded);
+                _playing = true;
+                CloseMenu();
+                SetSpeed(0);
+                ChapterChanged?.Invoke(ChapterId);
             }
 
             _hud.Toast(message, bad: loaded is null);
@@ -321,10 +522,43 @@ public partial class GameRoot : Node
 
     private void NewGame()
     {
-        var seed = (_session.Seed * 6364136223846793005UL) + 1442695040888963407UL;
+        if (_mission is not null)
+        {
+            StartMission(_mission, NextSeed());
+            return;
+        }
+
         _saves.CurrentId = null;
-        StartSession(GameSession.NewGame(_dataRoot, seed % 1_000_000UL));
+        _hud.ClearEvents();
+        StartSession(GameSession.NewGame(_dataRoot, NextSeed(), withMission: false));
         _hud.Toast($"Nueva partida, semilla {_session.Seed}.");
+    }
+
+    /// <summary>Screenshot of the campaign menu with some progress, for docs and review.</summary>
+    private async void MenuShowcase(string path)
+    {
+        if (_options.ContainsKey("progress"))
+        {
+            _campaign.Complete("awakening");
+            _campaign.Complete("first_colony");
+        }
+
+        _playing = true;
+        OpenMenu();
+        if (_options.TryGetValue("briefing", out var id))
+        {
+            StartMission(_campaign.Campaign.Mission(id));
+        }
+
+        for (var i = 0; i < 40; i++)
+        {
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        }
+
+        var image = GetViewport().GetTexture().GetImage();
+        var error = image.SavePng(path);
+        GD.Print($"MARTIS menu screenshot {path} {error}");
+        GetTree().Quit(error == Error.Ok ? 0 : 1);
     }
 
     /// <summary>Scripted showcase used for screenshots: a thriving colony at dusk.</summary>
@@ -382,10 +616,13 @@ public partial class GameRoot : Node
         _session.Advance(30);
         Refresh();
         var biomass = _session.View().TotalBiomassKg;
+        _session.RecordAction("analyze-region");
         _saves.CurrentId = null;
-        var id = _saves.Save(_session);
-        var loaded = _saves.LoadLatest(out var message);
+        var id = _saves.Save(_session, MissionDefinition.FirstColonyFile);
+        var loaded = _saves.LoadLatest(out var message, out var missionFile);
         ok &= loaded is not null && loaded.Tick == 30 && Math.Abs(loaded.View().TotalBiomassKg - biomass) < 1e-12;
+        ok &= missionFile == MissionDefinition.FirstColonyFile
+            && loaded!.Mission!.Status().Single(status => status.Id == "analyze_region").CompletedTick is not null;
         GD.Print($"MARTIS smoke ok={ok} save={id} tick={_session.Tick} biomass={biomass:0.######} {message} {error}");
         GetTree().Quit(ok ? 0 : 1);
     }

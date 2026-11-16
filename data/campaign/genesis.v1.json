@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "schema": "martis.campaign",
+    "id": "genesis",
+    "name": "Génesis",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (campaña H1)",
+    "review": "Estructura aprobada por Daniel el 2026-11-16: mapas de 64, 128 y 256 casillas según el capítulo. Los capítulos 2 a 5 se completan en H3–H6."
+  },
+  "chapters": [
+    {
+      "id": "ch1",
+      "title": "Primer aliento",
+      "summary": "Las primeras bacterias de Marte: leer el planeta, diseñar un microbio y ver actuar la evolución.",
+      "grid": 64,
+      "missions": [
+        {
+          "id": "awakening",
+          "file": "awakening.v1.json"
+        },
+        {
+          "id": "first_colony",
+          "file": "first_colony.v1.json"
+        },
+        {
+          "id": "selection",
+          "file": "selection.v1.json"
+        }
+      ]
+    },
+    {
+      "id": "ch2",
+      "title": "Ciclo cerrado",
+      "summary": "Un ecosistema microbiano: descomponedores, extremófilos en el frío y el primer oxígeno.",
+      "grid": 128,
+      "missions": []
+    },
+    {
+      "id": "ch3",
+      "title": "Cooperación",
+      "summary": "Endosimbiosis y los primeros organismos multicelulares.",
+      "grid": 128,
+      "missions": []
+    },
+    {
+      "id": "ch4",
+      "title": "Cadenas tróficas",
+      "summary": "Herbívoros, depredadores y el equilibrio de un ecosistema complejo.",
+      "grid": 256,
+      "missions": []
+    },
+    {
+      "id": "ch5",
+      "title": "Mente",
+      "summary": "Sistemas nerviosos, sociedades y una especie inteligente que transforma su mundo.",
+      "grid": 256,
+      "missions": []
+    }
+  ],
+  "location": {
+    "site": "model"
+  },
+  "parameters": []
+}
