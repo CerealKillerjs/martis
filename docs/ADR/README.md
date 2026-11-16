@@ -11,5 +11,6 @@
 - [ADR-008 — DT-008: Método de difusión](ADR-008-difusion.md) (Aceptado)
 - [ADR-009 — DT-009: Integración genética (herencia)](ADR-009-integracion-genetica.md) (Aceptado)
 - [ADR-010 — DT-010: Plataforma inicial](ADR-010-plataforma-inicial.md) (Aceptado)
+- [ADR-011 — Unidades del modelo](ADR-011-unidades-del-modelo.md) (Aceptado: decisión de MARTIS Lead tras la validación científica de MARTIS Ciencia (rondas 1-3 del PR #4), 2026-11-16)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).

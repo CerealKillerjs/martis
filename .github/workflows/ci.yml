@@ -46,6 +46,23 @@ jobs:
       - name: Restaurar
         run: dotnet restore MARTIS.sln --locked-mode
 
+      # `restore --locked-mode` recreates a missing packages.lock.json on SDK 10.0.404.
+      # diff catches edits to tracked locks. status catches locks that were never indexed.
+      # `git status` itself exits 0 when the tree is dirty, so a non-empty status fails the step.
+      - name: El restore no cambia los lockfiles
+        shell: bash
+        run: |
+          set +e
+          git diff --exit-code -- '**/packages.lock.json'
+          diff_status=$?
+          status=$(git status --porcelain -- '**/packages.lock.json')
+          set -e
+          if [ "$diff_status" -ne 0 ] || [ -n "$status" ]; then
+            git status --porcelain -- '**/packages.lock.json'
+            echo "packages.lock.json cambió o no está en el índice."
+            exit 1
+          fi
+
       - name: Compilar
         run: dotnet build MARTIS.sln -c Release --no-restore
 

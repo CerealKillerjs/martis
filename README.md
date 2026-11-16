@@ -2,7 +2,7 @@
 
 Motor de simulación científica en C# / .NET. Este repositorio contiene el motor y el ejecutable sin interfaz. La aplicación Godot (`Martis.Game`) no forma parte de la solución: el motor se compila y se prueba sin Godot.
 
-Este árbol corresponde al hito **T01 Infrastructure** del TDD v1.0 (§1.2 y §16): solución, proyectos, referencias, identificadores tipados y pruebas de arquitectura. La simulación en sí llega en hitos posteriores.
+Este árbol corresponde al hito **T01 Infrastructure** (solución, proyectos, referencias, identificadores tipados y pruebas de arquitectura) y al modelo de dominio de **T02** (S1-10..S1-14): ambiente, recursos, genoma, poblaciones, mundo y validador. El motor de ticks, el PRNG y los escenarios llegan después.
 
 ## Requisitos
 
@@ -79,7 +79,7 @@ MARTIS.sln
 global.json
 Directory.Build.props
 Directory.Packages.props
-src/Martis.Domain/          Biology/ Genetics/ Ecology/ Environment/ Common/
+src/Martis.Domain/          Biology/ Genetics/ Ecology/ Environment/ Common/ World/ Validation/
 src/Martis.Simulation/      Engine/ Systems/ Algorithms/ Random/ Spatial/ Validation/
 src/Martis.Contracts/       Commands/ Snapshots/ Events/
 src/Martis.Persistence/     SQLite/ Serialization/ Migrations/
@@ -92,7 +92,7 @@ data/                       genes/ organisms/ reactions/ environments/ scenarios
 .github/workflows/ci.yml
 ```
 
-Las carpetas vacías reservan el sitio de los hitos siguientes. T01 solo implementa los identificadores tipados de §2.1 y el comando `--version`.
+T02 llena Biology, Genetics, Environment, World y Validation. Ecology sigue vacío. El diccionario de esos tipos está en [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md). El comando de CLI sigue siendo `--version`.
 
 ## Versiones de paquetes
 
@@ -120,11 +120,11 @@ En `tests/Martis.Integration.Tests`, con el rasgo `Category=Architecture`:
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest`: `actions/setup-dotnet` lee `global.json` y cachea NuGet (`cache: true`, clave `**/packages.lock.json`), luego `dotnet restore MARTIS.sln --locked-mode`, `dotnet build -c Release --no-restore` y `dotnet test -c Release --no-build`. No instala Godot.
+GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest`: `actions/setup-dotnet` lee `global.json` y cachea NuGet (`cache: true`, clave `**/packages.lock.json`), luego `dotnet restore MARTIS.sln --locked-mode`. A continuación `git diff --exit-code -- '**/packages.lock.json'` y `git status --porcelain` sobre esos ficheros: el restore con SDK 10.0.404 puede recrear un lock que no estaba en el índice, y el paso falla si el diff no está vacío o si `status` muestra alguno. Después, `dotnet build -c Release --no-restore` y `dotnet test -c Release --no-build`. No instala Godot.
 
 ## Fuera de este hito
 
-- Lógica de simulación, estado del mundo, PRNG, escenarios y validadores VAL-001..010 (T02 en adelante).
+- Motor de ticks, PRNG y escenarios. El estado del mundo, VAL-001, VAL-002, VAL-003, VAL-005 y las reglas DOM-VAL están en `Martis.Domain` ([ADR-011](docs/ADR/ADR-011-unidades-del-modelo.md), [diccionario](docs/DATA_DICTIONARY.md)). VAL-004 no tiene campo en este hito. VAL-006..010 siguen pendientes. El trasvase de agua entre compartimentos llega en T03/T04.
 - `Martis.Game`, escenas y el SDK de Godot (T08).
 - `benchmarks/` (T10).
 - Esquema SQLite, migraciones y partidas guardadas (T07). El proyecto de persistencia solo abre una base en memoria para comprobar el paquete.

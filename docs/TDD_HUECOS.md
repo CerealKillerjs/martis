@@ -8,7 +8,7 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 | H-02 | A | §5.1, §8, §12.2 | El TDD pone `ISimulationCommand.Apply(SimulationState)` en Contracts y no asigna proyecto a `SimulationState`. Si el estado viviera en Simulation, Contracts→Simulation cerraría un ciclo. | **Cerrado** (2026-11-16) en [ADR-000](ADR/ADR-000-reglas-de-arquitectura.md): `SimulationState` en Domain; los comandos son datos en Contracts; un handler en Simulation los aplica sobre ese estado. Contracts no contiene `Apply`. | MARTIS Lead |
 | H-03 | A | §8.1 vs §9.3 | «Snapshot» significa dos cosas: vista agregada para UI (`SimulationSnapshot`, sin genomas ni RNG) y estado completo de guardado (con genomas y estado PRNG). `Restore(SimulationSnapshot)` y VAL-009 requieren estado completo. | Dos tipos: `SimulationSnapshot` (vista, Contracts) y `StateSnapshot`/`SaveSnapshot` (completo, Persistence/Simulation). | Dani |
 | H-04 | A | §5.3, §5.5, §6 | El contexto y el motor reciben **un** `SimulationRandom`, pero §6 exige 5 flujos independientes. No se define cómo derivar cada flujo de `WorldSeed`; `Restore` solo restaura `State`, no el RNG. | Un `RngStreams` (5 flujos) en el contexto; derivación documentada (ADR-003); su estado forma parte del snapshot completo. | Motor/Dani |
-| H-05 | A | §3.1, §12.1, §2.5 | Δt inicial = 1 **sol** (~88.775 s) pero la configuración usa `DeltaTimeDays` y `AgeDistributionMeanDays` («días»). Un sol no es un día terrestre. B.4 pide escalas «desde horas», imposible con Δt = 1 sol sin subpasos. | Renombrar a `DeltaTimeSols` (o guardar `DeltaTimeSeconds`) y definir subpasos. Decidir unidad canónica. | Dani/Ciencia |
+| H-05 | A | §3.1, §12.1, §2.5 | Δt inicial = 1 **sol** (~88.775 s) pero la configuración usa `DeltaTimeDays` y `AgeDistributionMeanDays` («días»). Un sol no es un día terrestre. B.4 pide escalas «desde horas», imposible con Δt = 1 sol sin subpasos. | **Parcial:** 1 tick = 1 sol; SecondsPerSol ≈ 88 775 s (redondeo, MODEL_ASSUMPTION; ver [ADR-011](ADR/ADR-011-unidades-del-modelo.md)). | MARTIS Lead |
 | H-06 | M | §4.4 vs §12.1 | Límite «por especie y celda» vs `MaxVariantsPerCell`. | **Cerrado** (2026-11-16) en [ADR-006](ADR/ADR-006-variantes-por-celda.md): el nombre es `MaxVariantsPerSpeciesPerCell`. | MARTIS Lead |
 | H-07 | A | §7, §7.3 | Tamaño físico de celda sin fijar; imprescindible para difusión (`D·Δt/Δx²`), radiación y calibración regional. | Fijar escala en el escenario como `MODEL_ASSUMPTION`; no usar hasta decidirlo. Para el prototipo, ninguna difusión. | Dani/Ciencia |
 | H-08 | M | §7.3 | Condiciones de contorno de la difusión no definidas. | **Cerrado** (2026-11-16) en [ADR-008](ADR/ADR-008-difusion.md): borde cerrado, sin flujo. | MARTIS Lead |
@@ -21,14 +21,14 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 | H-15 | A | §10 vs §12.5 | El validador de ejemplo solo cubre 5 de los 9 recursos, no VAL-004/005/006/008/009/010, y lanza excepción en el primer fallo, mientras §11.1 pide registrar semilla, tick, celda, población, sistema y estado previo/posterior. | Validador que devuelve lista estructurada de violaciones (id VAL, tick, celda, población) y política de fallo en el CLI (S1-14). | Motor/QA |
 | H-16 | A | §18 vs §19 | Día 4 ejecuta **100** ticks; el prototipo (§19) y T03 exigen **1000**. El escenario se llama `MarsBaseline` (§18.1, §19) y `mars_baseline` (§11.1). §19 dice «Save Results» pero §11.1 lista 7 ficheros (incl. `mutations.csv`, `mass_balance.csv`) que aún no tienen datos en el prototipo. | Prototipo: 1000 ticks; id de escenario `mars_baseline` con nombre visible `MarsBaseline`; salidas mínimas: `metadata.json`, `final_snapshot.json`, `resource_history.csv`, `simulation.log` (+ `population_history.csv` solo cabecera); `mutations.csv` y `mass_balance.csv` llegan en T04/T06. | Dani |
 | H-17 | A | §1.2, §16 T01, §18 Día 1 | T01 exige que «todos compilan» pero `Martis.Game` necesita Godot/SDK de Godot; el prototipo CLI no. CI en Linux no debe depender de Godot. | `Martis.Game` fuera de `MARTIS.sln` por defecto (o en una solución aparte) hasta T08/DT-001. | Dani |
-| H-18 | M | §3.4, §10.1 | No hay unidades de `ResourcePool` ni tabla de composición elemental (matriz A) ni forma de pasar biomasa (kg) a elementos; sin eso VAL-007 no se puede implementar ni verificar. `ReactionDefinition` usa `string` como clave de especie química. | Definir unidades (mol o kg) y `data/` de composición elemental con fuente (MARTIS Ciencia) antes de T04. | Ciencia/Dani |
+| H-18 | M | §3.4, §10.1 | No hay unidades de `ResourcePool` ni tabla de composición elemental (matriz A) ni forma de pasar biomasa (kg) a elementos; sin eso VAL-007 no se puede implementar ni verificar. `ReactionDefinition` usa `string` como clave de especie química. | **Parcial:** unidades cerradas en [ADR-011](ADR/ADR-011-unidades-del-modelo.md); composición y especie de cada depósito pendientes (T04). | MARTIS Lead |
 | H-19 | M | §16, B.6 | Falta un hito para editor de organismos/genoma, laboratorio/experimentos y Simulation Inspector (§11) aunque FIRST COLONY (T09) exige «diseñar fotótrofo» y «experimentos previos». «Mantener la población varias generaciones» no tiene umbral medible. | Añadir sub-hitos en T08/T09 y definir umbrales (no inventados: decididos por Dani/Ciencia). | Dani |
 | H-20 | M | §7.4, T10 | Los objetivos de rendimiento exigen «equipo de referencia documentado», que no existe. | Definir y documentar máquina de referencia antes de T10; hasta entonces solo se miden, no se cumplen/incumplen. | Dani |
 | H-21 | M | §5.1, §6, §8 | La reproducibilidad exige «orden de comandos» pero no hay registro de comandos ni se define en qué punto del tick se aplican; `ApplyCommand` muta el estado de inmediato. | Cola de comandos aplicada al inicio del tick (§5.4 paso 1) y registro de comandos con tick en el guardado/experimento. | Motor/Dani |
 | H-22 | B | §5.1, §5.5 | `Initialize(config)` solo valida, pero el constructor ya recibe estado y configuración; no está claro cuál construye el mundo. | Definir `SimulationEngineFactory`; `Initialize` crea el estado desde configuración y escenario. | Motor |
 | H-23 | B | §1.1, §18 | El TDD no menciona CI, licencia ni estructura de ramas/PR (solo «Ramas de funcionalidades»). | CI mínima en Linux (S1-06) y decisión de licencia antes de publicar el repo. | Dani |
 | H-24 | B | §20 | La referencia Jakosky & Edwards (2018) está sin identificar bibliográficamente. | Registrar DOI/versión/fecha/página en el modelo científico de S1-16 antes de usarla. | Ciencia |
-| H-25 | A | §1.1, §17 DT-001/002 | «Fijar .NET según Godot» choca con el estado actual: Godot 4.7.x exige mínimo `net8.0`, y .NET 8/9 están fuera de soporte desde el 10-nov-2026; Godot 4.8 (beta) sube el mínimo a `net10.0`. | ADR-001/002: SDK 10 LTS, libs `net10.0`, decisión final de Game en T08. | Dani |
+| H-25 | A | §1.1, §17 DT-001/002 | «Fijar .NET según Godot» choca con el estado actual: Godot 4.7.x exige mínimo `net8.0`, y .NET 8/9 están fuera de soporte desde el 10-nov-2026; Godot 4.8 (beta) sube el mínimo a `net10.0`. | **Cerrado** (2026-11-16) en [ADR-001](ADR/ADR-001-version-godot.md) y [ADR-002](ADR/ADR-002-version-dotnet.md): SDK 10.0.404 (LTS), librerías y CLI en `net10.0`; la versión definitiva de `Martis.Game` se fija en T08. | Dani |
 | H-26 | B | §7.1 | `GridIndex` fija `Width=64`/`Height=64` como constantes, pero la configuración admite `MapWidth/MapHeight`. | Usar dimensiones de configuración. | Motor |
 | H-27 | B | §1.2 | No hay proyectos de test para Contracts ni Cli. | Añadir `Martis.Contracts.Tests`/`Martis.Cli.Tests` o cubrirlos desde Integration.Tests (propuesta Sprint 1). | QA |
 | H-28 | M | §5.4 | Se listan 8 interfaces de sistema y 15 pasos de tick; no se define el orden/registro canónico ni qué sistema ejecuta cada paso (p. ej. «Publicar snapshot», «Actualizar estadísticas»). | Pipeline fijo y versionado de sistemas (S1-22) con test de orden. | Motor |
@@ -38,3 +38,27 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 - Los objetivos de §7.4 (10.000 poblaciones, 1.000 ticks < 10 s, snapshot < 1 s, < 256 MB) son **objetivos de ingeniería, no mediciones** (el propio TDD lo dice). Ningún documento de planificación los trata como resultados.
 - Los números de ejemplo del TDD (genoma A01, 10.000 → 9.900 + 100, `mutation_rate` 0,0001, límite 32) son **ilustrativos** y no valores científicos.
 - Las versiones de Godot y .NET de ADR-001/002 están verificadas contra fuentes oficiales con fecha 2026-11-16; las versiones de paquetes NuGet **no** se han verificado.
+
+## Deuda documental
+
+- `GDD.md` — pendiente.
+- `SCIENCE_MODEL.md` — la hace MARTIS Ciencia en T05/T06.
+- `DATA_DICTIONARY.md` — empieza en T02 y se completa en T03. Los tipos que introduce T02 están en [DATA_DICTIONARY.md](DATA_DICTIONARY.md).
+
+## Deuda de modelo (ronda 2)
+
+- R2-10. Solo temperatura y presión distinguen «sin asignar». El resto de campos ambientales nace en 0. El cargador de T03 tiene que rellenarlos todos de forma explícita.
+- R2-11. `MaintenanceCost` y `ReproductionRate` están en [0, 1]: el primero es una fracción de `EnergyReserveJ` por sol y el segundo una tasa per cápita por tick (0 significa que no se reproduce). Se calibran en T05/T06.
+- R2-12. El agua adsorbida o hidratada queda fuera de v0. DOM-VAL-012 comprueba la contabilidad contra el total registrado y no un doble conteo cuyo total se haya inflado. La conservación entre ticks se comprueba en T04.
+- R2-13. `BiomassKg` tiene pendiente declarar si es masa seca o húmeda, junto a la tabla de especies de los depósitos.
+- R2-14. PAR queda para T05/T06.
+- R2-15. La atenuación exponencial de la dosis es `MODEL_ASSUMPTION` y se decide en T05.
+
+## Obligaciones del cargador de T03
+
+- Rechazar valores sin `classification` o sin `source`.
+- Avisar si una celda `Regional` lleva un valor `planetary_mean`.
+- Convertir datos intensivos a kg por celda con la geometría del escenario.
+- Rellenar explícitamente todos los campos de `EnvironmentState` (R2-10).
+- Guardar el valor nativo de la fuente con su clasificación (p. ej. Hassler 0,210 mGy/día, `SCIENTIFIC_MEASURED`) y el valor por sol aparte, como derivado, con la conversión `MODEL_ASSUMPTION` (R3-07). En este PR solo queda anotado.
+- Citar el UV de REMS con Viúdez-Moreiras et al. 2025, doi:10.1073/pnas.2426611122 (R3-09). En este PR solo queda anotado.
