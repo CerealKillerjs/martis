@@ -198,7 +198,7 @@ public sealed class MutationSystem(MetabolismWorkspace workspace) : ISimulationS
             parent.EnergyReserveJ -= reserve;
             parent.Abundance = parent.BiomassKg / organism.Kinetics.IndividualMassKg;
 
-            var id = state.Populations.Max(population => population.Id.Value) + 1L;
+            var id = state.AllocatePopulationId();
             state.Populations.Add(new Population(new PopulationId(id), parent.OrganismId, parent.CellIndex, genome)
             {
                 BiomassKg = biomass,

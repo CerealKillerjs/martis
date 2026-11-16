@@ -16,6 +16,7 @@ namespace Martis.Simulation.Engine;
 internal sealed class StateCheckpoint
 {
     private readonly long _tick;
+    private readonly long _nextPopulationId;
     private readonly CellCopy[] _cells;
     private readonly PopulationCopy[] _populations;
     private readonly RngStreamState _random;
@@ -26,9 +27,11 @@ internal sealed class StateCheckpoint
         CellCopy[] cells,
         PopulationCopy[] populations,
         RngStreamState random,
-        ISimulationCommand[] commands)
+        ISimulationCommand[] commands,
+        long nextPopulationId)
     {
         _tick = tick;
+        _nextPopulationId = nextPopulationId;
         _cells = cells;
         _populations = populations;
         _random = random;
@@ -49,7 +52,7 @@ internal sealed class StateCheckpoint
             populations[i] = PopulationCopy.Capture(state.Populations[i]);
         }
 
-        return new StateCheckpoint(state.Tick, cells, populations, random.ExportState(), commands.ToArray());
+        return new StateCheckpoint(state.Tick, cells, populations, random.ExportState(), commands.ToArray(), state.NextPopulationId);
     }
 
     public void Restore(SimulationState state, RngStreams random, Queue<ISimulationCommand> commands)
@@ -60,6 +63,7 @@ internal sealed class StateCheckpoint
         }
 
         state.Tick = _tick;
+        state.NextPopulationId = _nextPopulationId;
         for (var i = 0; i < _cells.Length; i++)
         {
             _cells[i].Restore(state.Environment[i], state.Resources[i], state.AllocationBuffers[i], state.WaterBudgets[i], state.MassLedgers[i]);

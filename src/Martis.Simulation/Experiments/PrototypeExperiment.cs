@@ -25,6 +25,28 @@ public sealed record ExperimentRequest(
 {
     /// <summary>Populations inoculated before the first tick, applied in list order (TDD §5.1).</summary>
     public IReadOnlyList<PopulationIntroduction> Introductions { get; init; } = [];
+
+    /// <summary>
+    /// Saved state to continue from (T07). The run restores it before any introduction and
+    /// then advances <see cref="Ticks"/> more ticks. Its world seed must be <see cref="Seed"/>.
+    /// </summary>
+    public StateSnapshot? Resume { get; init; }
+
+    /// <summary>Ticks between saved snapshots when a save sink is given; 0 saves only the final state.</summary>
+    public int SnapshotIntervalTicks { get; init; }
+}
+
+/// <summary>
+/// Where a run puts its save data (T07, TDD §9.2): full snapshots every interval and the
+/// events between them. The CLI writes them to SQLite; Simulation does not know the store.
+/// </summary>
+public interface ISaveSink
+{
+    /// <summary>A binary payload from <see cref="StateSnapshotBinary.Write"/>.</summary>
+    void SaveSnapshot(long tick, string schemaVersion, byte[] payload);
+
+    /// <summary>One event of the tick, as a JSON object.</summary>
+    void RecordEvent(long tick, string eventType, string payloadJson);
 }
 
 /// <summary>
@@ -85,7 +107,8 @@ public static class PrototypeExperiment
         ExperimentRequest request,
         MarsBaselineScenario scenario,
         Func<MarsBaselineScenario, ulong, SimulationEngine>? engineFactory = null,
-        Biology.BiologyCatalog? biology = null)
+        Biology.BiologyCatalog? biology = null,
+        ISaveSink? save = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(scenario);
@@ -112,6 +135,16 @@ public static class PrototypeExperiment
         else
         {
             engine = MarsBaselineWorld.Create(scenario, request.Seed);
+        }
+
+        if (request.Resume is { } resume)
+        {
+            if (resume.Configuration.WorldSeed != request.Seed)
+            {
+                throw new ArgumentException("The saved state was made with another seed.", nameof(request));
+            }
+
+            resume.Restore(engine);
         }
 
         foreach (var introduction in request.Introductions)
@@ -153,6 +186,7 @@ public static class PrototypeExperiment
 
         var initialViolations = Domain.Validation.SimulationValidator.Validate(engine.State);
         string? failure = null;
+        long? lastSaved = null;
         if (initialViolations.Count > 0)
         {
             failure = $"initial state failed validation ({Num(initialViolations.Count)} violations)";
@@ -162,6 +196,12 @@ public static class PrototypeExperiment
         {
             AppendHistory(resources, populations, engine.State);
             balance.Row(engine.State, workspace);
+            if (save is not null && request.Resume is null && engine.PendingCommandCount == 0)
+            {
+                Save(save, engine, identity);
+                lastSaved = engine.CurrentTick;
+            }
+
             for (var step = 0; step < request.Ticks; step++)
             {
                 try
@@ -184,6 +224,16 @@ public static class PrototypeExperiment
                 balance.Accumulate(workspace);
                 AppendMutations(mutations, workspace);
                 var tick = engine.CurrentTick;
+                if (save is not null)
+                {
+                    RecordEvents(save, tick, workspace);
+                    if (request.SnapshotIntervalTicks > 0 && tick % request.SnapshotIntervalTicks == 0)
+                    {
+                        Save(save, engine, identity);
+                        lastSaved = tick;
+                    }
+                }
+
                 if (tick % request.HistoryIntervalTicks == 0 || step + 1 == request.Ticks)
                 {
                     AppendHistory(resources, populations, engine.State);
@@ -199,6 +249,11 @@ public static class PrototypeExperiment
         }
 
         var snapshot = StateSnapshot.Capture(engine, identity);
+        if (save is not null && failure is null && lastSaved != engine.CurrentTick)
+        {
+            save.SaveSnapshot(engine.CurrentTick, snapshot.SchemaVersion, StateSnapshotBinary.Write(snapshot));
+        }
+
         var snapshotBytes = StateSnapshotJson.Write(snapshot);
         var snapshotHash = StateSnapshotJson.Sha256Hex(snapshot);
         var succeeded = failure is null;
@@ -341,6 +396,62 @@ public static class PrototypeExperiment
         buffer.WrittenSpan.CopyTo(bytes);
         bytes[^1] = (byte)'\n';
         return bytes;
+    }
+
+    private static void Save(ISaveSink save, SimulationEngine engine, ScenarioIdentity identity)
+    {
+        var snapshot = StateSnapshot.Capture(engine, identity);
+        save.SaveSnapshot(engine.CurrentTick, snapshot.SchemaVersion, StateSnapshotBinary.Write(snapshot));
+    }
+
+    /// <summary>Mutation and extinction events of the tick, as compact JSON objects.</summary>
+    private static void RecordEvents(ISaveSink save, long tick, Biology.MetabolismWorkspace? workspace)
+    {
+        if (workspace is null)
+        {
+            return;
+        }
+
+        foreach (var item in workspace.MutationEvents)
+        {
+            save.RecordEvent(tick, "mutation", Json(writer =>
+            {
+                writer.WriteNumber("cell", item.CellIndex);
+                writer.WriteString("organism", item.OrganismId);
+                writer.WriteNumber("parent_id", item.ParentId);
+                writer.WriteNumber("child_id", item.ChildId);
+                writer.WriteNumber("child_biomass_kg", item.ChildBiomassKg);
+                writer.WriteStartArray("changes");
+                foreach (var change in item.Changes)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("gene", change.GeneId);
+                    writer.WriteNumber("before", change.Before);
+                    writer.WriteNumber("after", change.After);
+                    writer.WriteEndObject();
+                }
+
+                writer.WriteEndArray();
+            }));
+        }
+
+        foreach (var id in workspace.Extinct)
+        {
+            save.RecordEvent(tick, "extinction", Json(writer => writer.WriteNumber("population_id", id)));
+        }
+    }
+
+    private static string Json(Action<Utf8JsonWriter> body)
+    {
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            writer.WriteStartObject();
+            body(writer);
+            writer.WriteEndObject();
+        }
+
+        return Encoding.UTF8.GetString(stream.ToArray());
     }
 
     /// <summary>One row per new variant; <c>changes</c> is <c>GENE:before&gt;after</c> joined by ';'.</summary>

@@ -101,6 +101,7 @@ Convención: «Criterio TDD» es el literal de §16; «Criterio verificable» es
 - **Criterio TDD:** Guardar, cerrar, recuperar y continuar.
 - **Criterio verificable:** test de integración: guardar, reabrir la base, cargar y continuar N ticks produce el mismo estado que ejecutar sin interrumpir (VAL-009 + VAL-010); corromper un byte del último snapshot ⇒ se recupera el anterior; migración inicial de §9.2 aplicada y versionada; H-14 (semilla ulong↔INTEGER) cubierta por test.
 - **Depende de:** T02, T03 (estado estable), T06 recomendado; ADR-004.
+- **Estado:** implementado ([ADR-015](ADR/ADR-015-guardado-sqlite.md), propuesto): formato binario `MRTS` v1 con SHA-256, esquema de estado v2, migraciones 1 (§9.2) y 2, `SaveGameStore`, recuperación del snapshot anterior y `simulate --save/--resume`.
 
 ### T08 — Godot Integration
 - **Contenido (TDD):** Mapa, reloj, estadísticas y controles.

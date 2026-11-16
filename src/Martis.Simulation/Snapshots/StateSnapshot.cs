@@ -83,7 +83,16 @@ public sealed record StateSnapshot(
     IReadOnlyList<PopulationImage> Populations)
 {
     /// <summary>Schema id of this layout. A different layout is a new id, not a silent edit.</summary>
-    public const string CurrentSchemaVersion = "martis-state-v1";
+    public const string CurrentSchemaVersion = "martis-state-v2";
+
+    /// <summary>T04–T06 layout without <see cref="NextPopulationId"/>. Still readable; the id is derived.</summary>
+    public const string SchemaVersionV1 = "martis-state-v1";
+
+    /// <summary>
+    /// Id the next new population receives (schema v2). 0 means unknown: <see cref="Restore"/>
+    /// then uses one above the largest id in <see cref="Populations"/>.
+    /// </summary>
+    public long NextPopulationId { get; init; }
 
     public static StateSnapshot Capture(SimulationEngine engine, ScenarioIdentity? scenario)
     {
@@ -132,7 +141,10 @@ public sealed record StateSnapshot(
             state.Tick,
             engine.Random.ExportState(),
             cells,
-            populations);
+            populations)
+        {
+            NextPopulationId = NextId(state.NextPopulationId, populations),
+        };
     }
 
     /// <summary>
@@ -144,7 +156,8 @@ public sealed record StateSnapshot(
     public void Restore(SimulationEngine engine)
     {
         ArgumentNullException.ThrowIfNull(engine);
-        if (!string.Equals(SchemaVersion, CurrentSchemaVersion, StringComparison.Ordinal))
+        if (!string.Equals(SchemaVersion, CurrentSchemaVersion, StringComparison.Ordinal)
+            && !string.Equals(SchemaVersion, SchemaVersionV1, StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Snapshot schema '{SchemaVersion}' is not supported.");
         }
@@ -205,6 +218,8 @@ public sealed record StateSnapshot(
                 });
             }
 
+            state.NextPopulationId = NextId(NextPopulationId, Populations);
+
             var violations = SimulationValidator.Validate(state);
             if (violations.Count > 0)
             {
@@ -217,6 +232,18 @@ public sealed record StateSnapshot(
             engine.Initialize(previousConfiguration);
             throw;
         }
+    }
+
+    /// <summary>The stored next id, raised above every population id in the image.</summary>
+    private static long NextId(long stored, IReadOnlyList<PopulationImage> populations)
+    {
+        var next = Math.Max(1L, stored);
+        foreach (var population in populations)
+        {
+            next = Math.Max(next, population.Id + 1);
+        }
+
+        return next;
     }
 
     private static CellStateImage CaptureCell(

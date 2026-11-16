@@ -1,9 +1,12 @@
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Martis.Persistence.SQLite;
 using Martis.Simulation.Biology;
+using Martis.Simulation.Engine;
 using Martis.Simulation.Experiments;
 using Martis.Simulation.Scenarios;
+using Martis.Simulation.Snapshots;
 
 namespace Martis.Cli;
 
@@ -24,7 +27,9 @@ internal static class SimulateCommand
         "Usage: martis --version\n"
         + "       martis simulate --scenario <id> --seed <ulong> --ticks <int> --output <dir>\n"
         + "                       [--root <repository dir>] [--history-interval <int>]\n"
-        + "                       [--introduce <organism>@<x>,<y>:<kg>]...";
+        + "                       [--introduce <organism>@<x>,<y>:<kg>]...\n"
+        + "                       [--save <file.db> [--save-name <name>] [--snapshot-interval <int>]]\n"
+        + "       martis simulate --scenario <id> --save <file.db> --resume <save id> --ticks <int> --output <dir>";
 
     internal static int Run(ReadOnlySpan<string> args)
     {
@@ -62,17 +67,6 @@ internal static class SimulateCommand
             return RunFailure;
         }
 
-        var request = new ExperimentRequest(
-            options.Scenario,
-            options.Seed,
-            options.Ticks,
-            options.HistoryInterval,
-            new HostInfo(RuntimeInformation.FrameworkDescription, BuildSdk(), RuntimeInformation.RuntimeIdentifier))
-        {
-            Introductions = options.Introductions
-                .Select(item => new PopulationIntroduction(item.Organism, (item.Y * MarsBaselineWorld.Width) + item.X, item.Kg))
-                .ToArray(),
-        };
         foreach (var item in options.Introductions)
         {
             if (!biology.TryGetOrganism(item.Organism, out _))
@@ -83,8 +77,119 @@ internal static class SimulateCommand
             }
         }
 
-        var result = PrototypeExperiment.Run(request, scenario, biology: biology);
+        SaveGameStore? store = null;
+        try
+        {
+            var seed = options.Seed ?? 0UL;
+            StateSnapshot? resume = null;
+            string? saveId = null;
+            if (options.Save is not null)
+            {
+                store = SaveGameStore.Open(options.Save);
+                if (options.Resume is not null)
+                {
+                    var save = store.GetSaveGame(options.Resume);
+                    if (save is null)
+                    {
+                        Console.Error.WriteLine($"Save '{options.Resume}' is not in {options.Save}.");
+                        return RunFailure;
+                    }
 
+                    if (options.Seed is { } given && given != save.WorldSeed)
+                    {
+                        Console.Error.WriteLine($"--seed {given} does not match the save's seed {save.WorldSeed}.");
+                        return InvalidArguments;
+                    }
+
+                    seed = save.WorldSeed;
+                    var recovery = store.LoadLatestValid(save.Id, stored => TryDecode(stored.Payload, out _));
+                    foreach (var tick in recovery.RejectedTicks)
+                    {
+                        Console.Error.WriteLine($"Snapshot at tick {tick} is corrupt; trying the previous one.");
+                    }
+
+                    if (recovery.Snapshot is null || !TryDecode(recovery.Snapshot.Payload, out resume))
+                    {
+                        Console.Error.WriteLine($"Save '{save.Id}' has no valid snapshot.");
+                        return RunFailure;
+                    }
+
+                    if (!string.Equals(resume!.PipelineVersion, SimulationPipeline.BiologyVersion, StringComparison.Ordinal))
+                    {
+                        Console.Error.WriteLine($"The save was made with {resume.PipelineVersion}; this build runs {SimulationPipeline.BiologyVersion}.");
+                        return RunFailure;
+                    }
+
+                    saveId = save.Id;
+                    Console.Error.WriteLine($"Resuming save {save.Id} from tick {resume.Tick}.");
+                }
+                else
+                {
+                    saveId = string.Create(CultureInfo.InvariantCulture, $"save-{store.ListSaveGames().Count + 1}");
+                    store.CreateSaveGame(
+                        saveId,
+                        options.SaveName ?? $"{options.Scenario} seed {seed}",
+                        EngineAssembly.Version,
+                        DataVersion,
+                        seed,
+                        options.Scenario,
+                        SimulationPipeline.BiologyVersion);
+                    Console.Error.WriteLine($"Save id: {saveId}");
+                }
+            }
+
+            var request = new ExperimentRequest(
+                options.Scenario,
+                seed,
+                options.Ticks,
+                options.HistoryInterval,
+                new HostInfo(RuntimeInformation.FrameworkDescription, BuildSdk(), RuntimeInformation.RuntimeIdentifier))
+            {
+                Introductions = options.Introductions
+                    .Select(item => new PopulationIntroduction(item.Organism, (item.Y * MarsBaselineWorld.Width) + item.X, item.Kg))
+                    .ToArray(),
+                Resume = resume,
+                SnapshotIntervalTicks = options.SnapshotInterval,
+            };
+            var sink = store is not null && saveId is not null ? new SqliteSaveSink(store, saveId) : null;
+            var result = PrototypeExperiment.Run(request, scenario, biology: biology, save: sink);
+            return Finish(options, result);
+        }
+        catch (System.Data.Common.DbException exception)
+        {
+            Console.Error.WriteLine($"Save file error: {exception.Message}");
+            return RunFailure;
+        }
+        catch (InvalidOperationException exception) when (store is not null)
+        {
+            Console.Error.WriteLine($"Save error: {exception.Message}");
+            return RunFailure;
+        }
+        finally
+        {
+            store?.Dispose();
+        }
+    }
+
+    /// <summary>Version of the published biology data (<c>*.v1.json</c>) stored in <c>SaveGame.DataVersion</c>.</summary>
+    internal const int DataVersion = 1;
+
+    private static bool TryDecode(byte[] payload, out StateSnapshot? snapshot)
+    {
+        try
+        {
+            snapshot = StateSnapshotBinary.Read(payload);
+            return true;
+        }
+        catch (SnapshotCorruptException)
+        {
+            snapshot = null;
+            return false;
+        }
+    }
+
+    private static int Finish(Options options, ExperimentResult result)
+    {
         try
         {
             Directory.CreateDirectory(options.Output);
@@ -144,9 +249,27 @@ internal static class SimulateCommand
 
     private sealed record Introduction(string Organism, int X, int Y, double Kg);
 
-    private sealed record Options(string Scenario, ulong Seed, int Ticks, string Output, string? Root, int HistoryInterval)
+    private sealed record Options(string Scenario, ulong? Seed, int Ticks, string Output, string? Root, int HistoryInterval)
     {
         public IReadOnlyList<Introduction> Introductions { get; init; } = [];
+
+        public string? Save { get; init; }
+
+        public string? SaveName { get; init; }
+
+        public string? Resume { get; init; }
+
+        public int SnapshotInterval { get; init; }
+    }
+
+    /// <summary>Writes the run's snapshots and events to the SQLite save (T07).</summary>
+    private sealed class SqliteSaveSink(SaveGameStore store, string saveId) : ISaveSink
+    {
+        public void SaveSnapshot(long tick, string schemaVersion, byte[] payload)
+            => store.SaveSnapshot(saveId, tick, schemaVersion, payload);
+
+        public void RecordEvent(long tick, string eventType, string payloadJson)
+            => store.RecordEvent(saveId, tick, eventType, payloadJson);
     }
 
     /// <summary>Parses <c>organism@x,y:kg</c>. Coordinates must lie on the 64×64 grid.</summary>
@@ -177,13 +300,17 @@ internal static class SimulateCommand
 
     private static bool TryParse(ReadOnlySpan<string> args, out Options options)
     {
-        options = new Options(string.Empty, 0, 0, string.Empty, null, PrototypeExperiment.DefaultHistoryIntervalTicks);
+        options = new Options(string.Empty, null, 0, string.Empty, null, PrototypeExperiment.DefaultHistoryIntervalTicks);
         string? scenario = null;
         ulong? seed = null;
         int? ticks = null;
         string? output = null;
         string? root = null;
         int? interval = null;
+        string? save = null;
+        string? saveName = null;
+        string? resume = null;
+        int? snapshotInterval = null;
         var introductions = new List<Introduction>();
 
         for (var i = 0; i < args.Length; i++)
@@ -247,6 +374,40 @@ internal static class SimulateCommand
 
                     interval = parsedInterval;
                     break;
+                case "--save":
+                    if (save is not null || string.IsNullOrWhiteSpace(value))
+                    {
+                        return false;
+                    }
+
+                    save = value;
+                    break;
+                case "--save-name":
+                    if (saveName is not null || string.IsNullOrWhiteSpace(value))
+                    {
+                        return false;
+                    }
+
+                    saveName = value;
+                    break;
+                case "--resume":
+                    if (resume is not null || string.IsNullOrWhiteSpace(value))
+                    {
+                        return false;
+                    }
+
+                    resume = value;
+                    break;
+                case "--snapshot-interval":
+                    if (snapshotInterval is not null
+                        || !int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var parsedSnapshot)
+                        || parsedSnapshot <= 0)
+                    {
+                        return false;
+                    }
+
+                    snapshotInterval = parsedSnapshot;
+                    break;
                 case "--introduce":
                     if (!TryParseIntroduction(value, out var introduction))
                     {
@@ -260,14 +421,21 @@ internal static class SimulateCommand
             }
         }
 
-        if (scenario is null || seed is null || ticks is null || output is null)
+        if (scenario is null || ticks is null || output is null
+            || (seed is null && resume is null)
+            || ((resume is not null || saveName is not null || snapshotInterval is not null) && save is null)
+            || (resume is not null && saveName is not null))
         {
             return false;
         }
 
-        options = new Options(scenario, seed.Value, ticks.Value, output, root, interval ?? PrototypeExperiment.DefaultHistoryIntervalTicks)
+        options = new Options(scenario, seed, ticks.Value, output, root, interval ?? PrototypeExperiment.DefaultHistoryIntervalTicks)
         {
             Introductions = introductions,
+            Save = save,
+            SaveName = saveName,
+            Resume = resume,
+            SnapshotInterval = snapshotInterval ?? 0,
         };
         return true;
     }

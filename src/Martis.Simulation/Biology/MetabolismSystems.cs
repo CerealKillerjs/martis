@@ -128,7 +128,7 @@ public sealed class IntroducePopulationHandler : ICommandHandler
             throw new ArgumentOutOfRangeException(nameof(command), introduce.BiomassKg, "Inoculated biomass must be finite and positive.");
         }
 
-        var nextId = state.Populations.Count == 0 ? 1L : state.Populations.Max(population => population.Id.Value) + 1L;
+        var nextId = state.AllocatePopulationId();
         state.Populations.Add(new Population(
             new PopulationId(nextId),
             organism.Definition.Id,

@@ -53,6 +53,29 @@ public sealed class SimulationState
 
     public long Tick { get; set; }
 
+    /// <summary>
+    /// Id the next new population receives. Kept in the save (schema v2) so an id is
+    /// never reused after an extinction. <see cref="AllocatePopulationId"/> also stays
+    /// above every id in <see cref="Populations"/>.
+    /// </summary>
+    public long NextPopulationId { get; set; } = 1;
+
+    /// <summary>Returns a fresh population id and advances <see cref="NextPopulationId"/>.</summary>
+    public long AllocatePopulationId()
+    {
+        var id = NextPopulationId;
+        foreach (var population in Populations)
+        {
+            if (population.Id.Value >= id)
+            {
+                id = population.Id.Value + 1;
+            }
+        }
+
+        NextPopulationId = id + 1;
+        return id;
+    }
+
     public EnvironmentState[] Environment { get; }
 
     public ResourcePool[] Resources { get; }

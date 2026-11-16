@@ -27,8 +27,11 @@ public static class StateSnapshotJson
     private static readonly string[] RootProperties =
     [
         "schema", "engine_version", "pipeline_version", "prng_algorithm", "scenario",
-        "configuration", "tick", "rng", "resource_columns", "cells", "populations",
+        "configuration", "tick", "next_population_id", "rng", "resource_columns", "cells", "populations",
     ];
+
+    private static readonly string[] RootPropertiesV1 =
+        [.. RootProperties.Where(name => name != "next_population_id")];
 
     private static readonly string[] ScenarioProperties = ["id", "name", "data_version", "sep_enabled"];
 
@@ -71,6 +74,11 @@ public static class StateSnapshotJson
         Line(text, "scenario", Compact(writer => WriteScenario(writer, snapshot.Scenario)), last: false);
         Line(text, "configuration", Compact(writer => WriteConfiguration(writer, snapshot.Configuration)), last: false);
         Line(text, "tick", Compact(writer => writer.WriteNumberValue(snapshot.Tick)), last: false);
+        if (!string.Equals(snapshot.SchemaVersion, StateSnapshot.SchemaVersionV1, StringComparison.Ordinal))
+        {
+            Line(text, "next_population_id", Compact(writer => writer.WriteNumberValue(snapshot.NextPopulationId)), last: false);
+        }
+
         Line(text, "rng", Compact(writer => WriteRandom(writer, snapshot.Random)), last: false);
         Line(text, "resource_columns", Compact(writer => WriteNames(writer, ResourceColumns.Names)), last: false);
         Block(text, "cells", snapshot.Cells.Count, i => Compact(writer => WriteCell(writer, i, snapshot.Cells[i])), last: false);
@@ -89,12 +97,17 @@ public static class StateSnapshotJson
             utf8.ToArray(),
             new JsonDocumentOptions { AllowTrailingCommas = false, CommentHandling = JsonCommentHandling.Disallow });
         var root = document.RootElement;
-        Expect(root, RootProperties, "snapshot");
-        var schema = String(root, "schema");
-        if (!string.Equals(schema, StateSnapshot.CurrentSchemaVersion, StringComparison.Ordinal))
+        var schema = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("schema", out var schemaElement) && schemaElement.ValueKind == JsonValueKind.String
+            ? schemaElement.GetString()
+            : null;
+        var v1 = string.Equals(schema, StateSnapshot.SchemaVersionV1, StringComparison.Ordinal);
+        if (!v1 && !string.Equals(schema, StateSnapshot.CurrentSchemaVersion, StringComparison.Ordinal))
         {
+            Expect(root, RootProperties, "snapshot");
             throw new FormatException($"Snapshot schema '{schema}' is not supported.");
         }
+
+        Expect(root, v1 ? RootPropertiesV1 : RootProperties, "snapshot");
 
         var columns = root.GetProperty("resource_columns").EnumerateArray().Select(item => item.GetString()).ToArray();
         if (!columns.SequenceEqual(ResourceColumns.Names, StringComparer.Ordinal))
@@ -105,7 +118,7 @@ public static class StateSnapshotJson
         var cells = root.GetProperty("cells").EnumerateArray().Select((cell, index) => ReadCell(cell, index)).ToArray();
         var populations = root.GetProperty("populations").EnumerateArray().Select(ReadPopulation).ToArray();
         return new StateSnapshot(
-            schema,
+            schema!,
             String(root, "engine_version"),
             String(root, "pipeline_version"),
             String(root, "prng_algorithm"),
@@ -114,7 +127,10 @@ public static class StateSnapshotJson
             root.GetProperty("tick").GetInt64(),
             ReadRandom(root.GetProperty("rng")),
             cells,
-            populations);
+            populations)
+        {
+            NextPopulationId = v1 ? 0 : root.GetProperty("next_population_id").GetInt64(),
+        };
     }
 
     private static void Line(StringBuilder text, string name, string value, bool last)

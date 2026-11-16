@@ -188,7 +188,9 @@ public sealed class CliSmokeTests
         "Usage: martis --version\n"
         + "       martis simulate --scenario <id> --seed <ulong> --ticks <int> --output <dir>\n"
         + "                       [--root <repository dir>] [--history-interval <int>]\n"
-        + "                       [--introduce <organism>@<x>,<y>:<kg>]...";
+        + "                       [--introduce <organism>@<x>,<y>:<kg>]...\n"
+        + "                       [--save <file.db> [--save-name <name>] [--snapshot-interval <int>]]\n"
+        + "       martis simulate --scenario <id> --save <file.db> --resume <save id> --ticks <int> --output <dir>";
 
     private static string Normalize(string text)
     {
@@ -205,7 +207,7 @@ public sealed class CliSmokeTests
             .Trim();
     }
 
-    private static async Task<(int ExitCode, string Stdout, string Stderr)> RunCli(params string[] args)
+    internal static async Task<(int ExitCode, string Stdout, string Stderr)> RunCli(params string[] args)
     {
         var start = new ProcessStartInfo
         {
