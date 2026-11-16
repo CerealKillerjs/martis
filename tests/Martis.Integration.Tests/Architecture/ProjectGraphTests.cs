@@ -38,6 +38,9 @@ public sealed class ProjectGraphTests
         ["Martis.Simulation.Tests"] = ["Martis.Simulation"],
         ["Martis.Persistence.Tests"] = ["Martis.Persistence"],
         ["Martis.Integration.Tests"] = ["Martis.Simulation", "Martis.Persistence", "Martis.Contracts"],
+
+        // T08: the Godot game sits on the same layer as the CLI (ADR-017).
+        ["Martis.Game"] = ["Martis.Simulation", "Martis.Persistence"],
     };
 
     [Fact]
@@ -84,6 +87,7 @@ public sealed class ProjectGraphTests
             ["Martis.Simulation.Tests"] = SimulationTestPackages,
             ["Martis.Persistence.Tests"] = TestPackages,
             ["Martis.Integration.Tests"] = TestPackages,
+            ["Martis.Game"] = [],
         };
 
         foreach (var (name, document) in LoadProjects())
@@ -112,13 +116,16 @@ public sealed class ProjectGraphTests
     }
 
     [Fact]
-    public void SolutionDoesNotContainTheGodotGame()
+    public void TheGodotGameStaysOutOfTheSolution()
     {
         var solution = File.ReadAllText(Path.Combine(RepoLayout.Root, "MARTIS.sln"));
         Assert.DoesNotContain("Martis.Game", solution, StringComparison.OrdinalIgnoreCase);
-        Assert.False(
-            Directory.Exists(Path.Combine(RepoLayout.Root, "src", "Martis.Game")),
-            "src/Martis.Game must stay out of the repository until T08.");
+
+        // T08 (ADR-017): the game is a Godot .NET project of its own, built by Godot.NET.Sdk.
+        var game = Path.Combine(RepoLayout.Root, "src", "Martis.Game");
+        Assert.True(File.Exists(Path.Combine(game, "project.godot")), "src/Martis.Game/project.godot is missing.");
+        var project = XDocument.Load(Path.Combine(game, "Martis.Game.csproj"));
+        Assert.StartsWith("Godot.NET.Sdk/", project.Root!.Attribute("Sdk")!.Value, StringComparison.Ordinal);
     }
 
     private static Dictionary<string, XDocument> LoadProjects()

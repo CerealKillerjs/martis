@@ -1,6 +1,8 @@
 # MARTIS
 
-Motor de simulación científica en C# / .NET. Este repositorio contiene el motor y el ejecutable sin interfaz. La aplicación Godot (`Martis.Game`) no forma parte de la solución: el motor se compila y se prueba sin Godot.
+Motor de simulación científica en C# / .NET y juego 3D en Godot 4.7.2 (`src/Martis.Game`). El juego no forma parte de la solución: el motor se compila y se prueba sin Godot.
+
+![Colonia FIRST COLONY al atardecer](docs/images/t08-atardecer.png)
 
 Este árbol corresponde al hito **T01 Infrastructure**, al modelo de dominio de **T02**, a la base de motor de **T03a**, al escenario MarsBaseline v0.4 de **T03b** y al prototipo CLI del TDD §19 (S1-31 a S1-33): snapshot completo del estado, exportación JSON canónica y el comando `simulate` que carga el escenario, avanza los ticks, valida y guarda los resultados. **T04** añade el motor metabólico: especies y reacciones balanceadas en `data/reactions`, organismos en `data/organisms` y la opción `--introduce` para inocular poblaciones ([ADR-012](docs/ADR/ADR-012-modelo-metabolico.md)). **T05** añade mortalidad, inanición, capacidad de carga, extinción y reciclaje ([ADR-013](docs/ADR/ADR-013-dinamica-de-poblaciones.md)). **T06** añade mutación, deriva, fusión de variantes y `mutations.csv` ([ADR-014](docs/ADR/ADR-014-evolucion.md)). **T07** añade el guardado en SQLite con `--save`, `--snapshot-interval` y `--resume` ([ADR-015](docs/ADR/ADR-015-guardado-sqlite.md)). **T09** añade el descomponedor y el extremófilo, el diseño de genomas y la misión FIRST COLONY ([ADR-016](docs/ADR/ADR-016-ecosistema-y-first-colony.md)).
 
@@ -99,9 +101,11 @@ graph TD
   Contracts[Martis.Contracts] --> Domain
   Persistence --> Contracts
   Persistence --> Domain
+  Game[Martis.Game · Godot] --> Simulation
+  Game --> Persistence
 ```
 
-`Martis.Game` no está en `MARTIS.sln` ni en el árbol (H-17). `benchmarks/` queda para T10.
+`Martis.Game` (juego 3D, T08) está en `src/Martis.Game` pero no en `MARTIS.sln` (H-17). `benchmarks/` queda para T10.
 
 ## Estructura
 
@@ -152,12 +156,28 @@ En `tests/Martis.Integration.Tests`, con el rasgo `Category=Architecture`:
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest`: `actions/setup-dotnet` lee `global.json` y cachea NuGet (`cache: true`, clave `**/packages.lock.json`), luego `dotnet restore MARTIS.sln --locked-mode`. A continuación `git diff --exit-code -- '**/packages.lock.json'` y `git status --porcelain` sobre esos ficheros: el restore con SDK 10.0.404 puede recrear un lock que no estaba en el índice, y el paso falla si el diff no está vacío o si `status` muestra alguno. Después, `dotnet build -c Release --no-restore` y `dotnet test -c Release --no-build`. No instala Godot.
+GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest`: `actions/setup-dotnet` lee `global.json` y cachea NuGet (`cache: true`, clave `**/packages.lock.json`), luego `dotnet restore MARTIS.sln --locked-mode`. A continuación `git diff --exit-code -- '**/packages.lock.json'` y `git status --porcelain` sobre esos ficheros: el restore con SDK 10.0.404 puede recrear un lock que no estaba en el índice, y el paso falla si el diff no está vacío o si `status` muestra alguno. Después, `dotnet build -c Release --no-restore` y `dotnet test -c Release --no-build`. En Linux compila además el juego con `dotnet build src/Martis.Game/Martis.Game.csproj` (Godot.NET.Sdk llega por NuGet). No instala el editor de Godot.
+
+## Juego (T08)
+
+Requisitos: [Godot 4.7.2-stable .NET](https://godotengine.org/download/archive/) y el SDK de .NET 10. Detalle en [ADR-017](docs/ADR/ADR-017-juego-3d-godot.md).
+
+```bash
+dotnet build src/Martis.Game/Martis.Game.csproj
+godot --path src/Martis.Game                       # jugar
+godot --headless --path src/Martis.Game -- --smoke # 30 soles, guardar, cargar; sale con 0
+godot --path src/Martis.Game -- --shot=captura.png --hour=0.7   # demostración y captura
+```
+
+Controles: botón derecho gira la cámara, rueda acerca, botón central o WASD desplaza, Q/E giran. Espacio pausa, 0–4 cambian la capa (temperatura, agua, radiación, biomasa), F5 guarda, F9 carga. Clic izquierdo inspecciona una celda; con «Desplegar» activo, inocula el diseño del laboratorio. Las partidas se guardan en `user://martis.db` con el mismo formato que el CLI.
+
+| Noche | Capa de agua |
+| --- | --- |
+| ![Colonias de noche](docs/images/t08-noche.png) | ![Capa de agua](docs/images/t08-capa-agua.png) |
 
 ## Fuera de este hito
 
 - `EnvironmentSystem` mantiene la temperatura constante (sin ciclos diurno ni estacional). VAL-004 se comprueba en `NextBool`. VAL-010 se comprueba en la misma plataforma. VAL-006..008 siguen pendientes. El trasvase de agua entre compartimentos llega en T04.
-- `Martis.Game`, escenas y el SDK de Godot (T08).
 - `benchmarks/` (T10).
 - Esquema SQLite, migraciones y partidas guardadas (T07). El proyecto de persistencia solo abre una base en memoria para comprobar el paquete.
 - Matriz de invariantes VAL-001..010 (S1-34) y benchmark inicial (S1-35).
@@ -171,5 +191,5 @@ GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest
 - **H-01.** Simulation referencia Contracts, además de Domain.
 - **H-02.** El ciclo se evita dejando los datos en Contracts y la aplicación en Simulation. Sin tipos de comando en este hito.
 - **Roll-forward.** `global.json` usa `latestPatch` con la versión 10.0.404, como indica ADR-002. En la revisión el lead lo nombra H-27.
-- **H-17.** `Martis.Game` sigue fuera de `MARTIS.sln`. La CI no depende de Godot.
+- **H-17.** `Martis.Game` sigue fuera de `MARTIS.sln`. La CI no depende del editor de Godot; desde T08 compila el juego con Godot.NET.Sdk.
 - Los cuatro proyectos de test del brief se mantienen. Contracts y el CLI se cubren desde `Martis.Integration.Tests`. ADR-000 lo actualiza el lead; este PR no lo modifica.

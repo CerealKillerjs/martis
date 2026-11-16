@@ -17,5 +17,6 @@
 - [ADR-014 — Evolución v1: mutación, deriva y variantes (T06)](ADR-014-evolucion.md) (Propuesto)
 - [ADR-015 — Guardado en SQLite, formato binario y recuperación (T07)](ADR-015-guardado-sqlite.md) (Propuesto)
 - [ADR-016 — Ecosistema MVP y misión FIRST COLONY (T09)](ADR-016-ecosistema-y-first-colony.md) (Propuesto)
+- [ADR-017 — Juego 3D en Godot 4.7.2 sobre `GameSession` (T08)](ADR-017-juego-3d-godot.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).

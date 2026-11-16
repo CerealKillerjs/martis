@@ -37,3 +37,6 @@ appsettings.*.local.json
 
 # Salidas del CLI (simulate --output results/...)
 results/
+
+# Godot (src/Martis.Game)
+.godot/

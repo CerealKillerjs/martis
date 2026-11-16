@@ -108,6 +108,7 @@ Convención: «Criterio TDD» es el literal de §16; «Criterio verificable» es
 - **Criterio TDD:** Observar y controlar simulación.
 - **Criterio verificable:** `Main.tscn` arranca con la versión fijada (ADR-001), muestra el mapa 64×64 como textura generada desde datos de celdas, reloj y estadísticas; pausa y cambio de velocidad funcionan (lista de comprobación manual con captura); Godot solo usa comandos/snapshots inmutables (el test de arquitectura prohíbe referencias a estado mutable); ninguna llamada a nodos desde el hilo de simulación.
 - **Depende de:** T03, T07; decisión final de versión Godot/TFM (ADR-001/002, H-25).
+- **Estado:** implementado en 3D ([ADR-017](ADR/ADR-017-juego-3d-godot.md), propuesto) a petición de Dani: relieve procedural, capas de datos 64×64 sobre el terreno, colonias bioluminiscentes, ciclo día/noche, misión, inspector, laboratorio, despliegue, guardado y carga. Godot 4.7.2 con `net10.0`.
 
 ### T09 — Ecosystem MVP
 - **Contenido (TDD):** Tres arquetipos (fotótrofo, descomponedor, extremófilo), reciclaje y ecología.

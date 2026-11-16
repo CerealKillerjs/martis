@@ -1,0 +1,20 @@
+<Project>
+  <!--
+    Martis.Game is built by the Godot .NET SDK, outside MARTIS.sln (ADR-000, ADR-017).
+    This file replaces the repository Directory.Build.props for the game only.
+  -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <Version>0.1.0</Version>
+    <Product>MARTIS</Product>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <!-- Same lock-file rules as the solution (packages.lock.json, locked restore on CI). -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestoreLockedMode>false</RestoreLockedMode>
+    <RestoreLockedMode Condition="'$(CI)' == 'true' Or '$(GITHUB_ACTIONS)' == 'true'">true</RestoreLockedMode>
+    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+  </PropertyGroup>
+</Project>
