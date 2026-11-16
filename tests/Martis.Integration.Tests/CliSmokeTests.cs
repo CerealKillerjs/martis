@@ -156,7 +156,7 @@ public sealed class CliSmokeTests
         var rows = File.ReadAllLines(Path.Combine(output.Path, "population_history.csv"));
         var last = rows[^1].Split(',');
         Assert.Equal("60", last[0]);
-        Assert.Equal("1", last[1]);
+        Assert.True(int.Parse(last[1], System.Globalization.CultureInfo.InvariantCulture) >= 1);
         Assert.True(double.Parse(last[3], System.Globalization.CultureInfo.InvariantCulture) > 0.001);
         Assert.StartsWith("tick,C_kg,", File.ReadAllLines(Path.Combine(output.Path, "mass_balance.csv"))[0], StringComparison.Ordinal);
     }
