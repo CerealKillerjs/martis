@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "first_colony",
+    "name": "FIRST COLONY — 001",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (T09)",
+    "review": "Misión de referencia del TDD B.6. Los umbrales de «mantener varias generaciones» son propuestas (H-19).",
+    "objectives": [
+      {
+        "id": "analyze_region",
+        "type": "action",
+        "action": "analyze-region",
+        "title": "Analizar la región"
+      },
+      {
+        "id": "design_phototroph",
+        "type": "design",
+        "capability": "photoautotrophy",
+        "title": "Diseñar un fotótrofo"
+      },
+      {
+        "id": "run_experiment",
+        "type": "action",
+        "action": "run-experiment",
+        "title": "Experimentar antes de desplegar"
+      },
+      {
+        "id": "deploy_colony",
+        "type": "deploy",
+        "capability": "photoautotrophy",
+        "title": "Desplegar la colonia"
+      },
+      {
+        "id": "sustain_generations",
+        "type": "sustain",
+        "capability": "photoautotrophy",
+        "min_biomass": "mission.first_colony.min_biomass_kg",
+        "sols": "mission.first_colony.sustain_sols",
+        "title": "Mantener la población varias generaciones"
+      },
+      {
+        "id": "observe_mutations",
+        "type": "mutations",
+        "count": "mission.first_colony.mutations",
+        "title": "Observar mutaciones"
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.first_colony.min_biomass_kg",
+      "field": "min_biomass_kg",
+      "value": 0.1,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para H-19; Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa fotótrofa total mínima para contar un sol como sostenido.",
+      "range": [
+        1e-12,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.first_colony.sustain_sols",
+      "field": "sustain_sols",
+      "value": 200.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para H-19; Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles seguidos por encima del mínimo. Con una tasa neta de ~2 %/sol son varias generaciones de la biomasa.",
+      "range": [
+        1,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.first_colony.mutations",
+      "field": "mutations",
+      "value": 1.0,
+      "unit": "variantes",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para H-19; Dani/Ciencia deben confirmarlo.",
+      "rationale": "Variantes nuevas que hay que observar.",
+      "range": [
+        1,
+        1000000.0
+      ]
+    }
+  ]
+}

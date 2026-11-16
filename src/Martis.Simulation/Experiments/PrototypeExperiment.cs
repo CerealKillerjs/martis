@@ -34,6 +34,12 @@ public sealed record ExperimentRequest(
 
     /// <summary>Ticks between saved snapshots when a save sink is given; 0 saves only the final state.</summary>
     public int SnapshotIntervalTicks { get; init; }
+
+    /// <summary>Mission to follow during the run (T09); null runs without one.</summary>
+    public Missions.MissionDefinition? Mission { get; init; }
+
+    /// <summary>Player actions reported to the mission before the first tick (for example <c>analyze-region</c>).</summary>
+    public IReadOnlyList<string> MissionActions { get; init; } = [];
 }
 
 /// <summary>
@@ -54,7 +60,11 @@ public interface ISaveSink
 /// <paramref name="OrganismId"/> placed in <paramref name="CellIndex"/> before tick 1.
 /// Hosts use this instead of the Contracts command, so they depend on Simulation only.
 /// </summary>
-public sealed record PopulationIntroduction(string OrganismId, int CellIndex, double BiomassKg);
+public sealed record PopulationIntroduction(
+    string OrganismId,
+    int CellIndex,
+    double BiomassKg,
+    IReadOnlyDictionary<string, double>? GeneOverrides = null);
 
 /// <summary>One output file, as bytes. The host decides where to write it.</summary>
 public sealed record ExperimentFile(string Name, byte[] Content);
@@ -93,6 +103,9 @@ public static class PrototypeExperiment
     public const string LogFile = "simulation.log";
     public const string MassBalanceFile = "mass_balance.csv";
     public const string MutationsFile = "mutations.csv";
+
+    /// <summary>Written only when the request names a mission.</summary>
+    public const string MissionFile = "mission.json";
 
     /// <summary>Files every run produces, in write order.</summary>
     public static IReadOnlyList<string> FileNames { get; } =
@@ -150,7 +163,19 @@ public static class PrototypeExperiment
         foreach (var introduction in request.Introductions)
         {
             engine.ApplyCommand(new Martis.Contracts.Commands.IntroducePopulationCommand(
-                introduction.OrganismId, introduction.CellIndex, introduction.BiomassKg));
+                introduction.OrganismId, introduction.CellIndex, introduction.BiomassKg, introduction.GeneOverrides));
+        }
+
+        Missions.MissionTracker? mission = null;
+        var reported = new HashSet<string>(StringComparer.Ordinal);
+        if (request.Mission is { } definition)
+        {
+            mission = new Missions.MissionTracker(definition, biology ?? workspace?.Catalog
+                ?? throw new ArgumentException("A mission needs the biology catalog.", nameof(request)));
+            foreach (var action in request.MissionActions)
+            {
+                mission.RecordAction(action, engine.CurrentTick);
+            }
         }
 
         var balance = new MassBalanceWriter(biology ?? workspace?.Catalog);
@@ -224,6 +249,12 @@ public static class PrototypeExperiment
                 balance.Accumulate(workspace);
                 AppendMutations(mutations, workspace);
                 var tick = engine.CurrentTick;
+                if (mission is not null)
+                {
+                    mission.Observe(engine.State, workspace);
+                    LogMission(log, mission, reported);
+                }
+
                 if (save is not null)
                 {
                     RecordEvents(save, tick, workspace);
@@ -273,6 +304,11 @@ public static class PrototypeExperiment
             new ExperimentFile(MutationsFile, utf8.GetBytes(mutations.ToString())),
             new ExperimentFile(LogFile, utf8.GetBytes(log.ToString())),
         };
+        if (mission is not null)
+        {
+            files = [.. files.Take(files.Length - 1), new ExperimentFile(MissionFile, MissionJson(mission)), files[^1]];
+        }
+
         return new ExperimentResult(succeeded, engine.CurrentTick, failure, files);
     }
 
@@ -396,6 +432,68 @@ public static class PrototypeExperiment
         buffer.WrittenSpan.CopyTo(bytes);
         bytes[^1] = (byte)'\n';
         return bytes;
+    }
+
+    private static void LogMission(Log log, Missions.MissionTracker mission, HashSet<string> reported)
+    {
+        foreach (var status in mission.Status())
+        {
+            if (status.CompletedTick is { } tick && reported.Add(status.Id))
+            {
+                log.Line($"mission {mission.Definition.Id} objective {status.Id} completed tick={Num(tick)}");
+            }
+        }
+
+        if (mission.IsComplete && reported.Add("*"))
+        {
+            log.Line($"mission {mission.Definition.Id} complete tick={Num(mission.CompletedTick!.Value)}");
+        }
+    }
+
+    private static byte[] MissionJson(Missions.MissionTracker mission)
+    {
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }))
+        {
+            writer.WriteStartObject();
+            writer.WriteString("mission", mission.Definition.Id);
+            writer.WriteString("name", mission.Definition.Name);
+            writer.WriteBoolean("complete", mission.IsComplete);
+            if (mission.CompletedTick is { } done)
+            {
+                writer.WriteNumber("completed_tick", done);
+            }
+            else
+            {
+                writer.WriteNull("completed_tick");
+            }
+
+            writer.WriteStartArray("objectives");
+            foreach (var status in mission.Status())
+            {
+                writer.WriteStartObject();
+                writer.WriteString("id", status.Id);
+                writer.WriteString("title", status.Title);
+                if (status.CompletedTick is { } tick)
+                {
+                    writer.WriteNumber("completed_tick", tick);
+                }
+                else
+                {
+                    writer.WriteNull("completed_tick");
+                }
+
+                writer.WriteNumber("progress", status.Progress);
+                writer.WriteNumber("target", status.Target);
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        stream.WriteByte((byte)'\n');
+        return stream.ToArray();
     }
 
     private static void Save(ISaveSink save, SimulationEngine engine, ScenarioIdentity identity)

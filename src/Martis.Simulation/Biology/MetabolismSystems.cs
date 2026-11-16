@@ -3,6 +3,7 @@ using Martis.Domain.Biology;
 using Martis.Domain.Chemistry;
 using Martis.Domain.Common;
 using Martis.Domain.Environment;
+using Martis.Domain.Genetics;
 using Martis.Domain.Validation;
 using Martis.Domain.World;
 using Martis.Simulation.Commands;
@@ -133,7 +134,7 @@ public sealed class IntroducePopulationHandler : ICommandHandler
             new PopulationId(nextId),
             organism.Definition.Id,
             introduce.CellIndex,
-            organism.Definition.BaseGenome.BaseGenome)
+            DesignedGenome(organism, introduce.GeneOverrides))
         {
             BiomassKg = introduce.BiomassKg,
             Abundance = introduce.BiomassKg / organism.Kinetics.IndividualMassKg,
@@ -142,6 +143,29 @@ public sealed class IntroducePopulationHandler : ICommandHandler
             Viability = 1.0,
         });
         _workspace.PendingInflowKg += introduce.BiomassKg;
+    }
+
+    /// <summary>The base genome with the player's overrides. An unknown gene or a value outside [0, 1] is an error.</summary>
+    internal static Genome DesignedGenome(OrganismModel organism, IReadOnlyDictionary<string, double>? overrides)
+    {
+        var genome = organism.Definition.BaseGenome.BaseGenome;
+        if (overrides is null || overrides.Count == 0)
+        {
+            return genome;
+        }
+
+        foreach (var name in overrides.Keys.Order(StringComparer.Ordinal))
+        {
+            if (!genome.TryGetExpression(new GeneId(name), out _))
+            {
+                throw new ArgumentException($"Organism '{organism.Id}' has no gene '{name}'.", nameof(overrides));
+            }
+        }
+
+        return new Genome(genome.Expressions.Select(gene =>
+            overrides.TryGetValue(gene.GeneId.Value, out var value)
+                ? new GeneExpression(gene.GeneId, value)
+                : gene));
     }
 }
 

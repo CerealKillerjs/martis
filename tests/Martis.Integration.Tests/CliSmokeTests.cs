@@ -37,6 +37,10 @@ public sealed class CliSmokeTests
         yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "1", "--ticks", "1", "--output", "out", "--introduce", "phototroph_a01@64,0:1" }];
         yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "1", "--ticks", "1", "--output", "out", "--introduce", "phototroph_a01@1,1:-1" }];
         yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "1", "--ticks", "1", "--output", "out", "--introduce", "nobody@1,1:1" }];
+        yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "1", "--ticks", "1", "--output", "out", "--introduce", "phototroph_a01@1,1:1+UV_PROTECTION=2" }];
+        yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "1", "--ticks", "1", "--output", "out", "--introduce", "phototroph_a01@1,1:1+WINGS=0.5" }];
+        yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "1", "--ticks", "1", "--output", "out", "--mission", "olympus" }];
+        yield return [new[] { "simulate", "--scenario", "mars_baseline", "--seed", "1", "--ticks", "1", "--output", "out", "--mission-action", "analyze-region" }];
     }
 
     [Fact]
@@ -188,7 +192,8 @@ public sealed class CliSmokeTests
         "Usage: martis --version\n"
         + "       martis simulate --scenario <id> --seed <ulong> --ticks <int> --output <dir>\n"
         + "                       [--root <repository dir>] [--history-interval <int>]\n"
-        + "                       [--introduce <organism>@<x>,<y>:<kg>]...\n"
+        + "                       [--introduce <organism>@<x>,<y>:<kg>[+<GENE>=<0..1>]...]...\n"
+        + "                       [--mission first_colony [--mission-action <action>]...]\n"
         + "                       [--save <file.db> [--save-name <name>] [--snapshot-interval <int>]]\n"
         + "       martis simulate --scenario <id> --save <file.db> --resume <save id> --ticks <int> --output <dir>";
 

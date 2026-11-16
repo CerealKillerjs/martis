@@ -114,6 +114,7 @@ Convención: «Criterio TDD» es el literal de §16; «Criterio verificable» es
 - **Criterio TDD:** Completar FIRST COLONY.
 - **Criterio verificable:** los tres arquetipos definidos en `data/organisms/` con parámetros clasificados; reciclaje de biomasa muerta conserva elementos (VAL-007); la misión FIRST COLONY (B.6: analizar región, diseñar fotótrofo, experimentar, desplegar, mantener varias generaciones, observar mutaciones) se completa en un escenario con semilla. **Umbrales de «mantener varias generaciones» pendientes de definir (H-19).**
 - **Depende de:** T06, T08.
+- **Estado:** motor implementado ([ADR-016](ADR/ADR-016-ecosistema-y-first-colony.md), propuesto): descomponedor D01 y extremófilo E01, ciclo de carbono y agua cerrado, diseño de genoma y misión FIRST COLONY completable con semilla en el CLI (`--mission first_colony`). La parte jugable va en T08. Umbrales H-19 propuestos.
 
 ### T10 — Optimization
 - **Contenido (TDD):** Benchmarks y perfiles.

@@ -57,6 +57,10 @@ public sealed record OrganismModel(
     OrganismKinetics Kinetics)
 {
     public string Id => Definition.Id.Value;
+
+    /// <summary>True when the base genome has <paramref name="gene"/> (used to check a player design).</summary>
+    public bool HasGene(string gene)
+        => Definition.BaseGenome.BaseGenome.Expressions.Any(item => string.Equals(item.GeneId.Value, gene, StringComparison.Ordinal));
 }
 
 /// <summary>

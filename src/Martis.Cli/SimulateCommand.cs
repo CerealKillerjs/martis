@@ -5,6 +5,7 @@ using Martis.Persistence.SQLite;
 using Martis.Simulation.Biology;
 using Martis.Simulation.Engine;
 using Martis.Simulation.Experiments;
+using Martis.Simulation.Missions;
 using Martis.Simulation.Scenarios;
 using Martis.Simulation.Snapshots;
 
@@ -27,7 +28,8 @@ internal static class SimulateCommand
         "Usage: martis --version\n"
         + "       martis simulate --scenario <id> --seed <ulong> --ticks <int> --output <dir>\n"
         + "                       [--root <repository dir>] [--history-interval <int>]\n"
-        + "                       [--introduce <organism>@<x>,<y>:<kg>]...\n"
+        + "                       [--introduce <organism>@<x>,<y>:<kg>[+<GENE>=<0..1>]...]...\n"
+        + "                       [--mission first_colony [--mission-action <action>]...]\n"
         + "                       [--save <file.db> [--save-name <name>] [--snapshot-interval <int>]]\n"
         + "       martis simulate --scenario <id> --save <file.db> --resume <save id> --ticks <int> --output <dir>";
 
@@ -67,11 +69,33 @@ internal static class SimulateCommand
             return RunFailure;
         }
 
+        MissionDefinition? mission = null;
+        if (options.Mission is not null)
+        {
+            if (!string.Equals(options.Mission, "first_colony", StringComparison.Ordinal))
+            {
+                Console.Error.WriteLine($"Unknown mission '{options.Mission}'. Known: first_colony.");
+                Console.Error.WriteLine(Usage);
+                return InvalidArguments;
+            }
+
+            try
+            {
+                mission = MissionDefinition.LoadPublished(root);
+            }
+            catch (Exception exception) when (exception is IOException or FormatException or InvalidDataException or KeyNotFoundException or InvalidOperationException)
+            {
+                Console.Error.WriteLine($"Mission load failed: {exception.Message}");
+                return RunFailure;
+            }
+        }
+
         foreach (var item in options.Introductions)
         {
-            if (!biology.TryGetOrganism(item.Organism, out _))
+            if (!biology.TryGetOrganism(item.Organism, out var organism)
+                || (item.Genes is not null && item.Genes.Keys.Any(gene => !organism!.HasGene(gene))))
             {
-                Console.Error.WriteLine($"Unknown organism '{item.Organism}'. Known: {string.Join(", ", biology.Organisms.Select(o => o.Id))}.");
+                Console.Error.WriteLine($"Unknown organism or gene in '{item.Organism}'. Known organisms: {string.Join(", ", biology.Organisms.Select(o => o.Id))}.");
                 Console.Error.WriteLine(Usage);
                 return InvalidArguments;
             }
@@ -146,10 +170,12 @@ internal static class SimulateCommand
                 new HostInfo(RuntimeInformation.FrameworkDescription, BuildSdk(), RuntimeInformation.RuntimeIdentifier))
             {
                 Introductions = options.Introductions
-                    .Select(item => new PopulationIntroduction(item.Organism, (item.Y * MarsBaselineWorld.Width) + item.X, item.Kg))
+                    .Select(item => new PopulationIntroduction(item.Organism, (item.Y * MarsBaselineWorld.Width) + item.X, item.Kg, item.Genes))
                     .ToArray(),
                 Resume = resume,
                 SnapshotIntervalTicks = options.SnapshotInterval,
+                Mission = mission,
+                MissionActions = options.MissionActions,
             };
             var sink = store is not null && saveId is not null ? new SqliteSaveSink(store, saveId) : null;
             var result = PrototypeExperiment.Run(request, scenario, biology: biology, save: sink);
@@ -247,7 +273,10 @@ internal static class SimulateCommand
             ?.Value;
     }
 
-    private sealed record Introduction(string Organism, int X, int Y, double Kg);
+    private sealed record Introduction(string Organism, int X, int Y, double Kg)
+    {
+        public IReadOnlyDictionary<string, double>? Genes { get; init; }
+    }
 
     private sealed record Options(string Scenario, ulong? Seed, int Ticks, string Output, string? Root, int HistoryInterval)
     {
@@ -260,6 +289,10 @@ internal static class SimulateCommand
         public string? Resume { get; init; }
 
         public int SnapshotInterval { get; init; }
+
+        public string? Mission { get; init; }
+
+        public IReadOnlyList<string> MissionActions { get; init; } = [];
     }
 
     /// <summary>Writes the run's snapshots and events to the SQLite save (T07).</summary>
@@ -272,29 +305,52 @@ internal static class SimulateCommand
             => store.RecordEvent(saveId, tick, eventType, payloadJson);
     }
 
-    /// <summary>Parses <c>organism@x,y:kg</c>. Coordinates must lie on the 64×64 grid.</summary>
+    /// <summary>
+    /// Parses <c>organism@x,y:kg</c>, optionally followed by <c>+GENE=value</c> designs.
+    /// Coordinates must lie on the 64×64 grid and each gene value in [0, 1].
+    /// </summary>
     private static bool TryParseIntroduction(string text, out Introduction introduction)
     {
         introduction = new Introduction(string.Empty, 0, 0, 0);
-        var at = text.IndexOf('@', StringComparison.Ordinal);
-        var colon = text.LastIndexOf(':');
+        var parts = text.Split('+');
+        var head = parts[0];
+        var at = head.IndexOf('@', StringComparison.Ordinal);
+        var colon = head.LastIndexOf(':');
         if (at <= 0 || colon < at)
         {
             return false;
         }
 
-        var coordinates = text[(at + 1)..colon].Split(',');
+        var coordinates = head[(at + 1)..colon].Split(',');
         if (coordinates.Length != 2
             || !int.TryParse(coordinates[0], NumberStyles.None, CultureInfo.InvariantCulture, out var x)
             || !int.TryParse(coordinates[1], NumberStyles.None, CultureInfo.InvariantCulture, out var y)
             || x >= MarsBaselineWorld.Width || y >= MarsBaselineWorld.Height
-            || !double.TryParse(text[(colon + 1)..], NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var kg)
+            || !double.TryParse(head[(colon + 1)..], NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var kg)
             || !double.IsFinite(kg) || kg <= 0)
         {
             return false;
         }
 
-        introduction = new Introduction(text[..at], x, y, kg);
+        Dictionary<string, double>? genes = null;
+        foreach (var design in parts.Skip(1))
+        {
+            var equals = design.IndexOf('=', StringComparison.Ordinal);
+            if (equals <= 0
+                || !double.TryParse(design[(equals + 1)..], NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var value)
+                || value is < 0.0 or > 1.0)
+            {
+                return false;
+            }
+
+            genes ??= new Dictionary<string, double>(StringComparer.Ordinal);
+            if (!genes.TryAdd(design[..equals], value))
+            {
+                return false;
+            }
+        }
+
+        introduction = new Introduction(head[..at], x, y, kg) { Genes = genes };
         return true;
     }
 
@@ -311,6 +367,8 @@ internal static class SimulateCommand
         string? saveName = null;
         string? resume = null;
         int? snapshotInterval = null;
+        string? mission = null;
+        var actions = new List<string>();
         var introductions = new List<Introduction>();
 
         for (var i = 0; i < args.Length; i++)
@@ -408,6 +466,22 @@ internal static class SimulateCommand
 
                     snapshotInterval = parsedSnapshot;
                     break;
+                case "--mission":
+                    if (mission is not null || string.IsNullOrWhiteSpace(value))
+                    {
+                        return false;
+                    }
+
+                    mission = value;
+                    break;
+                case "--mission-action":
+                    if (string.IsNullOrWhiteSpace(value))
+                    {
+                        return false;
+                    }
+
+                    actions.Add(value);
+                    break;
                 case "--introduce":
                     if (!TryParseIntroduction(value, out var introduction))
                     {
@@ -424,7 +498,8 @@ internal static class SimulateCommand
         if (scenario is null || ticks is null || output is null
             || (seed is null && resume is null)
             || ((resume is not null || saveName is not null || snapshotInterval is not null) && save is null)
-            || (resume is not null && saveName is not null))
+            || (resume is not null && saveName is not null)
+            || (actions.Count > 0 && mission is null))
         {
             return false;
         }
@@ -436,6 +511,8 @@ internal static class SimulateCommand
             SaveName = saveName,
             Resume = resume,
             SnapshotInterval = snapshotInterval ?? 0,
+            Mission = mission,
+            MissionActions = actions,
         };
         return true;
     }
