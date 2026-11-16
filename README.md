@@ -124,7 +124,7 @@ GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest
 
 ## Fuera de este hito
 
-- Motor de ticks, PRNG y escenarios. El estado del mundo y VAL-001..005 ya están en `Martis.Domain`. VAL-006..010 siguen pendientes.
+- Motor de ticks, PRNG y escenarios. El estado del mundo, VAL-001, VAL-002, VAL-003, VAL-005 y las reglas DOM-VAL están en `Martis.Domain` ([ADR-011](docs/ADR/ADR-011-unidades-del-modelo.md), [diccionario](docs/DATA_DICTIONARY.md)). VAL-004 no tiene campo en este hito. VAL-006..010 siguen pendientes. El trasvase de agua entre compartimentos llega en T03/T04.
 - `Martis.Game`, escenas y el SDK de Godot (T08).
 - `benchmarks/` (T10).
 - Esquema SQLite, migraciones y partidas guardadas (T07). El proyecto de persistencia solo abre una base en memoria para comprobar el paquete.

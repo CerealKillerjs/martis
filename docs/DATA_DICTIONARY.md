@@ -1,163 +1,116 @@
 # Diccionario de datos — T02
 
-Tipos que introduce el modelo de dominio (S1-10..S1-14). Los identificadores tipados (`RegionId`, `CellId`, `PopulationId`, `OrganismId`, `GeneId`, `ReactionId`) ya estaban en T01 y no se redefinen aquí.
+Tipos del modelo de dominio. Los identificadores `RegionId`, `CellId`, `PopulationId`, `OrganismId`, `GeneId` y `ReactionId` vienen de T01.
 
-Ningún número de esta tabla es una medición marciana. El 0 con el que nacen las cantidades es el valor no asignado del tipo, no un estado inicial de Marte. Donde la unidad no está fijada, se escribe «pendiente de H-18» o «pendiente de MARTIS Ciencia». No hay factor de conversión ni coeficiente.
+Ningún número de aquí es una medición marciana. Las unidades que fija [ADR-011](ADR/ADR-011-unidades-del-modelo.md) están propuestas: las valida MARTIS Ciencia. Lo que no tiene cifra en esa decisión lleva `TODO: pendiente MARTIS Ciencia` y no se inventa.
 
-Los identificadores VAL-001..005 son los de TDD §10. `CELL-001` es un invariante estructural de este hito, no un VAL del TDD. VAL-006, VAL-007 y VAL-008 no se comprueban: no hay consumo, balance elemental ni balance de energía.
+VAL-001..005 significan solo lo que dice el TDD §10. Las reglas añadidas en este hito son DOM-VAL-001..012. La columna «se parece a» dice qué VAL del TDD recuerda, sin sustituirlo.
+
+VAL-006, VAL-007 y VAL-008 no se comprueban: no hay consumo, balance elemental ni balance de energía.
+
+## Tiempo
+
+| Nombre | Tipo | Unidad | Rango | Invariante |
+| --- | --- | --- | --- | --- |
+| MartianTime.SecondsPerSol | int | s por sol | 88 775, una sola copia en el código | 1 tick = 1 sol. Cita NSSDC pendiente de MARTIS Ciencia |
+
+No hay `DeltaTimeDays` en el código. La edad de la población va en soles.
 
 ## EnvironmentState
 
-Estado ambiental de una celda (TDD §2.2). Clase mutable. `CheckInvariants` rechaza el primer campo que no cumpla el rango.
+| Campo | Tipo | Unidad | Clasificación | Rango válido | Id | Se parece a |
+| --- | --- | --- | --- | --- | --- | --- |
+| TemperatureKelvin | AssignedDouble | K | unidad del TDD §2.2 | unset, o finito y > 0 | DOM-VAL-001 si está asignado y no cumple; DOM-VAL-009 si un escenario cargado lo deja unset | VAL-001, con cota estricta y sin ser un recurso |
+| PressurePascal | AssignedDouble | Pa | unidad del TDD §2.2 | unset, o finito y ≥ 0. El 0 asignado es un dato | DOM-VAL-002; DOM-VAL-009 si el escenario lo deja unset | VAL-001, sin ser un recurso |
+| UvRadiation | double | W/m² en superficie | MODEL_ASSUMPTION | finito y ≥ 0 | DOM-VAL-004 | VAL-001 |
+| IonizingRadiation | double | W/m² en superficie | MODEL_ASSUMPTION | finito y ≥ 0. Unidad dosimétrica pendiente de MARTIS Ciencia | DOM-VAL-004 | VAL-001 |
+| SolarIrradiance | double | W/m² en superficie, no en el tope de la atmósfera | MODEL_ASSUMPTION | finito y ≥ 0 | DOM-VAL-004 | VAL-001 |
+| WaterIce | double | kg por celda | MODEL_ASSUMPTION | finito y ≥ 0. Reserva física; la biología no la consume | DOM-VAL-004 | VAL-001 |
+| WaterVapor | double | kg por celda | MODEL_ASSUMPTION | finito y ≥ 0. Reserva física; la biología no la consume | DOM-VAL-004 | VAL-001 |
+| SoilPorosity | double | fracción adimensional | MODEL_ASSUMPTION | finito y en [0, 1] | DOM-VAL-003 | VAL-005, sin ser un gen |
+| PerchlorateConcentration | double | kg de perclorato por celda | MODEL_ASSUMPTION | finito y ≥ 0. No es una concentración molar | DOM-VAL-004 | VAL-001 |
+| Scope | EnvironmentScope o null | — | — | en un escenario cargado, uno de PlanetaryMean, Regional(SiteId), Lab, Game | DOM-VAL-010 si falta | ninguno de §10 |
 
-| Campo | Tipo | Unidad | Rango válido | Invariante |
-| --- | --- | --- | --- | --- |
-| TemperatureKelvin | double | K | finito y ≥ 0 | VAL-001 |
-| PressurePascal | double | Pa | finito y ≥ 0 | VAL-001 |
-| UvRadiation | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | VAL-001 |
-| IonizingRadiation | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | VAL-001 |
-| SolarIrradiance | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | VAL-001 |
-| WaterIce | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | VAL-001 |
-| WaterVapor | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | VAL-001 |
-| SoilPorosity | double | pendiente de MARTIS Ciencia | finito y ≥ 0. Sin máximo declarado | VAL-001 |
-| PerchlorateConcentration | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | VAL-001 |
+`AssignedDouble` por defecto es unset. Unset no es el número 0: `Set(0)` es otro valor. `CheckInvariants` no exige que temperatura y presión estén asignadas; `SimulationValidator` con `ValidationContext.LoadedScenario` sí. Un mundo sin escenario puede pasar el validador con las dos sin asignar. Ese mismo estado no es un escenario válido.
+
+`SiteId` es un identificador de sitio, distinto de organismo, gen y reacción. `Regional` exige texto.
 
 ## ResourcePool
 
-Depósitos accesibles de una celda (TDD §2.3), no necesariamente la concentración química total. Clase mutable. La unidad de los nueve campos es **pendiente de H-18**.
+Masa en kg por celda. Cada depósito finito y ≥ 0 es **VAL-001** («ningún recurso negativo»). El 0 es una masa asignada, no un hueco.
 
-| Campo | Tipo | Unidad | Rango válido | Invariante |
+| Campo | Tipo | Unidad | Rango | Notas |
 | --- | --- | --- | --- | --- |
-| CarbonDioxide | double | pendiente de H-18 | finito y ≥ 0 | VAL-001 |
-| Water | double | pendiente de H-18 | finito y ≥ 0 | VAL-001 |
-| Oxygen | double | pendiente de H-18 | finito y ≥ 0 | VAL-001 |
-| Nitrogen | double | pendiente de H-18 | finito y ≥ 0 | VAL-001 |
-| Phosphorus | double | pendiente de H-18 | finito y ≥ 0 | VAL-001 |
-| Sulfur | double | pendiente de H-18 | finito y ≥ 0 | VAL-001 |
-| Iron | double | pendiente de H-18 | finito y ≥ 0 | VAL-001 |
-| OrganicCarbon | double | pendiente de H-18 | finito y ≥ 0 | VAL-001 |
-| MineralCarbon | double | pendiente de H-18 | finito y ≥ 0 | VAL-001 |
+| CarbonDioxide, Oxygen, Nitrogen, Phosphorus, Sulfur, Iron, OrganicCarbon, MineralCarbon | double | kg por celda | finito y ≥ 0 | VAL-001 |
+| Water | double | kg por celda | finito y ≥ 0 | Solo el líquido accesible para la biología. No es hielo ni vapor. VAL-001 |
 
-Ninguna población resta de este depósito. La demanda se anota en `AllocationBuffer`.
+La matriz A (`ElementalCompositionMatrix`) guardará las masas molares, clasificación `MODEL_ASSUMPTION`. Todavía no tiene números. TODO: pendiente MARTIS Ciencia.
 
 ## AllocationBuffer
 
-Libro de demanda de una celda (TDD §12.3). Mismos nueve campos, mismo orden, misma unidad (**pendiente de H-18**) y el mismo rango que `ResourcePool`. Invariante VAL-001. Anotar una demanda no modifica el depósito. T02 no reparte ni consume el buffer.
+Misma lista y la misma unidad (kg por celda) que el depósito. Anota demanda y no resta. Un valor no finito o negativo es **DOM-VAL-005**, no VAL-001: no es el depósito.
 
-## NamedQuantity
+## Agua por celda
 
-Par `(Name, Value)` con el nombre del campo y el valor actual. El orden de la lista `Quantities` es el orden de declaración del tipo dueño y el orden en que el validador recorre la celda.
+`CellWaterBudget.RecordedTotalKg` (kg por celda) es el total contable. No es un cuarto stock. Tiene que coincidir con
 
-## GeneExpression
+`ResourcePool.Water + EnvironmentState.WaterIce + EnvironmentState.WaterVapor`
 
-Expresión normalizada de un gen (TDD §2.4). No es una tasa molecular medida.
+sumados en ese orden. Cada término y el total son finitos y ≥ 0. Si el total no cuadra, **DOM-VAL-012**. Se parece a una conservación de masa, no a un VAL del §10: VAL-007 sigue sin implementarse.
 
-| Campo | Tipo | Unidad | Rango válido | Invariante |
+Contar la misma masa en el líquido y en el hielo sin aumentar el total registrado hace que la suma no cuadre: el validador lo ve. Pasar masa de un compartimento a otro, conservándola, llega en T03/T04 y no está en este código.
+
+El depósito no tiene `WaterIce` ni `WaterVapor`. El ambiente no tiene `Water`.
+
+## GeneExpression y Genome
+
+| Campo | Tipo | Unidad | Rango | Invariante |
 | --- | --- | --- | --- | --- |
-| GeneId | GeneId | identificador de contenido | el de T01, incluida la cadena vacía | — |
-| Expression | double | adimensional, peso de modelo | finito y en [0, 1]. −0 es válido | VAL-005 |
+| Expression | double | peso de modelo, adimensional | finito y en [0, 1]. −0 es válido | **VAL-005** |
 
-El constructor lanza `ArgumentOutOfRangeException` fuera de ese intervalo, incluido `NaN` y ±∞.
-
-## Genome
-
-Conjunto de `GeneExpression` sin genes repetidos. La enumeración sigue `GeneId.Value` con orden ordinal (`string.CompareOrdinal`), no el orden de inserción ni un orden por hash. Un genoma vacío es válido. `TryGetExpression` devuelve false si el gen no está; el 0 de salida en ese caso no es una expresión almacenada.
+El genoma no repite `GeneId` y se enumera en orden ordinal.
 
 ## Phenotype
 
-Rasgos derivados (TDD §2.4). No se guarda en `Population`, `SimulationState` ni `OrganismDefinition`. Cada componente es finito y ≥ 0. No hay máximo: la escala biológica no está fijada (pendiente de MARTIS Ciencia).
+No se guarda en la población ni en el estado. Cada componente es finito y ≥ 0. No hay máximo.
 
-| Campo | Tipo | Unidad | Rango válido | Invariante |
-| --- | --- | --- | --- | --- |
-| UvResistance | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | cantidad no negativa |
-| ThermalTolerance | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | cantidad no negativa |
-| DesiccationTolerance | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | cantidad no negativa |
-| PhotosyntheticEfficiency | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | cantidad no negativa |
-| MaintenanceCost | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | cantidad no negativa |
-| ReproductionRate | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | cantidad no negativa |
-| BiofilmProduction | double | pendiente de MARTIS Ciencia | finito y ≥ 0 | cantidad no negativa |
+| Campo | Unidad | Clasificación |
+| --- | --- | --- |
+| MaintenanceCost | adimensional por tick | MODEL_ASSUMPTION |
+| ReproductionRate | adimensional por tick | MODEL_ASSUMPTION |
+| UvResistance, ThermalTolerance, DesiccationTolerance, PhotosyntheticEfficiency, BiofilmProduction | pendiente de MARTIS Ciencia | pendiente de MARTIS Ciencia |
 
-`PhenotypeCalculator` copia la expresión del gen enlazado en `PhenotypeGeneBinding`, sin coeficiente. Un componente sin gen, o un gen que el genoma no tiene, aporta 0 (extremo inferior de VAL-005, no una constante medida). La modulación ambiental no está aplicada (pendiente de MARTIS Ciencia). `null` en el enlace significa «sin gen»; un `GeneId` vacío es un identificador real.
+El calculador copia la expresión del gen enlazado, sin coeficiente. Sin gen, el componente vale 0 (extremo de VAL-005, no una constante medida).
 
 ## Population
 
-Población agregada en una celda (TDD §2.5). No hay objetos individuo. La abundancia puede ser fraccionaria. El fenotipo no se almacena.
+| Campo | Tipo | Unidad | Rango | Id | Se parece a |
+| --- | --- | --- | --- | --- | --- |
+| Abundance | double | recuento equivalente | finito y ≥ 0. El 0 es legal | **VAL-002** | es el VAL-002 |
+| BiomassKg | double | kg | finito y ≥ 0 | **VAL-003** | es el VAL-003 |
+| EnergyReserveJ | double | J | finito y ≥ 0 | DOM-VAL-006 | VAL-002, pero el TDD no llama recurso ni población a la energía |
+| AgeDistributionMeanSols | double | sol | finito y ≥ 0 | DOM-VAL-007 | VAL-002, pero no es una población negativa |
+| Viability | double | fracción del modelo | finito y en [0, 1] | DOM-VAL-008 | VAL-004. El TDD no dice que este campo sea una probabilidad. Definición biológica pendiente de MARTIS Ciencia |
+| CellIndex | int | índice `y * width + x` | dentro de la rejilla | DOM-VAL-011 | ninguno de §10 |
+| Genome | Genome | — | expresiones VAL-005 | VAL-005 | — |
 
-| Campo | Tipo | Unidad | Rango válido | Invariante |
-| --- | --- | --- | --- | --- |
-| Id | PopulationId | identificador de partida | el de T01 | — |
-| OrganismId | OrganismId | identificador de contenido | el de T01 | — |
-| CellIndex | int | índice lineal `y * width + x` | dentro de `[0, width * height)` cuando el mundo lo comprueba | CELL-001 |
-| Genome | Genome | — | no nulo; expresiones según VAL-005 | VAL-005 |
-| Abundance | double | recuento equivalente, adimensional | finito y ≥ 0. El 0 es legal | VAL-002 |
-| BiomassKg | double | kg | finito y ≥ 0 | VAL-003 |
-| EnergyReserveJ | double | J | finito y ≥ 0 | VAL-002. VAL-008 no se evalúa |
-| AgeDistributionMeanDays | double | el nombre del TDD dice días. H-05 sigue abierto: un sol no es un día terrestre. Este tipo no guarda un factor de conversión | finito y ≥ 0 | VAL-002 |
-| Viability | double | fracción del modelo | finito y en [0, 1]. Los extremos son VAL-004, no un umbral medido. Definición biológica pendiente de MARTIS Ciencia | VAL-004 |
+## GridIndex y SimulationState
 
-## OrganismDefinition
+Índice lineal `y * width + x`. Las dimensiones las pasa quien construye el estado. El tipo no contiene el tamaño de ejemplo.
 
-Definición de contenido (TDD §2.4). No crece una población y no guarda un fenotipo.
+H-07: el prototipo habla de una rejilla de 64×64 celdas. Eso es un tamaño de prueba, no una constante del índice. El tamaño físico (metros por celda) no está fijado. No hay difusión.
 
-| Campo | Tipo | Unidad | Rango válido | Invariante |
-| --- | --- | --- | --- | --- |
-| Id | OrganismId | identificador de contenido | el de T01 | — |
-| Name | string | — | no nulo y no vacío | estructural |
-| Category | string | — | no nulo y no vacío | estructural |
-| BaseGenome | GenomeDefinition | — | no nulo | el genoma que envuelve |
-| Metabolism | MetabolismDefinition | — | no nulo | — |
-| Reproduction | ReproductionDefinition | — | no nulo | — |
-
-`GenomeDefinition` guarda el `Genome` base y ningún double propio.
-
-`MetabolismDefinition` guarda `ReactionId` en el orden del llamador, sin repetidos. No hay tasas, rendimientos ni estequiometría (pendiente de MARTIS Ciencia).
-
-`ReproductionDefinition` no tiene campos. No hay tasa ni probabilidad (pendiente de MARTIS Ciencia).
-
-## GridIndex
-
-Coordenada de celda. La anchura y la altura las pasa quien construye el índice (H-26); el tipo no fija un tamaño de mapa.
-
-| Campo | Tipo | Unidad | Rango válido | Invariante |
-| --- | --- | --- | --- | --- |
-| X | int | índice de columna | `0 ≤ X < Width` | fuera de rango lanza `ArgumentOutOfRangeException` |
-| Y | int | índice de fila | `0 ≤ Y < Height` | fuera de rango lanza `ArgumentOutOfRangeException` |
-| Width | int | número de columnas | > 0 | — |
-| Height | int | número de filas | > 0 | — |
-
-`ToLinearIndex` devuelve `Y * Width + X`. Si el producto no cabe en `int`, lanza `OverflowException`.
-
-## SimulationState
-
-Mundo en arrays lineales (TDD §12.2, H-02). `new SimulationState(width, height)` exige las dos dimensiones > 0 y calcula `checked(width * height)` antes de reservar.
-
-| Campo | Tipo | Unidad | Rango válido | Invariante |
-| --- | --- | --- | --- | --- |
-| Width | int | columnas | > 0 | constructor |
-| Height | int | filas | > 0 | constructor |
-| CellCount | int | celdas | `Width * Height`, sin desbordar | — |
-| Tick | long | paso de simulación | el valor que tenga el estado; el validador lo copia en cada violación | — |
-| Environment | EnvironmentState[] | — | longitud `CellCount`, una instancia por celda | VAL-001 en cada campo |
-| Resources | ResourcePool[] | — | longitud `CellCount`, una instancia por celda | VAL-001 en los 9 depósitos |
-| AllocationBuffers | AllocationBuffer[] | — | longitud `CellCount`, alineado con `Resources` | VAL-001. No resta de `Resources` |
-| Populations | List\<Population\> | — | sin entradas nulas. El orden de la lista es el orden de visita | VAL-002..005 y CELL-001 |
-| Statistics | SimulationStatistics | — | no nulo | — |
-
-La celda de índice `i` es `y * Width + x`. Añadir una población a la lista no mueve recursos.
-
-`SimulationStatistics` no declara contadores ni valores medidos. Existe porque §12.2 lo pide en el estado.
+`WaterBudgets` tiene una entrada por celda, alineada con `Resources` y `Environment`.
 
 ## InvariantViolation
 
-Resultado de `SimulationValidator.Validate`. No lanza en la primera violación: devuelve la lista completa, en este orden: celdas por índice lineal ascendente; dentro de la celda, ambiente, depósito y buffer, cada uno en orden de declaración; después las poblaciones en el orden de la lista; dentro de cada población, rango de celda, abundancia, biomasa, reserva de energía, media de edad, viabilidad y genes en orden de `GeneId`.
+| Campo | Significado |
+| --- | --- |
+| InvariantId | `VAL-001`, `VAL-002`, `VAL-003`, `VAL-005` o `DOM-VAL-001`..`DOM-VAL-012`. VAL-004 no lo emite este validador |
+| Tick | el tick del estado |
+| CellIndex | índice lineal |
+| Population | la población, o null |
+| Value | el número que falla. NaN cuando falta temperatura, presión o alcance en un escenario cargado: no es una medición NaN |
+| Quantity | nombre del campo, el `GeneId`, o `GeneId.Empty` |
 
-| Campo | Tipo | Unidad | Rango válido | Invariante |
-| --- | --- | --- | --- | --- |
-| InvariantId | string | — | no vacío. `VAL-001`..`VAL-005` o `CELL-001` | — |
-| Tick | long | paso | el `Tick` del estado en el momento de la comprobación | — |
-| CellIndex | int? | índice lineal | la celda afectada, o el `CellIndex` de la población aunque quede fuera del array. Null si no hay celda | — |
-| Population | PopulationId? | identificador | la población afectada, o null | — |
-| Value | double | la de la cantidad rota | el número que incumplió el rango, sin sustituirlo | — |
-| Quantity | string | — | no vacío. Nombre del campo, el texto del `GeneId`, o `GeneId.Empty` si ese identificador no tiene texto | — |
-
-`Validate(null)` lanza `ArgumentNullException`. Una ranura o una población nula lanza `InvalidOperationException`: es un grafo roto, no un VAL.
+`Validate(state)` mira un mundo. `Validate(state, LoadedScenario)` exige temperatura, presión y alcance en cada celda.
