@@ -139,6 +139,27 @@ public sealed class Rover
         return driven;
     }
 
+    /// <summary>
+    /// Spends a fraction of the battery on an instrument (V2 scanner). Free before landing; refused,
+    /// without spending anything, when the charge is short.
+    /// </summary>
+    public bool Spend(double fraction)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(fraction);
+        if (_lander is null)
+        {
+            return true;
+        }
+
+        if (Battery + 1e-12 < fraction)
+        {
+            return false;
+        }
+
+        Battery = Math.Max(0.0, Battery - fraction);
+        return true;
+    }
+
     /// <summary>True when cell <paramref name="x"/>, <paramref name="y"/> is close enough to seed.</summary>
     public bool CanReach(int x, int y) => DistanceTo(x, y) <= Definition.ReachCells + 1e-9;
 

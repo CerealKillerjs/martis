@@ -1,0 +1,228 @@
+{
+  "metadata": {
+    "schema": "martis.survey",
+    "id": "survey_valle",
+    "name": "Conocimiento del terreno: sonda orbital y escáner del rover",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (V2)",
+    "review": "Documento Maestro v2.0 §2, §6 y §13.2. Valores GAME_BALANCE pendientes de ajuste.",
+    "survey": {
+      "orbital_confidence": "survey.orbital_confidence",
+      "orbital_swath_cells": "survey.orbital_swath",
+      "orbital_sols_per_pass": "survey.orbital_period",
+      "scan_radius_cells": "survey.scan_radius",
+      "scan_peak_confidence": "survey.scan_peak",
+      "scan_falloff": "survey.scan_falloff",
+      "scan_battery_cost": "survey.scan_battery",
+      "passive_radius_cells": "survey.passive_radius",
+      "passive_confidence": "survey.passive_confidence",
+      "estimated_threshold": "survey.estimated",
+      "measured_threshold": "survey.measured"
+    }
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "survey.orbital_confidence",
+      "field": "orbital_confidence",
+      "value": 0.45,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el conocimiento del terreno (V2); Daniel debe ajustarlo jugando.",
+      "rationale": "Confianza que deja una pasada de la sonda orbital: resolución baja, datos estimados.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "survey.orbital_swath",
+      "field": "orbital_swath_cells",
+      "value": 8,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el conocimiento del terreno (V2); Daniel debe ajustarlo jugando.",
+      "rationale": "Ancho de la franja que cubre cada pasada orbital.",
+      "range": [
+        1,
+        64
+      ]
+    },
+    {
+      "id": "survey.orbital_period",
+      "field": "orbital_sols_per_pass",
+      "value": 2,
+      "unit": "soles",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el conocimiento del terreno (V2); Daniel debe ajustarlo jugando.",
+      "rationale": "Soles entre dos pasadas de la sonda orbital sobre la región.",
+      "range": [
+        1,
+        30
+      ]
+    },
+    {
+      "id": "survey.scan_radius",
+      "field": "scan_radius_cells",
+      "value": 4.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el conocimiento del terreno (V2); Daniel debe ajustarlo jugando.",
+      "rationale": "Radio del escáner del rover.",
+      "range": [
+        1.0,
+        12.0
+      ]
+    },
+    {
+      "id": "survey.scan_peak",
+      "field": "scan_peak_confidence",
+      "value": 0.95,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el conocimiento del terreno (V2); Daniel debe ajustarlo jugando.",
+      "rationale": "Confianza del escáner junto al rover.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "survey.scan_falloff",
+      "field": "scan_falloff",
+      "value": 0.25,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el conocimiento del terreno (V2); Daniel debe ajustarlo jugando.",
+      "rationale": "Fracción de confianza que se pierde en el borde del escáner.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "survey.scan_battery",
+      "field": "scan_battery_cost",
+      "value": 0.04,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el conocimiento del terreno (V2); Daniel debe ajustarlo jugando.",
+      "rationale": "Batería del rover que gasta un escaneo.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "survey.passive_radius",
+      "field": "passive_radius_cells",
+      "value": 2.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el conocimiento del terreno (V2); Daniel debe ajustarlo jugando.",
+      "rationale": "Radio de las cámaras de navegación del rover mientras conduce.",
+      "range": [
+        0.0,
+        8.0
+      ]
+    },
+    {
+      "id": "survey.passive_confidence",
+      "field": "passive_confidence",
+      "value": 0.4,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el conocimiento del terreno (V2); Daniel debe ajustarlo jugando.",
+      "rationale": "Confianza que dejan las cámaras de navegación.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "survey.estimated",
+      "field": "estimated_threshold",
+      "value": 0.3,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el conocimiento del terreno (V2); Daniel debe ajustarlo jugando.",
+      "rationale": "Confianza mínima para considerar una celda estimada.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "survey.measured",
+      "field": "measured_threshold",
+      "value": 0.75,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el conocimiento del terreno (V2); Daniel debe ajustarlo jugando.",
+      "rationale": "Confianza mínima para considerar una celda medida.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    }
+  ]
+}

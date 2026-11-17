@@ -145,7 +145,7 @@ Cada hito va en una rama y un PR propios, apilados.
 ### Corte vertical del Documento Maestro v2.0 (§32)
 
 - **V1, modos sobre un mismo estado ([ADR-027](ADR/ADR-027-modos-sobre-un-estado.md)):** Exploración, Estratégico, Laboratorio y Planetario (F1–F4), control de tiempo con tope por modo y libro de órdenes.
-- **V2:** conocimiento y escaneo (niebla de conocimiento, escáner del rover, sonda orbital).
+- **V2, conocimiento y escaneo ([ADR-029](ADR/ADR-029-conocimiento-y-escaneo.md)):** niebla de conocimiento por celda, sonda orbital por franjas, cámaras y escáner del rover (C); no se siembra a ciegas.
 - **V3:** muestras y análisis de laboratorio.
 - **V4:** robots e instalaciones (energía, desgaste, órdenes con retraso y fallo).
 - **V5:** valle parametrizado con puntos de interés, FIRST COLONY como misión del corte y guardado/carga repetible.

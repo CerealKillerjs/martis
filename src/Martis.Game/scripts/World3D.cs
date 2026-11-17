@@ -31,6 +31,8 @@ public partial class World3D : Node3D
     private ImageTexture _cellTexture = null!;
     private Image _glowImage = null!;
     private ImageTexture _glowTexture = null!;
+    private Image _knowledgeImage = null!;
+    private ImageTexture _knowledgeTexture = null!;
     private MultiMeshInstance3D _domes = null!;
     private DirectionalLight3D _sun = null!;
     private DirectionalLight3D _moon = null!;
@@ -39,6 +41,7 @@ public partial class World3D : Node3D
     private CpuParticles3D _dust = null!;
     private Node3D _lander = null!;
     private float _clock;
+    private float _scanAge = 99f;
 
     public Terrain Ground { get; private set; } = null!;
 
@@ -89,6 +92,37 @@ public partial class World3D : Node3D
         var wx = ((float)x * Terrain.CellSize) - (Ground.SizeX / 2f);
         var wz = ((float)y * Terrain.CellSize) - (Ground.SizeZ / 2f);
         return new Vector3(wx, Ground.HeightAt(wx, wz), wz);
+    }
+
+    /// <summary>
+    /// The fog of knowledge (V2, ADR-029): unknown ground is veiled, estimated ground keeps a light
+    /// hatch, measured ground is clear. Layers only show data where something is known.
+    /// </summary>
+    public void ShowKnowledge(Martis.Simulation.Expedition.KnowledgeMap knowledge)
+    {
+        var estimated = (float)knowledge.Definition.EstimatedThreshold;
+        var measured = (float)knowledge.Definition.MeasuredThreshold;
+        for (var y = 0; y < knowledge.Height; y++)
+        {
+            for (var x = 0; x < knowledge.Width; x++)
+            {
+                var c = (float)knowledge.Confidence(x, y);
+                // 0 unknown, 0.5 estimated, 1 measured: what the shader needs, not the raw confidence.
+                var level = c >= measured ? 1f : c >= estimated ? 0.5f : 0f;
+                _knowledgeImage.SetPixel(x, y, new Color(level, c, 0, 1));
+            }
+        }
+
+        _knowledgeTexture.Update(_knowledgeImage);
+    }
+
+    /// <summary>An expanding ring where the rover just scanned.</summary>
+    public void Scanned(double x, double y, double radius)
+    {
+        _terrainMaterial.SetShaderParameter("scan_center", new Vector2((float)x, (float)y));
+        _terrainMaterial.SetShaderParameter("scan_radius", (float)radius);
+        _scanAge = 0f;
+        _terrainMaterial.SetShaderParameter("scan_age", 0f);
     }
 
     /// <summary>Draws the rover's seeding ring on the terrain; a negative radius hides it.</summary>
@@ -194,6 +228,11 @@ public partial class World3D : Node3D
     {
         var dt = (float)delta;
         _clock += dt;
+        if (_scanAge < 4f)
+        {
+            _scanAge += dt;
+            _terrainMaterial.SetShaderParameter("scan_age", _scanAge);
+        }
         UpdateSun();
         for (var i = _pulses.Count - 1; i >= 0; i--)
         {
@@ -301,6 +340,10 @@ public partial class World3D : Node3D
         _terrainMaterial = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/terrain.gdshader") };
         _terrainMaterial.SetShaderParameter("cell_data", _cellTexture);
         _terrainMaterial.SetShaderParameter("glow_data", _glowTexture);
+        _knowledgeImage = Image.CreateEmpty(Ground.CellsX, Ground.CellsY, false, Image.Format.Rgf);
+        _knowledgeImage.Fill(new Color(1, 1, 0, 1)); // known until a knowledge map says otherwise (menu backdrop)
+        _knowledgeTexture = ImageTexture.CreateFromImage(_knowledgeImage);
+        _terrainMaterial.SetShaderParameter("knowledge_data", _knowledgeTexture);
         _terrainMaterial.SetShaderParameter("world_size", Ground.SizeX);
         _terrainMaterial.SetShaderParameter("cells", (float)Ground.CellsX);
         _terrainMaterial.SetShaderParameter("highlight_cell", new Vector2(-1, -1));

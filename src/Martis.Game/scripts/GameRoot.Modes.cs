@@ -183,6 +183,7 @@ public partial class GameRoot
         {
             "deploy" => "Siembra",
             "analyze" => "Análisis",
+            "scan" => "Escaneo",
             _ => order.Kind,
         };
         var state = order.Status == OrderStatus.Done ? "✓" : "✗";
@@ -219,6 +220,8 @@ public partial class GameRoot
             _session.Research?.Points,
             _orders.All.Count,
             _orders.All.Count(order => order.Status == OrderStatus.Failed),
-            _session.Intelligence));
+            _session.Intelligence,
+            _knowledge.Coverage(Martis.Simulation.Expedition.KnowledgeLevel.Estimated),
+            _knowledge.Coverage(Martis.Simulation.Expedition.KnowledgeLevel.Measured)));
     }
 }
