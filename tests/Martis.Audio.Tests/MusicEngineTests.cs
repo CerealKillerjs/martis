@@ -173,4 +173,16 @@ public sealed class MusicEngineTests
 
         Assert.True(levels.Max() - levels.Min() < 4, string.Join(", ", levels.Select(l => l.ToString("0.0"))));
     }
+
+    [Fact]
+    public void TheTitlePlaysTheWrittenThemeWhateverTheSeed()
+    {
+        // The title screen has its own composed piece (Daniel, 2026-11-17), not generated phrases.
+        Assert.True(MusicStyle.For(MusicMood.Title, null).Scored);
+        Assert.False(MusicStyle.For(MusicMood.Day, null).Scored);
+        var a = new MusicEngine(1, MusicMood.Title);
+        var b = new MusicEngine(999, MusicMood.Title);
+        Assert.Equal(Render(a, 20), Render(b, 20));
+        Assert.True(a.NotesPlayed >= 20, $"{a.NotesPlayed} notes");
+    }
 }

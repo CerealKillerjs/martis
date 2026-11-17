@@ -43,6 +43,10 @@ public sealed record MusicStyle(
     float DroneLevel,
     float HeartbeatLevel)
 {
+    /// <summary>True for the title screen: it plays the written <see cref="TitleTheme"/>
+    /// instead of generated phrases.</summary>
+    public bool Scored { get; init; }
+
     private static readonly int[] TitleProgression = [0, 3, 5, 4];
     private static readonly int[] DayProgression = [0, 5, 3, 4];
     private static readonly int[] NightProgression = [0, 5, 3, 6];
@@ -52,7 +56,7 @@ public sealed record MusicStyle(
 
     private static readonly MusicStyle[] Base =
     [
-        new(53, Mode.Lydian, 66f, TitleProgression, 0.5f, 1, LeftHand.Broken, 4.5f, 1300f, 0.45f, 0.15f, 0f),
+        new(50, Mode.Aeolian, 54f, TitleProgression, 0.5f, 1, LeftHand.Broken, 4.5f, 1300f, 0f, 0f, 0f) { Scored = true },
         new(55, Mode.Ionian, 72f, DayProgression, 0.55f, 1, LeftHand.Broken, 5f, 1200f, 0.4f, 0.1f, 0f),
         new(50, Mode.Aeolian, 58f, NightProgression, 0.3f, 1, LeftHand.Sparse, 7f, 800f, 0.45f, 0.3f, 0f),
         new(57, Mode.Lydian, 80f, ThrivingProgression, 0.75f, 1, LeftHand.Flowing, 3f, 1600f, 0.35f, 0.1f, 0f),
