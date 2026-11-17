@@ -155,4 +155,22 @@ public sealed class MusicEngineTests
         Assert.True(night < day, $"night {night} day {day}");
         Assert.True(day < thriving, $"day {day} thriving {thriving}");
     }
+
+    [Fact]
+    public void EveryMoodIsMasteredToTheSameLoudnessAndUnderTheCeiling()
+    {
+        // Mastering (Daniel, 2026-11-17): consistent loudness between moods, peaks under −1 dBFS.
+        var ceiling = MathF.Pow(10f, -1f / 20f);
+        var levels = new List<double>();
+        foreach (var mood in Enum.GetValues<MusicMood>())
+        {
+            var output = Render(new MusicEngine(31, mood), 40);
+            Assert.True(Signal.Peak(output) <= ceiling + 1e-6f, $"{mood} peaks at {Signal.Peak(output)}");
+            var lufs = LoudnessMeter.Integrated(Signal.Channel(output, 0), Signal.Channel(output, 1), MusicEngine.SampleRate);
+            Assert.InRange(lufs, MusicEngine.TargetLufs - 3, MusicEngine.TargetLufs + 3);
+            levels.Add(lufs);
+        }
+
+        Assert.True(levels.Max() - levels.Min() < 4, string.Join(", ", levels.Select(l => l.ToString("0.0"))));
+    }
 }
