@@ -260,20 +260,26 @@ public static class SfxSynth
             AddReverb(buffer, reverb);
         }
 
-        Finish(buffer, Peak(sfx));
+        Finish(buffer, TargetLoudness(sfx));
         return buffer;
     }
 
-    private static float Peak(Sfx sfx) => sfx switch
+    /// <summary>
+    /// Loudness each sound is mastered to, as its loudest momentary (400 ms) window in LUFS:
+    /// the interface whispers, events speak, milestones stand out above the music
+    /// (<see cref="MusicEngine.TargetLufs"/>).
+    /// </summary>
+    public static double TargetLoudness(Sfx sfx) => sfx switch
     {
-        Sfx.UiHover => 0.16f,
-        Sfx.UiClick or Sfx.UiBack or Sfx.Pause or Sfx.Resume => 0.4f,
-        Sfx.Toast or Sfx.Save or Sfx.Load => 0.45f,
-        Sfx.Error or Sfx.Analyze or Sfx.Experiment => 0.55f,
-        Sfx.Mutation or Sfx.Transition => 0.6f,
-        Sfx.Extinction or Sfx.Mission => 0.7f,
-        Sfx.Deploy => 0.8f,
-        _ => 0.88f,
+        Sfx.UiHover => -30,
+        Sfx.UiClick or Sfx.UiBack or Sfx.Pause or Sfx.Resume => -26,
+        Sfx.Toast or Sfx.Save or Sfx.Load => -24,
+        Sfx.Error or Sfx.Analyze or Sfx.Experiment or Sfx.Transition => -22,
+        Sfx.Mutation or Sfx.Extinction => -20,
+        Sfx.Mission => -19,
+        Sfx.Deploy => -18,
+        Sfx.Victory => -17,
+        _ => -16,
     };
 
     private static float Sine(float hertz, float t) => MathF.Sin(Dsp.Tau * hertz * t);
@@ -303,23 +309,33 @@ public static class SfxSynth
         }
     }
 
+    /// <summary>A small room: the FDN reverb at a one-second decay, mixed in parallel.</summary>
     private static void AddReverb(float[] buffer, float wet)
     {
-        var reverb = new Reverb(SampleRate, room: 0.78f, damping: 0.4f);
+        var room = new FdnReverb(SampleRate, rt60Seconds: 1.1f, preDelayMs: 8f, damping: 0.5f);
         for (var i = 0; i < buffer.Length; i++)
         {
-            reverb.Process(buffer[i], buffer[i], out var left, out var right);
-            buffer[i] += wet * 0.5f * (left + right);
+            room.Process(buffer[i], buffer[i], out var left, out var right);
+            buffer[i] += wet * 0.8f * (left + right);
         }
     }
 
-    /// <summary>Normalises to <paramref name="peak"/> and applies a short fade-in and a fade-out on the tail.</summary>
-    private static void Finish(float[] buffer, float peak)
+    /// <summary>
+    /// Masters one sound: a 60 Hz high-pass (no rumble from tiny speakers), light 2:1
+    /// compression, a short fade-in and a tail fade, then loudness normalisation to
+    /// <paramref name="targetLufs"/> through a lookahead limiter at −1 dBFS.
+    /// </summary>
+    private static void Finish(float[] buffer, double targetLufs)
     {
+        var highPass = Biquad.HighPass(60, 0.707, SampleRate);
+        var compressor = new Compressor(SampleRate, thresholdDb: -20f, ratio: 2f, attackMs: 4f, releaseMs: 120f, kneeDb: 6f);
         var fadeIn = Math.Min(buffer.Length / 4, SampleRate * 3 / 1000);
         var fadeOut = Math.Max(SampleRate / 50, (int)(buffer.Length * 0.15));
         for (var i = 0; i < buffer.Length; i++)
         {
+            var left = highPass.Process(buffer[i]);
+            var right = left;
+            compressor.Process(ref left, ref right);
             var gain = 1f;
             if (i < fadeIn)
             {
@@ -333,22 +349,47 @@ public static class SfxSynth
                 gain *= x * x;
             }
 
-            buffer[i] *= gain;
+            buffer[i] = left * gain;
         }
 
-        var max = 0f;
-        foreach (var sample in buffer)
+        // Limiting a loud transient lowers the loudness a little, so measure and correct.
+        var source = (float[])buffer.Clone();
+        var unity = LoudnessMeter.MaxMomentary(source, SampleRate);
+        if (double.IsNegativeInfinity(unity))
         {
-            max = MathF.Max(max, MathF.Abs(sample));
+            return;
         }
 
-        if (max > 0f)
+        var gainDb = targetLufs - unity;
+        for (var pass = 0; pass < 4; pass++)
         {
-            var scale = peak / max;
-            for (var i = 0; i < buffer.Length; i++)
+            var measured = LimitInto(buffer, source, (float)gainDb);
+            if (Math.Abs(measured - targetLufs) < 0.2)
             {
-                buffer[i] *= scale;
+                return;
+            }
+
+            gainDb += targetLufs - measured;
+        }
+    }
+
+    /// <summary>Writes <paramref name="source"/> × gain through a fresh limiter (latency
+    /// compensated) into <paramref name="output"/> and returns the result's loudness.</summary>
+    private static double LimitInto(float[] output, float[] source, float gainDb)
+    {
+        var limiter = new Limiter(SampleRate, ceilingDb: -1f, lookaheadMs: 3f, releaseMs: 60f);
+        var gain = MathF.Pow(10f, gainDb / 20f);
+        for (var i = 0; i < source.Length + limiter.Latency; i++)
+        {
+            var x = i < source.Length ? source[i] * gain : 0f;
+            limiter.Process(x, x, out var y, out _);
+            var at = i - limiter.Latency;
+            if (at >= 0)
+            {
+                output[at] = y;
             }
         }
+
+        return LoudnessMeter.MaxMomentary(output, SampleRate);
     }
 }

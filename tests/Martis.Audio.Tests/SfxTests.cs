@@ -96,4 +96,16 @@ public sealed class SfxTests
         Assert.Null(SfxSynth.ForEvent("tick"));
         Assert.Null(SfxSynth.ForEvent(string.Empty));
     }
+
+    [Theory]
+    [MemberData(nameof(All))]
+    public void EverySoundIsMasteredToItsLoudnessUnderTheCeiling(Sfx sfx)
+    {
+        var samples = SfxSynth.Render(sfx);
+        Assert.True(Signal.Peak(samples) <= MathF.Pow(10f, -1f / 20f) + 1e-6f, $"{sfx} peaks at {Signal.Peak(samples)}");
+        var loudness = LoudnessMeter.MaxMomentary(samples, SfxSynth.SampleRate);
+        var target = SfxSynth.TargetLoudness(sfx);
+        Assert.True(loudness <= target + 1.0, $"{sfx}: {loudness:0.0} LUFS, target {target}");
+        Assert.True(loudness >= target - 3.0, $"{sfx}: {loudness:0.0} LUFS, target {target}");
+    }
 }
