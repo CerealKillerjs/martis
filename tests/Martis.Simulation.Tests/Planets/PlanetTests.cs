@@ -98,4 +98,45 @@ public sealed class PlanetTests
         stream.Write(data);
         stream.Write([0, 0, 0, 0]); // CRC is not checked by the reader
     }
+
+    [Fact]
+    public void TheStorySectionIsIsidisWestWithJezeroAsADetailInsert()
+    {
+        var mars = Mars();
+        var start = mars.StartSection;
+        var relief = mars.LoadRelief(start);
+
+        Assert.Equal("isidis_occidental", start.Id);
+        Assert.Equal(400000.0, relief.Definition.SizeM);
+        Assert.Equal(256, relief.Definition.Cells);
+        Assert.Contains(mars.Sections, section => !section.Start && section.UnlockEra > 1);
+        var insert = Assert.Single(relief.Inserts);
+        Assert.Equal("jezero", insert.Detail.Definition.Id);
+
+        // Inside the insert the detailed relief wins; the floor of Jezero lies in it.
+        var (x, y) = relief.LocalOf(18.4, 77.55, mars.RadiusM);
+        Assert.Equal(insert.Detail.HeightAt(x - insert.X, y - insert.Y), relief.HeightAt(x, y), 6);
+        Assert.InRange(relief.HeightAt(x, y), -3000, -2000);
+        // Far from it, only the base relief counts.
+        Assert.Equal(relief.BaseHeightAt(380000, 20000), relief.HeightAt(380000, 20000), 9);
+    }
+
+    [Fact]
+    public void ThePlacesOfTheStorySectionSitOnRealFeatures()
+    {
+        var mars = Mars();
+        var start = mars.StartSection;
+        var relief = mars.LoadRelief(start);
+        var places = Martis.Simulation.Expedition.ValleyDefinition.LoadPublished(Repo.Root(), start.PlacesFile!, (lat, lon) =>
+        {
+            var (x, y) = relief.LocalOf(lat, lon, mars.RadiusM);
+            return (x / relief.Definition.SizeM, y / relief.Definition.SizeM);
+        });
+
+        var delta = places.Pois.Single(poi => poi.Id == "delta");
+        // The Jezero delta is ~60 km west and ~30 km south of the section centre.
+        Assert.InRange(delta.FractionX, 0.30, 0.40);
+        Assert.InRange(delta.FractionY, 0.53, 0.62);
+        Assert.NotNull(start.Arrival);
+    }
 }

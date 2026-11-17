@@ -19,9 +19,18 @@ public partial class GameRoot
     private ValleyDefinition? _valleyDefinition;
     private PoiField _pois = null!;
 
+    /// <summary>A latitude and longitude as a fraction of the section map (M3, ADR-036).</summary>
+    private (double X, double Y) SectionFraction(Martis.Simulation.Planets.RegionRelief relief, double lat, double lon)
+    {
+        var (x, y) = relief.LocalOf(lat, lon, _planetRadiusM);
+        return (x / relief.Definition.SizeM, y / relief.Definition.SizeM);
+    }
+
     private void ResetValley()
     {
-        _valleyDefinition ??= ValleyDefinition.LoadPublished(_dataRoot);
+        _valleyDefinition ??= Relief() is { } relief && _section?.PlacesFile is { } places
+            ? ValleyDefinition.LoadPublished(_dataRoot, places, (lat, lon) => SectionFraction(relief, lat, lon))
+            : ValleyDefinition.LoadPublished(_dataRoot);
         _pois = new PoiField(_valleyDefinition, _session.Width, _session.Height);
         foreach (var marker in _poiMarkers)
         {

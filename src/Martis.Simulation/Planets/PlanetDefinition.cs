@@ -13,6 +13,35 @@ public sealed record PlanetDefinition(string Id, string Name, double RadiusM, do
 {
     public const string MarsFile = "mars.v1.json";
 
+    /// <summary>The planet split in playable sections (M3, ADR-036); the story mode opens them one by one.</summary>
+    public IReadOnlyList<SectionDefinition> Sections { get; init; } = [];
+
+    /// <summary>The section a new story game starts in.</summary>
+    public SectionDefinition StartSection => Sections.FirstOrDefault(section => section.Start)
+        ?? throw new InvalidOperationException($"Planet '{Id}' has no start section.");
+
+    public SectionDefinition Section(string id)
+        => Sections.FirstOrDefault(section => string.Equals(section.Id, id, StringComparison.Ordinal))
+            ?? throw new KeyNotFoundException($"Planet '{Id}' has no section '{id}'.");
+
+    /// <summary>The relief of a section with data: its region plus its detail inserts.</summary>
+    public RegionRelief LoadRelief(SectionDefinition section)
+    {
+        ArgumentNullException.ThrowIfNull(section);
+        if (section.RegionId is null)
+        {
+            throw new InvalidOperationException($"Section '{section.Id}' has no relief data yet.");
+        }
+
+        var relief = RegionRelief.Load(Region(section.RegionId));
+        foreach (var insert in section.Inserts)
+        {
+            relief.WithInsert(RegionRelief.Load(Region(insert)), RadiusM);
+        }
+
+        return relief;
+    }
+
     public RegionDefinition Region(string id)
         => Regions.FirstOrDefault(region => string.Equals(region.Id, id, StringComparison.Ordinal))
             ?? throw new KeyNotFoundException($"Planet '{Id}' has no region '{id}'.");
@@ -47,14 +76,90 @@ public sealed record PlanetDefinition(string Id, string Name, double RadiusM, do
             });
         }
 
-        return new PlanetDefinition(
+        var sections = new List<SectionDefinition>();
+        if (meta.TryGetProperty("sections", out var sectionArray))
+        {
+            foreach (var section in sectionArray.EnumerateArray())
+            {
+                sections.Add(new SectionDefinition(
+                    section.GetProperty("id").GetString()!,
+                    section.GetProperty("name").GetString()!,
+                    section.GetProperty("lat").GetDouble(),
+                    section.GetProperty("lon").GetDouble(),
+                    section.GetProperty("size_km").GetDouble() * 1000.0,
+                    section.TryGetProperty("region", out var region) ? region.GetString() : null,
+                    section.TryGetProperty("inserts", out var inserts) ? inserts.EnumerateArray().Select(item => item.GetString()!).ToArray() : [],
+                    section.TryGetProperty("start", out var start) && start.GetBoolean(),
+                    section.GetProperty("unlock_era").GetInt32(),
+                    section.GetProperty("unlock").GetString()!,
+                    section.GetProperty("summary").GetString()!)
+                {
+                    Arrival = section.TryGetProperty("arrival", out var arrival)
+                        ? (arrival.GetProperty("lat").GetDouble(), arrival.GetProperty("lon").GetDouble(), arrival.GetProperty("name").GetString()!)
+                        : null,
+                    PlacesFile = section.TryGetProperty("places", out var places) ? places.GetString() : null,
+                });
+            }
+        }
+
+        var definition = new PlanetDefinition(
             meta.GetProperty("id").GetString()!,
             meta.GetProperty("name").GetString()!,
             Number(planet, "radius_m"),
             Number(planet, "gravity_m_s2"),
             Number(planet, "sol_s"),
-            regions);
+            regions) { Sections = sections };
+        foreach (var section in sections)
+        {
+            if (section.RegionId is not null)
+            {
+                definition.Region(section.RegionId);
+            }
+
+            foreach (var insert in section.Inserts)
+            {
+                definition.Region(insert);
+            }
+        }
+
+        if (sections.Count > 0 && sections.Count(section => section.Start) != 1)
+        {
+            throw new InvalidDataException("A planet needs exactly one start section.");
+        }
+
+        if (sections.Select(section => section.Id).Distinct(StringComparer.Ordinal).Count() != sections.Count)
+        {
+            throw new InvalidDataException("Section ids must be unique.");
+        }
+
+        return definition;
     }
+}
+
+/// <summary>
+/// A playable section of a planet (M3, ADR-036): a square centred on a point, opened by the story
+/// mode at an era. <see cref="RegionId"/> is null while its relief has not been prepared yet.
+/// </summary>
+public sealed record SectionDefinition(
+    string Id,
+    string Name,
+    double CenterLat,
+    double CenterLon,
+    double SizeM,
+    string? RegionId,
+    IReadOnlyList<string> Inserts,
+    bool Start,
+    int UnlockEra,
+    string Unlock,
+    string Summary)
+{
+    public bool HasRelief => RegionId is not null;
+
+    /// <summary>Where the AI's lander arrives in a new story game (latitude, longitude), if set.</summary>
+    public (double Lat, double Lon, string Name)? Arrival { get; init; }
+
+    /// <summary>The section's points of interest (a <c>martis.valley</c> file in data/expedition), if any.</summary>
+    public string? PlacesFile { get; init; }
 }
 
 /// <summary>A region with real relief: a square of <see cref="SizeM"/> metres centred on a point of the planet.</summary>
@@ -124,6 +229,7 @@ public sealed record RegionDefinition(
 public sealed class RegionRelief
 {
     private readonly ushort[] _samples;
+    private readonly List<Insert> _inserts = [];
 
     private RegionRelief(RegionDefinition definition, ushort[] samples)
     {
@@ -158,8 +264,51 @@ public sealed class RegionRelief
         return Definition.MinHeightM + (_samples[(py * Pixels) + px] / 65535.0 * (Definition.MaxHeightM - Definition.MinHeightM));
     }
 
-    /// <summary>Bilinear height in metres at a local position (clamped to the region).</summary>
+    /// <summary>Detail regions blended over this one (M3, ADR-036), with their placement.</summary>
+    public IReadOnlyList<Insert> Inserts => _inserts;
+
+    /// <summary>
+    /// Blends a smaller, more detailed region over this one (M3, ADR-036): inside its square the
+    /// detail wins, fading into this relief over <paramref name="featherM"/> metres at its edges.
+    /// The two are placed by their centres on the planet's sphere.
+    /// </summary>
+    public RegionRelief WithInsert(RegionRelief detail, double radiusM, double featherM = 3000)
+    {
+        ArgumentNullException.ThrowIfNull(detail);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(radiusM);
+        var (x, y) = LocalOf(detail.Definition.CenterLat, detail.Definition.CenterLon, radiusM);
+        var half = detail.Definition.SizeM / 2;
+        _inserts.Add(new Insert(detail, x - half, y - half, Math.Clamp(featherM, 1, half)));
+        return this;
+    }
+
+    /// <summary>Local position (metres from the north-west corner) of a latitude and longitude.</summary>
+    public (double X, double Y) LocalOf(double lat, double lon, double radiusM)
+    {
+        var half = Definition.SizeM / 2;
+        var x = half + ((lon - Definition.CenterLon) * Math.PI / 180.0 * radiusM * Math.Cos(Definition.CenterLat * Math.PI / 180.0));
+        var y = half - ((lat - Definition.CenterLat) * Math.PI / 180.0 * radiusM);
+        return (x, y);
+    }
+
+    /// <summary>Height in metres at a local position: this relief, with any detail insert blended in.</summary>
     public double HeightAt(double xM, double yM)
+    {
+        var height = BaseHeightAt(xM, yM);
+        foreach (var insert in _inserts)
+        {
+            var w = insert.Weight(xM, yM);
+            if (w > 0)
+            {
+                height = (height * (1 - w)) + (insert.Detail.HeightAt(xM - insert.X, yM - insert.Y) * w);
+            }
+        }
+
+        return height;
+    }
+
+    /// <summary>Bilinear height in metres of this relief alone (clamped to the region).</summary>
+    public double BaseHeightAt(double xM, double yM)
     {
         var fx = Math.Clamp(xM / SpacingM, 0.0, Pixels - 1.000001);
         var fy = Math.Clamp(yM / SpacingM, 0.0, Pixels - 1.000001);
@@ -195,6 +344,24 @@ public sealed class RegionRelief
         var lat = Definition.CenterLat - ((yM - half) / radiusM * 180.0 / Math.PI);
         var lon = Definition.CenterLon + ((xM - half) / (radiusM * Math.Cos(Definition.CenterLat * Math.PI / 180.0)) * 180.0 / Math.PI);
         return (lat, lon);
+    }
+}
+
+/// <summary>A detail region placed inside a larger one: north-west corner in the larger region's metres.</summary>
+public sealed record Insert(RegionRelief Detail, double X, double Y, double FeatherM)
+{
+    /// <summary>1 well inside the detail square, falling to 0 at its edge.</summary>
+    public double Weight(double xM, double yM)
+    {
+        var size = Detail.Definition.SizeM;
+        var edge = Math.Min(Math.Min(xM - X, X + size - xM), Math.Min(yM - Y, Y + size - yM));
+        if (edge <= 0)
+        {
+            return 0;
+        }
+
+        var t = Math.Min(1, edge / FeatherM);
+        return t * t * (3 - (2 * t));
     }
 }
 

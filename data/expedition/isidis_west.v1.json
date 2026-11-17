@@ -1,0 +1,175 @@
+{
+  "metadata": {
+    "schema": "martis.valley",
+    "id": "isidis_occidental",
+    "name": "Isidis occidental (lugares reales: Jezero, Nili Fossae, Isidis)",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (M3)",
+    "review": "ADR-036: los lugares de interés del valle del corte vertical, movidos a rasgos reales de la sección inicial del modo historia. Posiciones en latitud y longitud aproximadas (±0,05°).",
+    "valley": {
+      "discovery_radius_cells": "isidis.discovery_radius",
+      "research_ice": "isidis.research_ice",
+      "research_brine": "isidis.research_brine",
+      "research_shelter": "isidis.research_shelter",
+      "research_meteorite": "isidis.research_meteorite",
+      "research_delta": "isidis.research_delta"
+    },
+    "pois": [
+      {
+        "id": "delta",
+        "kind": "Delta",
+        "name": "Delta occidental de Jezero",
+        "lat": 18.5,
+        "lon": 77.4,
+        "finding": "El abanico que dejó un río al desembocar en el lago de Jezero hace unos 3.500 millones de años. Arcillas y carbonatos que conservan bien las moléculas orgánicas: el mejor lugar de la sección para buscar biofirmas."
+      },
+      {
+        "id": "arcillas_nili",
+        "kind": "Ice",
+        "name": "Arcillas hidratadas de Nili Fossae",
+        "lat": 21.9,
+        "lon": 77.6,
+        "finding": "Fosas tectónicas con arcillas, serpentina y carbonatos vistos desde órbita. No es hielo: es agua ligada en los minerales, una reserva que se puede extraer calentando la roca."
+      },
+      {
+        "id": "carbonatos",
+        "kind": "Brine",
+        "name": "Carbonatos del margen de Jezero",
+        "lat": 18.62,
+        "lon": 77.55,
+        "finding": "Una franja de carbonatos junto a la antigua orilla del lago. Se formaron en agua: un registro químico del lago y un buen lugar para la vida microbiana antigua."
+      },
+      {
+        "id": "neretva",
+        "kind": "Shelter",
+        "name": "Cañón de Neretva Vallis",
+        "lat": 18.7,
+        "lon": 77.2,
+        "finding": "El valle por el que el río entraba en Jezero. Sus paredes tapan parte del cielo: la dosis de radiación es menor al pie del escarpe."
+      },
+      {
+        "id": "meteorito",
+        "kind": "Meteorite",
+        "name": "Meteorito metálico (hipotético)",
+        "lat": 17.4,
+        "lon": 80.8,
+        "finding": "Un bloque de hierro y níquel en la llanura de Isidis. No se ha visto uno aquí: los rovers sí han encontrado meteoritos así en otros lugares de Marte. Fuente de metales y nutrientes minerales."
+      }
+    ]
+  },
+  "location": {
+    "site": "regional:isidis_occidental"
+  },
+  "parameters": [
+    {
+      "id": "isidis.discovery_radius",
+      "field": "discovery_radius_cells",
+      "value": 1.5,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego copiado del valle del corte vertical (V5) para la sección inicial (M3); Daniel debe ajustarlo jugando.",
+      "rationale": "Distancia a la que la medida de una celda revela el punto de interés.",
+      "range": [
+        0.0,
+        6.0
+      ]
+    },
+    {
+      "id": "isidis.research_ice",
+      "field": "research_ice",
+      "value": 6.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego copiado del valle del corte vertical (V5) para la sección inicial (M3); Daniel debe ajustarlo jugando.",
+      "rationale": "Investigación por descubrir un depósito de hielo.",
+      "range": [
+        0.0,
+        50.0
+      ]
+    },
+    {
+      "id": "isidis.research_brine",
+      "field": "research_brine",
+      "value": 5.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego copiado del valle del corte vertical (V5) para la sección inicial (M3); Daniel debe ajustarlo jugando.",
+      "rationale": "Investigación por descubrir rastros de salmuera.",
+      "range": [
+        0.0,
+        50.0
+      ]
+    },
+    {
+      "id": "isidis.research_shelter",
+      "field": "research_shelter",
+      "value": 4.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego copiado del valle del corte vertical (V5) para la sección inicial (M3); Daniel debe ajustarlo jugando.",
+      "rationale": "Investigación por descubrir un abrigo frente a la radiación.",
+      "range": [
+        0.0,
+        50.0
+      ]
+    },
+    {
+      "id": "isidis.research_meteorite",
+      "field": "research_meteorite",
+      "value": 4.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego copiado del valle del corte vertical (V5) para la sección inicial (M3); Daniel debe ajustarlo jugando.",
+      "rationale": "Investigación por descubrir un meteorito metálico.",
+      "range": [
+        0.0,
+        50.0
+      ]
+    },
+    {
+      "id": "isidis.research_delta",
+      "field": "research_delta",
+      "value": 8.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego copiado del valle del corte vertical (V5) para la sección inicial (M3); Daniel debe ajustarlo jugando.",
+      "rationale": "Investigación por descubrir el delta fluvial antiguo.",
+      "range": [
+        0.0,
+        50.0
+      ]
+    }
+  ]
+}

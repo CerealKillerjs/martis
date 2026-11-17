@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using Godot;
 
 namespace Martis.Game;
@@ -57,6 +58,12 @@ public partial class GameRoot
         albedo.GenerateMipmaps();
         _realTerrain = new RealTerrain { Name = "RealTerrain" };
         _realTerrain.Setup(relief, ImageTexture.CreateFromImage(albedo));
+        foreach (var insert in relief.Inserts.Take(1))
+        {
+            var detail = Image.LoadFromFile(insert.Detail.Definition.AlbedoFile);
+            detail.GenerateMipmaps();
+            _realTerrain.SetDetail(insert, ImageTexture.CreateFromImage(detail));
+        }
         _real.AddChild(_realTerrain);
         _realRover = new RoverModel { Name = "Rover" };
         _real.AddChild(_realRover);

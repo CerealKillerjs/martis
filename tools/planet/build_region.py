@@ -47,6 +47,23 @@ REGIONS = {
         "height_px": 2049,
         "albedo_px": 4096,
         "albedo": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/CTX_EZs/Jezero_CTX_BlockAdj_dd.tif",
+        "albedo_name": "CTX mosaic of the Mars human exploration zones",
+        "ctx": True,
+    },
+    # The story-mode starting section (M3, ADR-036): Jezero, Nili Fossae, NE Syrtis and the
+    # western plains of Isidis. At ~195 m per sample the base DEM is already the right detail, so
+    # no CTX DTMs; the Jezero region above is blended in as a high-detail insert by the game.
+    "isidis_west": {
+        "name": "Isidis occidental",
+        "lat": 19.0,
+        "lon": 78.5,
+        "size_km": 400.0,
+        "height_px": 2049,
+        "albedo_px": 4096,
+        "albedo": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/Mars_MRO_CTX_Equi_Mosaics_Robbins/100mpp/MC13_100mpp.16bit.tif",
+        "albedo_name": "Global CTX mosaic, MC-13 Syrtis Major, 100 m (Robbins et al.)",
+        "albedo_unsigned": True,  # stored as int16 but holds unsigned 16-bit brightness
+        "ctx": False,
     },
 }
 
@@ -80,6 +97,52 @@ def warp(source: str, transform, pixels: int, nodata: float, resampling=Resampli
             num_threads=4,
         )
     return out
+
+
+def warp_unsigned(source: str, transform, pixels: int, bounds, gap_below: float = 30000.0) -> np.ndarray:
+    """Warps a mosaic whose int16 samples are really unsigned; gaps (dark stripes) are filled."""
+    from rasterio.warp import transform_bounds
+    from rasterio.windows import from_bounds
+
+    out = np.full((pixels, pixels), np.nan, dtype="float32")
+    with rasterio.open(source) as src:
+        left, bottom, right, top = transform_bounds(GEOGRAPHIC, src.crs, *bounds, densify_pts=21)
+        pad = 2000.0
+        window = from_bounds(left - pad, bottom - pad, right + pad, top + pad, src.transform).round_offsets().round_lengths()
+        data = src.read(1, window=window).view(np.uint16).astype("float32")
+        data[(data < gap_below) | (data == 32768)] = np.nan  # int16 nodata (-32768) reads as 32768
+        reproject(
+            source=data,
+            destination=out,
+            src_transform=src.window_transform(window),
+            src_crs=src.crs,
+            src_nodata=np.nan,
+            dst_transform=transform,
+            dst_crs=GEOGRAPHIC,
+            dst_nodata=np.nan,
+            resampling=Resampling.average,
+            num_threads=4,
+        )
+    return fill_gaps(out)
+
+
+def fill_gaps(image: np.ndarray) -> np.ndarray:
+    """Fills NaN holes from ever coarser averages of the valid pixels (a cheap pyramid fill)."""
+    image = image.copy()
+    level = image
+    factor = 1
+    while np.isnan(image).any() and level.shape[0] >= 2:
+        n = level.shape[0] // 2 * 2
+        blocks = level[:n, :n].reshape(n // 2, 2, n // 2, 2)
+        with np.errstate(invalid="ignore"), __import__("warnings").catch_warnings():
+            __import__("warnings").simplefilter("ignore", RuntimeWarning)
+            level = np.nanmean(blocks, axis=(1, 3))
+        factor *= 2
+        up = np.repeat(np.repeat(level, factor, axis=0), factor, axis=1)
+        up = np.pad(up, ((0, max(0, image.shape[0] - up.shape[0])), (0, max(0, image.shape[1] - up.shape[1]))), mode="edge")[: image.shape[0], : image.shape[1]]
+        holes = np.isnan(image) & ~np.isnan(up)
+        image[holes] = up[holes]
+    return np.nan_to_num(image, nan=0.0)
 
 
 def ctx_strips(bounds) -> list[tuple[str, str]]:
@@ -124,7 +187,7 @@ def parameters(meta: dict) -> list[dict]:
         return {
             "id": f"{meta['id']}.{pid}", "field": field, "value": value, "unit": unit,
             "classification": "SCIENTIFIC_MEASURED", "scope": f"regional:{meta['id']}", "version": "1", "status": "OK",
-            "source": [{"citation": f"{base['name']} ({base['by']}) + CTX DTMs (USGS, CC0)", "url": base["url"], "accessed": meta["date"], "where": where}],
+            "source": [{"citation": f"{base['name']} ({base['by']}) {" + CTX DTMs (USGS, CC0)" if meta["ctx_strips"] else ""}", "url": base["url"], "accessed": meta["date"], "where": where}],
         }
 
     return [
@@ -158,7 +221,7 @@ def main() -> int:
 
         total = np.zeros_like(base)
         weights = np.zeros_like(base)
-        strips = ctx_strips(bounds)[: args.max_strips]
+        strips = ctx_strips(bounds)[: args.max_strips] if region.get("ctx", True) else []
         used = []
         for i, (strip_id, href) in enumerate(strips, 1):
             print(f"CTX {i}/{len(strips)} {strip_id}", file=sys.stderr)
@@ -186,7 +249,15 @@ def main() -> int:
 
         print("albedo (CTX mosaic)…", file=sys.stderr)
         albedo_transform, _ = grid(region, region["albedo_px"])
-        albedo = warp("/vsicurl/" + region["albedo"], albedo_transform, region["albedo_px"], 0, Resampling.average, "uint8")
+        if region.get("albedo_unsigned"):
+            raw = warp_unsigned("/vsicurl/" + region["albedo"], albedo_transform, region["albedo_px"], bounds)
+        else:
+            raw = warp("/vsicurl/" + region["albedo"], albedo_transform, region["albedo_px"], 0, Resampling.average)
+        valid = np.isfinite(raw) & (raw > 0)
+        if valid.any() and raw[valid].max() > 255:  # a 16-bit mosaic: stretch to 8 bits
+            low_a, high_a = np.percentile(raw[valid], [0.5, 99.5])
+            raw = np.where(valid, 1 + (raw - low_a) / max(high_a - low_a, 1e-6) * 254, 0)
+        albedo = np.where(valid, np.clip(raw, 1, 255), 0).astype(np.uint8)
 
     low, high = float(height.min()), float(height.max())
     scaled = np.round((height - low) / (high - low) * 65535.0).astype(np.uint16)
@@ -212,8 +283,8 @@ def main() -> int:
         "ctx_coverage": float((weights > 0).mean()),
         "sources": [
             {"name": "Mars HRSC-MOLA Blended DEM Global 200 m v2", "by": "USGS Astrogeology / ESA-DLR-FU Berlin / NASA", "license": "public domain", "url": BASE_DEM},
-            {"name": f"MRO CTX controlled DTMs ({len(used)} strips)", "by": "USGS Astrogeology", "license": "CC0-1.0", "url": CTX_INDEX},
-            {"name": "CTX mosaic of the Mars human exploration zones", "by": "USGS Astrogeology / NASA-JPL-MSSS", "license": "public domain", "url": region["albedo"]},
+        ] + ([{"name": f"MRO CTX controlled DTMs ({len(used)} strips)", "by": "USGS Astrogeology", "license": "CC0-1.0", "url": CTX_INDEX}] if used else []) + [
+            {"name": region["albedo_name"], "by": "USGS Astrogeology / NASA-JPL-MSSS", "license": "public domain", "url": region["albedo"]},
         ],
         "ctx_strips": used,
     }

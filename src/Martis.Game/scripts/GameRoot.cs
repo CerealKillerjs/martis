@@ -61,7 +61,7 @@ public partial class GameRoot : Node
         _saves = new SaveService(_dataRoot, _options.TryGetValue("db", out var db) ? db : null);
         var seed = _options.TryGetValue("seed", out var text) && ulong.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var parsed) ? parsed : 5UL;
         _campaign = LoadCampaign();
-        var startGrid = _options.TryGetValue("grid", out var gridText) ? int.Parse(gridText, CultureInfo.InvariantCulture) : 64;
+        var startGrid = _options.TryGetValue("grid", out var gridText) ? int.Parse(gridText, CultureInfo.InvariantCulture) : DefaultGrid;
         StartSession(GameSession.NewGame(_dataRoot, seed, true, _campaign.Campaign.WorldFor(startGrid) ?? WorldOptions.Default));
 
         if (_options.ContainsKey("smoke"))
@@ -199,7 +199,13 @@ public partial class GameRoot : Node
             ("Empezar", () => _hud.Toast(definition.Objectives[0].Hint ?? definition.Objectives[0].Title)));
     }
 
-    private void FreePlay() => FreePlay(_options.TryGetValue("grid", out var grid) ? int.Parse(grid, CultureInfo.InvariantCulture) : 64);
+    private void FreePlay() => FreePlay(_options.TryGetValue("grid", out var grid) ? int.Parse(grid, CultureInfo.InvariantCulture) : DefaultGrid);
+
+    /// <summary>
+    /// Cells per side when nothing asks for a size: on real Mars the whole 400 km section at
+    /// ~1.5 km per cell (M3, ADR-036, chosen by Daniel); the invented terrain keeps 64.
+    /// </summary>
+    private int DefaultGrid => Relief() is { } relief ? relief.Definition.Cells : 64;
 
     private void FreePlay(int gridSize)
     {
@@ -332,10 +338,13 @@ public partial class GameRoot : Node
     }
 
     private Martis.Simulation.Planets.RegionRelief? _relief;
+    private Martis.Simulation.Planets.SectionDefinition? _section;
+    private double _planetRadiusM = 3396190.0;
+    private SectionMark[] _sectionMarks = [];
     private bool _reliefTried;
 
     /// <summary>
-    /// The real relief of Jezero (M1, ADR-034), loaded once. <c>--procedural</c> keeps the old
+    /// The real relief of the starting section (M1, M3: ADR-034, ADR-036), loaded once. <c>--procedural</c> keeps the old
     /// invented terrain; a missing or broken region file falls back to it too.
     /// </summary>
     private Martis.Simulation.Planets.RegionRelief? Relief()
@@ -349,7 +358,13 @@ public partial class GameRoot : Node
         try
         {
             var planet = Martis.Simulation.Planets.PlanetDefinition.LoadPublished(_dataRoot);
-            _relief = Martis.Simulation.Planets.RegionRelief.Load(planet.Region("jezero"));
+            // The story mode's starting section (M3, ADR-036): Isidis west with Jezero as a detail insert.
+            _section = planet.StartSection;
+            _planetRadiusM = planet.RadiusM;
+            _relief = planet.LoadRelief(_section);
+            _sectionMarks = planet.Sections
+                .Select(section => new SectionMark(section.Name, section.CenterLat, section.CenterLon, section.SizeM, section.UnlockEra <= 1, section.Unlock))
+                .ToArray();
         }
         catch (Exception exception) when (exception is System.IO.IOException or System.IO.InvalidDataException or KeyNotFoundException or System.Text.Json.JsonException or InvalidOperationException)
         {
@@ -828,6 +843,13 @@ public partial class GameRoot : Node
         ok &= loaded is not null && loaded.Tick == 30 && Math.Abs(loaded.View().TotalBiomassKg - biomass) < 1e-12;
         ok &= record?.MissionFile == MissionDefinition.FirstColonyFile
             && loaded!.Mission!.Status().Single(status => status.Id == "analyze_region").CompletedTick is not null;
+        // M3: on real Mars a new rover arrives at the real landing site in Jezero, not the centre.
+        var arrival = ArrivalCell();
+        var arrivalOk = Relief() is null || (arrival is { } cell && cell.X < _session.Width / 2 && cell.Y > _session.Height / 2);
+        GD.Print($"MARTIS smoke arrival={arrivalOk} cell={arrival} grid={_session.Width}");
+        ok &= arrivalOk;
+        // The checks below start from the centre of the map, where the reference colony lives.
+        _rover.Place(_session.Width / 2, _session.Height / 2, 0);
         // Expedición (J1): the rover loaded its data, drives, and gates deployments by reach.
         var start = _rover.X;
         var roverOk = _rover.CanReach(_session.Width / 2, _session.Height / 2) && !_rover.CanReach(0, 0) && _rover.Drive(1, 0, 0.5) > 0 && _rover.X > start;

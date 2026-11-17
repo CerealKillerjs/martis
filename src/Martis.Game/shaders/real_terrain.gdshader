@@ -4,6 +4,11 @@ render_mode cull_disabled;
 // Real-scale ground of a region (M2, ADR-035): metres, origin at the region centre.
 uniform sampler2D albedo_map : filter_linear_mipmap, repeat_disable, hint_default_white;
 uniform float region_size = 96000.0;
+// A sharper orbital image over part of the region (M3, ADR-036: Jezero inside Isidis west).
+// detail_rect = (u0, v0, size) in the region's UV; detail_on = 0 without one.
+uniform sampler2D detail_map : filter_linear_mipmap, repeat_disable, hint_default_white;
+uniform vec3 detail_rect = vec3(0.0, 0.0, 1.0);
+uniform float detail_on = 0.0;
 
 varying vec3 world_pos;
 varying vec3 world_normal;
@@ -40,7 +45,19 @@ void fragment() {
     // Orbital brightness with local contrast (strip seams fade, landforms stay).
     float g = texture(albedo_map, uv).r;
     float g_low = textureLod(albedo_map, uv, 7.0).r;
-    float b = clamp(0.5 + (g - g_low) * 2.4 + (g_low - 0.45) * 0.3, 0.0, 1.0);
+    float high = g - g_low;
+    if (detail_on > 0.0) {
+        // Inside the insert the sharper image gives the local contrast, fading at its edges.
+        vec2 duv = (uv - detail_rect.xy) / detail_rect.z;
+        vec2 edge = min(duv, 1.0 - duv);
+        float w = smoothstep(0.0, 0.04, min(edge.x, edge.y)) * detail_on;
+        if (w > 0.0) {
+            float d = texture(detail_map, duv).r;
+            float d_low = textureLod(detail_map, duv, 6.0).r;
+            high = mix(high, (d - d_low) * 1.1, w);
+        }
+    }
+    float b = clamp(0.5 + high * 2.4 + (g_low - 0.45) * 0.3, 0.0, 1.0);
 
     vec3 dark = vec3(0.17, 0.08, 0.05);
     vec3 bright = vec3(0.68, 0.38, 0.21);

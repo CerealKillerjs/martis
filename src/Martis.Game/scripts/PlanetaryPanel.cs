@@ -30,6 +30,9 @@ public sealed record PlanetaryData(
     double MeanWarmingK = 0,
     int WarmedCells = 0);
 
+/// <summary>A section of the planet as the planetary view draws it (M3, ADR-036).</summary>
+public sealed record SectionMark(string Name, double Lat, double Lon, double SizeM, bool Open, string Unlock);
+
 /// <summary>
 /// The planetary view (V1, Documento Maestro v2.0 §3.1): a turning globe of Mars with the
 /// study region marked, beside the region's global balances. It reads the same state as
@@ -38,7 +41,9 @@ public sealed record PlanetaryData(
 public partial class PlanetaryPanel : Control
 {
     private Label _data = null!;
+    private Label _sections = null!;
     private Node3D _globe = null!;
+    private Node3D? _sectionMarks;
 
     public override void _Ready()
     {
@@ -89,14 +94,14 @@ public partial class PlanetaryPanel : Control
             },
         });
 
-        // The study region: 18° N, 77° E (an illustrative crater-floor site), marked by a beacon.
+        // The arrival site in Jezero, 18.4° N, 77.5° E, marked by a beacon.
         var marker = new MeshInstance3D
         {
             Mesh = new SphereMesh { Radius = 0.025f, Height = 0.05f },
             MaterialOverride = new StandardMaterial3D { AlbedoColor = Colors.Black, EmissionEnabled = true, Emission = new Color(0.4f, 1f, 0.7f), EmissionEnergyMultiplier = 6f },
         };
-        var lat = Mathf.DegToRad(18f);
-        var lon = Mathf.DegToRad(77f);
+        var lat = Mathf.DegToRad(18.4f);
+        var lon = Mathf.DegToRad(77.5f);
         marker.Position = new Vector3(Mathf.Cos(lat) * Mathf.Sin(lon), Mathf.Sin(lat), Mathf.Cos(lat) * Mathf.Cos(lon)) * 1.01f;
         _globe.AddChild(marker);
 
@@ -126,6 +131,9 @@ public partial class PlanetaryPanel : Control
         _data = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         _data.AddThemeFontSizeOverride("font_size", 16);
         column.AddChild(_data);
+        _sections = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        _sections.AddThemeFontSizeOverride("font_size", 13);
+        column.AddChild(_sections);
         var note = new Label
         {
             Text = "Los balances del planeta entero (clima global, atmósfera) llegarán con la fase E. Esc vuelve al modo anterior.",
@@ -134,6 +142,49 @@ public partial class PlanetaryPanel : Control
         note.AddThemeFontSizeOverride("font_size", 12);
         note.AddThemeColorOverride("font_color", new Color(1, 1, 1, 0.45f));
         column.AddChild(note);
+    }
+
+    /// <summary>
+    /// The planet's sections (M3, ADR-036): open ones glow green on the globe, locked ones are
+    /// dim amber outlines, each listed with what opens it.
+    /// </summary>
+    public void SetSections(System.Collections.Generic.IReadOnlyList<SectionMark> sections, double radiusM)
+    {
+        _sectionMarks?.QueueFree();
+        _sectionMarks = new Node3D { Name = "Sections" };
+        _globe.AddChild(_sectionMarks);
+        var lines = new System.Collections.Generic.List<string> { "SECCIONES DE MARTE" };
+        foreach (var section in sections)
+        {
+            var lat = Mathf.DegToRad((float)section.Lat);
+            var lon = Mathf.DegToRad((float)section.Lon);
+            var normal = new Vector3(Mathf.Cos(lat) * Mathf.Sin(lon), Mathf.Sin(lat), Mathf.Cos(lat) * Mathf.Cos(lon));
+            var side = (float)(section.SizeM / radiusM); // angular size on a unit globe
+            var colour = section.Open ? new Color(0.4f, 1f, 0.7f, 0.55f) : new Color(1f, 0.7f, 0.35f, 0.22f);
+            var patch = new MeshInstance3D
+            {
+                Mesh = new PlaneMesh { Size = new Vector2(side, side) },
+                MaterialOverride = new StandardMaterial3D
+                {
+                    AlbedoColor = colour,
+                    Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+                    ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                    CullMode = BaseMaterial3D.CullModeEnum.Disabled,
+                    EmissionEnabled = section.Open,
+                    Emission = new Color(0.4f, 1f, 0.7f),
+                    EmissionEnergyMultiplier = 1.5f,
+                },
+            };
+            _sectionMarks.AddChild(patch);
+            var east = new Vector3(Mathf.Cos(lon), 0, -Mathf.Sin(lon));
+            var north = normal.Cross(east).Normalized();
+            patch.Transform = new Transform3D(new Basis(east, normal, -north), normal * 1.012f);
+            lines.Add(section.Open
+                ? $"● {section.Name} · abierta"
+                : $"○ {section.Name} · se abre con {section.Unlock}");
+        }
+
+        _sections.Text = string.Join('\n', lines);
     }
 
     public override void _Process(double delta)
@@ -160,7 +211,7 @@ public partial class PlanetaryPanel : Control
             string.Create(c, $"Conocimiento  {data.EstimatedFraction * 100:0} % estimado · {data.MeasuredFraction * 100:0.#} % medido"),
             string.Create(c, $"Estaciones  {data.WorkingStations}/{data.Stations} activas · desgaste del rover {data.RoverWear * 100:0} %"),
             string.Create(c, $"Calentamiento local  +{data.MeanWarmingK:0.0} K en {data.WarmedCells} celdas · calefactores {data.WorkingHeaters}/{data.Heaters}"),
-            string.Create(c, $"Lugares del valle  {data.DiscoveredPlaces}/{data.Places} descubiertos"),
+            string.Create(c, $"Lugares de interés  {data.DiscoveredPlaces}/{data.Places} descubiertos"),
             string.Create(c, $"Órdenes  {data.Orders} ({data.FailedOrders} fallidas)"),
         };
         if (data.ResearchPoints is { } points)

@@ -37,13 +37,17 @@ public sealed record ValleyDefinition(string Id, string Name, double DiscoveryRa
 {
     public const string PublishedFile = "valley.v1.json";
 
-    public static ValleyDefinition LoadPublished(string repositoryRoot, string fileName = PublishedFile)
+    public static ValleyDefinition LoadPublished(string repositoryRoot, string fileName = PublishedFile, Func<double, double, (double X, double Y)>? locate = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
-        return Load(File.ReadAllText(Path.Combine(repositoryRoot, "data", "expedition", fileName)));
+        return Load(File.ReadAllText(Path.Combine(repositoryRoot, "data", "expedition", fileName)), locate);
     }
 
-    public static ValleyDefinition Load(string json)
+    /// <summary>
+    /// Loads a valley. Places may give <c>x</c>/<c>y</c> as fractions of the map or, on a real
+    /// region (M3, ADR-036), <c>lat</c>/<c>lon</c>; <paramref name="locate"/> turns those into fractions.
+    /// </summary>
+    public static ValleyDefinition Load(string json, Func<double, double, (double X, double Y)>? locate = null)
     {
         var parameters = ParameterCatalog.Load(json);
         using var document = JsonDocument.Parse(json);
@@ -60,8 +64,22 @@ public sealed record ValleyDefinition(string Id, string Name, double DiscoveryRa
         foreach (var item in meta.GetProperty("pois").EnumerateArray())
         {
             var kind = Enum.Parse<PoiKind>(item.GetProperty("kind").GetString()!);
-            var x = item.GetProperty("x").GetDouble();
-            var y = item.GetProperty("y").GetDouble();
+            double x, y;
+            if (item.TryGetProperty("lat", out var lat))
+            {
+                if (locate is null)
+                {
+                    throw new InvalidDataException($"Point of interest {item.GetProperty("id").GetString()} is placed by latitude and longitude; load it with a region.");
+                }
+
+                (x, y) = locate(lat.GetDouble(), item.GetProperty("lon").GetDouble());
+            }
+            else
+            {
+                x = item.GetProperty("x").GetDouble();
+                y = item.GetProperty("y").GetDouble();
+            }
+
             if (x is < 0 or >= 1 || y is < 0 or >= 1)
             {
                 throw new InvalidDataException($"Point of interest {item.GetProperty("id").GetString()} must lie inside the map (fractions in [0, 1)).");

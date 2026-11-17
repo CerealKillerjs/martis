@@ -34,6 +34,11 @@ public partial class GameRoot
             _rover.Place(Math.Max(0, x - 2), y, 0);
             _rover.Landed(x, y);
         }
+        else if (ArrivalCell() is { } arrival)
+        {
+            // On real Mars the AI arrives at a real landing site, not the centre of the section.
+            _rover.Place(arrival.X, arrival.Y, 0);
+        }
 
         if (_gauge is null)
         {
@@ -43,6 +48,18 @@ public partial class GameRoot
 
         ApplyMode();
         PoseRover(0f);
+    }
+
+    /// <summary>The section's arrival point as a cell (M3, ADR-036), or null on invented terrain.</summary>
+    private (int X, int Y)? ArrivalCell()
+    {
+        if (Relief() is not { } relief || _section?.Arrival is not { } arrival)
+        {
+            return null;
+        }
+
+        var (fx, fy) = SectionFraction(relief, arrival.Lat, arrival.Lon);
+        return (Math.Clamp((int)(fx * _session.Width), 0, _session.Width - 1), Math.Clamp((int)(fy * _session.Height), 0, _session.Height - 1));
     }
 
     private void RoverLanded(int x, int y)

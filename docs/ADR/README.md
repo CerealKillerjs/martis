@@ -34,5 +34,6 @@
 - [ADR-033 — Calentamiento regional: calefactores y anomalía térmica (E1)](ADR-033-calentamiento-regional.md) (Propuesto)
 - [ADR-034 — Marte real: relieve de Jezero y PlanetDefinition (M1)](ADR-034-marte-real-jezero.md) (Propuesto)
 - [ADR-035 — Jezero a escala real, cargado por trozos (M2)](ADR-035-escala-real-por-trozos.md) (Propuesto)
+- [ADR-036 — Secciones de Marte y sección inicial del modo historia (M3)](ADR-036-secciones-modo-historia.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).

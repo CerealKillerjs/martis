@@ -52,6 +52,15 @@ public partial class RealTerrain : Node3D
         BuildFar();
     }
 
+    /// <summary>A sharper orbital image over a detail insert (M3, ADR-036).</summary>
+    public void SetDetail(Insert insert, Texture2D albedo)
+    {
+        ArgumentNullException.ThrowIfNull(insert);
+        _material.SetShaderParameter("detail_map", albedo);
+        _material.SetShaderParameter("detail_rect", new Vector3((float)(insert.X / _relief.Definition.SizeM), (float)(insert.Y / _relief.Definition.SizeM), (float)(insert.Detail.Definition.SizeM / _relief.Definition.SizeM)));
+        _material.SetShaderParameter("detail_on", 1f);
+    }
+
     /// <summary>
     /// The whole region at 375 m per vertex, a few metres below the detailed chunks: it fills the
     /// horizon (crater rims tens of kilometres away) where no chunk is built.
