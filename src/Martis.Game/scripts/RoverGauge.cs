@@ -18,7 +18,7 @@ public partial class RoverGauge : PanelContainer
         // Centred above the deploy hint: the log owns the bottom-left corner.
         SetAnchorsPreset(LayoutPreset.CenterBottom);
         OffsetLeft = -150;
-        OffsetTop = -150;
+        OffsetTop = -166;
         OffsetRight = 150;
         OffsetBottom = -54;
         GrowVertical = GrowDirection.Begin;
@@ -31,7 +31,7 @@ public partial class RoverGauge : PanelContainer
         var column = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
         column.AddThemeConstantOverride("separation", 4);
         AddChild(column);
-        _title = new Label { Text = "ROVER SEMBRADOR" };
+        _title = new Label { Text = "ROVER CIENTÍFICO" };
         _title.AddThemeFontSizeOverride("font_size", 12);
         _title.AddThemeColorOverride("font_color", Bio);
         column.AddChild(_title);
@@ -46,7 +46,7 @@ public partial class RoverGauge : PanelContainer
         column.AddChild(_keys);
     }
 
-    public void Show(Rover rover, bool driving, bool landed)
+    public void Show(Rover rover, bool driving, bool landed, KnowledgeMap? knowledge = null)
     {
         _battery.Value = rover.Battery;
         var percent = (int)System.Math.Round(rover.Battery * 100);
@@ -58,8 +58,11 @@ public partial class RoverGauge : PanelContainer
                     ? "Batería agotada: avance lento · vuelve al módulo"
                     : $"Batería {percent} %";
         _state.AddThemeColorOverride("font_color", landed && rover.Battery <= 0 ? new Color(1f, 0.55f, 0.4f) : new Color(1, 1, 1, 0.85f));
-        _keys.Text = driving
-            ? "WASD conducir · F sembrar aquí · Q/E mirar · Tab estratégico"
-            : "Tab o F1 conducir el rover · siembra dentro del anillo";
+        var mapped = knowledge is null
+            ? string.Empty
+            : System.FormattableString.Invariant($"Mapa {knowledge.Coverage(KnowledgeLevel.Estimated) * 100:0} % estimado · {knowledge.Coverage(KnowledgeLevel.Measured) * 100:0.#} % medido\n");
+        _keys.Text = mapped + (driving
+            ? "WASD conducir · C escanear · F sembrar · Q/E mirar · Tab estratégico"
+            : "Tab o F1 conducir el rover · siembra dentro del anillo");
     }
 }

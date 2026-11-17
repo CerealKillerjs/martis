@@ -22,7 +22,7 @@
 
 ### Códice y resumen de misión
 
-- **Conceptos:** `genesis.v1.json` define 17 conceptos y cada misión enseña los suyos (`teaches`). Un concepto lo enseña una sola misión.
+- **Conceptos:** `genesis.v1.json` define 18 conceptos y cada misión enseña los suyos (`teaches`). Un concepto lo enseña una sola misión.
 - **Briefing:** dice qué se va a aprender y cuánta ayuda hay.
 - **Al terminar:** el juego muestra el texto de cierre de la misión (`debrief`) y los conceptos nuevos.
 - **Códice:** `CampaignProgress.Learned` reúne lo aprendido y el menú de campaña lo enseña en «Códice». Los conceptos que faltan aparecen bloqueados.
@@ -35,7 +35,7 @@
 
 ### El capítulo 1 enseña el rover
 
-La misión 1.1 añade cinco pasos con las acciones de J1 ([ADR-026](ADR-026-expedicion-rover.md)) y V1 ([ADR-027](ADR-027-modos-sobre-un-estado.md)): modo Exploración (F1 o Tab), conducir el rover (WASD), modo Estratégico (F2), Laboratorio (F3) y Planetario (F4). La pista de despliegue de 1.2 enseña a sembrar con F donde está el rover. Las acciones `scan-site` y `collect-sample` de V2 y V3 podrán entrar en la guía cuando existan.
+La misión 1.1 añade seis pasos con las acciones de J1 ([ADR-026](ADR-026-expedicion-rover.md)), V1 ([ADR-027](ADR-027-modos-sobre-un-estado.md)) y V2 ([ADR-029](ADR-029-conocimiento-y-escaneo.md)): modo Exploración (F1 o Tab), conducir el rover (WASD), escanear con C, modo Estratégico (F2), Laboratorio (F3) y Planetario (F4). La pista de despliegue de 1.2 pide sembrar en terreno cartografiado, con F donde está el rover. El códice suma el concepto «Conocimiento del terreno». La acción `collect-sample` de V3 entrará cuando exista.
 
 ## Fuera de alcance
 

@@ -25,7 +25,8 @@
           "file": "awakening.v1.json",
           "teaches": [
             "leer_marte",
-            "rover"
+            "rover",
+            "cartografia"
           ],
           "kind": "reconnaissance"
         },
@@ -288,6 +289,12 @@
       "id": "rover",
       "title": "El rover sembrador",
       "text": "Solo puedes sembrar cerca del rover. Con F1 (o Tab) bajas al rover, con WASD lo conduces y con F siembras donde está. La batería se gasta al conducir y se recarga junto al módulo.",
+      "epistemic": "model"
+    },
+    {
+      "id": "cartografia",
+      "title": "Conocimiento del terreno",
+      "text": "Al llegar no sabes cómo es Marte: la sonda orbital solo estima franjas del mapa y el escáner del rover convierte esas estimaciones en medidas. Solo puedes analizar y sembrar donde ya hay datos. Medir antes de actuar es la base del método científico.",
       "epistemic": "model"
     },
     {

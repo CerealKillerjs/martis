@@ -144,14 +144,14 @@ public sealed class GuidanceTests
         progress.Complete("awakening");
         progress.Complete("first_colony");
 
-        Assert.Equal(["leer_marte", "rover", "fotosintesis", "diseno_genetico"], progress.Learned.Select(concept => concept.Id));
+        Assert.Equal(["leer_marte", "rover", "cartografia", "fotosintesis", "diseno_genetico"], progress.Learned.Select(concept => concept.Id));
         var reloaded = CampaignProgress.FromJson(Campaign, progress.ToJson());
         Assert.Equal(progress.Learned, reloaded.Learned);
     }
 
     [Theory]
     [InlineData("\"guidance\": \"tutorial\"", "\"guidance\": \"magic\"")]
-    [InlineData("\"leer_marte\",\n            \"rover\"", "\"leer_marte\",\n            \"ghost\"")]
+    [InlineData("\"leer_marte\",\n            \"rover\",\n            \"cartografia\"", "\"leer_marte\",\n            \"ghost\",\n            \"cartografia\"")]
     [InlineData("\"seleccion\"\n          ]", "\"fotosintesis\"\n          ]")]
     public void ABrokenGuidanceOrConceptIsRefused(string from, string to)
     {

@@ -15,6 +15,11 @@ uniform vec2 highlight_cell = vec2(-1.0);
 uniform float cells = 64.0;
 uniform vec2 reach_center = vec2(-1.0);  // rover position in cell units (J1); x < 0 hides the ring
 uniform float reach_radius = 3.0;        // cells the rover can seed
+// Fog of knowledge (V2, ADR-029): R = 0 unknown, 0.5 estimated, 1 measured; G = raw confidence.
+uniform sampler2D knowledge_data : filter_linear, repeat_disable;
+uniform vec2 scan_center = vec2(-1.0);   // last rover scan, cell units
+uniform float scan_radius = 4.0;
+uniform float scan_age = 99.0;           // seconds since that scan
 
 varying vec3 world_pos;
 varying vec3 world_normal;
@@ -110,15 +115,45 @@ void fragment() {
         emission += photo_col * cover_p * glow * 1.6 + decomp_col * cover_d * glow * 1.2;
     }
 
-    if (overlay_mode > 0) {
+    vec4 know = texture(knowledge_data, uv);
+    float known = smoothstep(0.15, 0.45, know.r);      // 0 unknown … 1 at least estimated
+    float measured = smoothstep(0.6, 0.95, know.r);
+
+    if (overlay_mode > 0 && known > 0.01) {
         vec3 o = ramp(overlay_mode, data.a);
         // Cell grid lines make the 64×64 model visible under the overlay.
         vec2 g = abs(fract(uv * cells) - 0.5);
         float line = smoothstep(0.47, 0.5, max(g.x, g.y));
         // Emissive so the data reads the same by day and by night; relief kept by a fixed shade.
         float shade = 0.45 + 0.55 * clamp(dot(world_normal, normalize(vec3(0.4, 1.0, 0.3))), 0.0, 1.0);
-        albedo *= 1.0 - overlay_strength;
-        emission = mix(emission, o * shade * 0.35, overlay_strength) + vec3(line * 0.05);
+        float strength = overlay_strength * known;
+        albedo *= 1.0 - strength;
+        emission = mix(emission, o * shade * 0.35, strength) + vec3(line * 0.05);
+    }
+
+    // Unknown ground: dimmed, cooled and crossed by a slow survey hatch. Estimated ground keeps
+    // a faint hatch; measured ground is clear.
+    {
+        vec2 cellp = uv * cells;
+        float hatch = smoothstep(0.82, 0.98, sin((cellp.x + cellp.y) * 3.1416 * 1.5 + TIME * 0.6) * 0.5 + 0.5);
+        vec3 veil = vec3(0.07, 0.075, 0.09);
+        float fog = 1.0 - known;
+        float grey = dot(albedo, vec3(0.3, 0.59, 0.11));
+        albedo = mix(albedo, mix(vec3(grey) * 0.3, veil, 0.6), fog * 0.9);
+        emission *= mix(1.0, 0.15, fog);
+        emission += vec3(0.25, 0.45, 0.7) * hatch * (fog * 0.06 + (known - measured) * 0.025);
+        // Border between known and unknown ground: a thin cold line.
+        float edge = 1.0 - smoothstep(0.0, 0.08, abs(know.r - 0.25));
+        emission += vec3(0.35, 0.65, 1.0) * edge * 0.18;
+    }
+
+    // Rover scan (V2): a bright ring expanding to the scanner radius.
+    if (scan_center.x >= 0.0 && scan_age < 2.5) {
+        float d = length(uv * cells - scan_center);
+        float front = scan_radius * clamp(scan_age / 0.9, 0.0, 1.0);
+        float wave = 1.0 - smoothstep(0.0, 0.35, abs(d - front));
+        float fade = 1.0 - smoothstep(0.9, 2.5, scan_age);
+        emission += vec3(0.4, 0.85, 1.0) * wave * fade * 1.6 * step(d, scan_radius + 0.3);
     }
 
     if (highlight_cell.x >= 0.0) {

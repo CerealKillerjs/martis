@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using Godot;
 using Martis.Simulation.Economy;
+using Martis.Simulation.Expedition;
 using Martis.Simulation.Missions;
 using Martis.Simulation.Sessions;
 
@@ -332,7 +333,11 @@ public partial class Hud : Control
         }
     }
 
-    public void ShowCell(CellReport? report)
+    /// <summary>
+    /// The inspector shows what the AI knows (V2, ADR-029): nothing for unknown ground, estimates
+    /// with their uncertainty for orbital or passing data, exact values once the rover measured it.
+    /// </summary>
+    public void ShowCell(CellReport? report, KnowledgeLevel level = KnowledgeLevel.Measured)
     {
         if (report is null)
         {
@@ -341,26 +346,53 @@ public partial class Hud : Control
         }
 
         var text = new System.Text.StringBuilder();
-        text.Append(CultureInfo.InvariantCulture, $"[b]Celda ({report.X}, {report.Y})[/b]\n");
+        var (tag, colour) = level switch
+        {
+            KnowledgeLevel.Measured => ("medida", "#60ffa0"),
+            KnowledgeLevel.Estimated => ("estimada", "#ffd060"),
+            _ => ("sin datos", "#ff8a70"),
+        };
+        text.Append(CultureInfo.InvariantCulture, $"[b]Celda ({report.X}, {report.Y})[/b]  [color={colour}]{tag}[/color]\n");
+        if (level == KnowledgeLevel.Unknown)
+        {
+            text.Append("[color=#ffffff99]Nadie ha observado este terreno. Espera a la sonda orbital o conduce el rover hasta aquí y escanea (C).[/color]\n");
+            _inspector.Text = text.ToString();
+            return;
+        }
+
+        var estimated = level == KnowledgeLevel.Estimated;
+        var about = estimated ? "≈ " : string.Empty;
         if (report.TemperatureKelvin is { } kelvin)
         {
-            text.Append(CultureInfo.InvariantCulture, $"Temperatura  [color=#ffb070]{kelvin:0.0} K[/color] ({kelvin - 273.15:0} °C)\n");
+            var spread = estimated ? "  [color=#ffffff77]± 8 K[/color]" : string.Empty;
+            text.Append(CultureInfo.InvariantCulture, $"Temperatura  [color=#ffb070]{about}{kelvin:0.0} K[/color] ({kelvin - 273.15:0} °C){spread}\n");
         }
 
         if (report.PressurePascal is { } pascal)
         {
-            text.Append(CultureInfo.InvariantCulture, $"Presión  {pascal:0} Pa\n");
+            text.Append(CultureInfo.InvariantCulture, $"Presión  {about}{pascal:0} Pa{(estimated ? "  [color=#ffffff77]± 15 %[/color]" : string.Empty)}\n");
         }
 
-        text.Append(CultureInfo.InvariantCulture, $"Irradiancia  {report.IrradianceWPerM2:0.0} W/m²\n");
-        text.Append(CultureInfo.InvariantCulture, $"Radiación  [color=#d080ff]{report.RadiationSvPerSol * 1000:0.000} mSv/sol[/color]\n");
-        text.Append("\n[b]Recursos[/b]\n");
-        foreach (var (name, kg) in report.ResourcesKg.OrderByDescending(item => item.Value).Take(8))
+        text.Append(CultureInfo.InvariantCulture, $"Irradiancia  {about}{report.IrradianceWPerM2:0.0} W/m²\n");
+        text.Append(CultureInfo.InvariantCulture, $"Radiación  [color=#d080ff]{about}{report.RadiationSvPerSol * 1000:0.000} mSv/sol[/color]{(estimated ? "  [color=#ffffff77]± 30 %[/color]" : string.Empty)}\n");
+        text.Append(estimated ? "\n[b]Recursos[/b]  [color=#ffffff77]± 50 %, escanea para medir[/color]\n" : "\n[b]Recursos[/b]\n");
+        foreach (var (name, kg) in report.ResourcesKg.OrderByDescending(item => item.Value).Take(estimated ? 3 : 8))
         {
-            text.Append(CultureInfo.InvariantCulture, $"  {Resource(name)}  {Mass(kg)}\n");
+            text.Append(CultureInfo.InvariantCulture, $"  {Resource(name)}  {about}{Mass(kg)}\n");
         }
 
         text.Append(CultureInfo.InvariantCulture, $"\n[b]Vida[/b]  {report.Populations.Count} poblaciones\n");
+        if (estimated)
+        {
+            if (report.Populations.Count > 0)
+            {
+                text.Append("[color=#ffffff99]Genomas y biomasa solo con medida in situ (C con el rover).[/color]\n");
+            }
+
+            _inspector.Text = text.ToString();
+            return;
+        }
+
         foreach (var population in report.Populations.OrderByDescending(item => item.BiomassKg).Take(5))
         {
             text.Append(CultureInfo.InvariantCulture, $"[color=#60ffa0]#{population.Id} {population.OrganismName}[/color]\n");
@@ -402,6 +434,7 @@ public partial class Hud : Control
                 "deploy" => "#80d0ff",
                 "failure" => "#ff4040",
                 "experiment" => "#c0a0ff",
+                "survey" => "#9fd8ff",
                 _ => "#ffffffcc",
             };
             _feed.AppendText($"[color=#ffffff66]sol {item.Tick}[/color]  [color={colour}]{Escape(item.Text)}[/color]\n");

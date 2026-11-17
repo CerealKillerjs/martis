@@ -86,6 +86,7 @@ public partial class GameRoot
         }
 
         PoseRover((float)(driven * Terrain.CellSize * Math.Sign(throttle)));
+        Glimpse();
     }
 
     private void PoseRover(float drivenMetres)
@@ -100,6 +101,6 @@ public partial class GameRoot
 
         var ring = Driving || _hud.DeployMode;
         _world.ShowReach(_rover.X, _rover.Y, ring ? _rover.Definition.ReachCells : -1);
-        _gauge?.Show(_rover, Driving, _landed);
+        _gauge?.Show(_rover, Driving, _landed, _knowledge);
     }
 }

@@ -266,12 +266,14 @@ public partial class GameRoot : Node
         if (_session.Failure is null && _time.Advance(delta) > 0)
         {
             _session.Advance(1);
+            OrbitalPass();
             Refresh();
         }
 
         _world.TimeOfDay = (float)((_time.SolProgress + 0.25) % 1.0);
         UpdatePlanetary();
         UpdateRover(delta);
+        ShowKnowledge();
         _hud.ShowStatus(_view ?? _session.View(), _world.TimeOfDay);
     }
 
@@ -293,6 +295,9 @@ public partial class GameRoot : Node
                     break;
                 case Key.F when Exploring:
                     SeedHere();
+                    break;
+                case Key.C when Exploring:
+                    ScanHere();
                     break;
                 case Key.F5:
                     Save();
@@ -398,6 +403,7 @@ public partial class GameRoot : Node
             _hud.ToggleResearch(null);
         }
 
+        ResetKnowledge();
         Select(session.Width / 2, session.Height / 2);
         Refresh();
         var colony = Array.FindIndex(_view!.BiomassKg, kg => kg > 0f);
@@ -430,7 +436,7 @@ public partial class GameRoot : Node
         }
         if (_selected.X >= 0)
         {
-            _hud.ShowCell(_session.Inspect(_selected.X, _selected.Y));
+            ShowSelected();
         }
 
         var fresh = (int)Math.Min(_session.TotalEvents - _seenEvents, _session.Events.Count);
@@ -533,12 +539,19 @@ public partial class GameRoot : Node
     {
         _selected = (x, y);
         _world.Highlight(x, y);
-        _hud.ShowCell(_session.Inspect(x, y));
+        ShowSelected();
     }
 
     private void Deploy(int x, int y)
     {
         var order = _orders.Issue("deploy", FormattableString.Invariant($"({x}, {y})"), Exploring ? "rover" : "estación", _session.Tick, _hud.BiomassKg);
+        if (!KnowledgeAllows(x, y, out var blind))
+        {
+            Resolve(_orders.Fail(order.Id, _session.Tick, "celda sin datos"));
+            _hud.Toast(blind!, bad: true);
+            return;
+        }
+
         if (_session.Introduce(_hud.SelectedOrganism, x, y, _hud.BiomassKg, _hud.Design(), out var error))
         {
             Resolve(_orders.Complete(order.Id, _session.Tick, FormattableString.Invariant($"{_hud.BiomassKg:0.###} kg programados")));
@@ -564,6 +577,12 @@ public partial class GameRoot : Node
     {
         if (_selected.X < 0)
         {
+            return;
+        }
+
+        if (!KnowledgeAllows(_selected.X, _selected.Y, out var blind))
+        {
+            _hud.Toast(blind!, bad: true);
             return;
         }
 
@@ -730,6 +749,7 @@ public partial class GameRoot : Node
         var sols = _options.TryGetValue("sols", out var text) ? int.Parse(text, CultureInfo.InvariantCulture) : 220;
         _session.Advance(sols);
         _world.PlaceLander(32 + o, 32 + o);
+        ShowcaseKnowledge(o);
         Select(32 + o, 32 + o);
         Refresh();
         _hud.ShowForecast(_session.Experiment("phototroph_a01", 32 + o, 32 + o, 0.5, design, 40));
@@ -805,6 +825,15 @@ public partial class GameRoot : Node
         SwitchMode(Martis.Application.GameMode.Strategic);
         Deploy(_session.Width / 2, _session.Height / 2);
         roverOk &= _session.Tick == tick && _orders.All.Count == 1;
+        // V2: no seeding blind; the scanner measures the ground under the rover.
+        Deploy(0, 0);
+        var blindRefused = _orders.All[^1].Status == Martis.Application.OrderStatus.Failed;
+        SwitchMode(Martis.Application.GameMode.Exploration);
+        ScanHere();
+        var (rx, ry) = _rover.Cell;
+        var knowledgeOk = blindRefused && _knowledge.Level(rx, ry) == Martis.Simulation.Expedition.KnowledgeLevel.Measured && _orders.All.Count == 3;
+        GD.Print($"MARTIS smoke knowledge={knowledgeOk} estimated={_knowledge.Coverage(Martis.Simulation.Expedition.KnowledgeLevel.Estimated):0.###}");
+        roverOk &= knowledgeOk;
         ok &= roverOk;
         GD.Print($"MARTIS smoke rover={roverOk} battery={_rover.Battery:0.##}");
         GD.Print($"MARTIS smoke ok={ok} save={id} tick={_session.Tick} biomass={biomass:0.######} {message} {error}");

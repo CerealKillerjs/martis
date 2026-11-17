@@ -36,7 +36,7 @@
         "type": "deploy",
         "capability": "photoautotrophy",
         "title": "Desplegar la colonia",
-        "hint": "Lleva el rover al sitio (F1 y WASD) y pulsa F para sembrar donde está, o pulsa «Desplegar» y haz clic dentro de su alcance. Un descomponedor cerca recicla el agua y el carbono."
+        "hint": "Siembra en terreno cartografiado: lleva el rover al sitio (F1 y WASD) y pulsa F, o pulsa «Desplegar» y haz clic dentro de su alcance. Un descomponedor cerca recicla el agua y el carbono."
       },
       {
         "id": "sustain_generations",

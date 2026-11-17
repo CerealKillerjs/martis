@@ -9,7 +9,7 @@
     "author": "MARTIS Motor (campaña H1)",
     "review": "Misión de la campaña «Génesis» (ADR-019). Umbrales GAME_BALANCE propuestos.",
     "sequential": true,
-    "briefing": "Sol 0. La sonda MARTIS acaba de posarse en el cráter Gale. Antes de sembrar vida, aprende a leer el planeta: mueve la cámara, consulta las capas de datos, inspecciona el terreno y recorre los cuatro modos de la misión: Exploración, Estratégico, Laboratorio y Planetario.",
+    "briefing": "Sol 0. La sonda MARTIS acaba de posarse en el cráter Gale. Antes de sembrar vida, aprende a leer el planeta: mueve la cámara, consulta las capas de datos, inspecciona el terreno y escanea el terreno con el rover y recorre los cuatro modos de la misión: Exploración, Estratégico, Laboratorio y Planetario.",
     "objectives": [
       {
         "id": "orbit_camera",
@@ -54,6 +54,13 @@
         "hint": "Usa WASD o las flechas. Solo podrás sembrar a 3 casillas del rover."
       },
       {
+        "id": "scan_site",
+        "type": "action",
+        "action": "scan-site",
+        "title": "Escanea el terreno",
+        "hint": "En Exploración pulsa C: el escáner del rover mide las 4 celdas de alrededor y convierte las estimaciones de la sonda en medidas."
+      },
+      {
         "id": "orbital_view",
         "type": "action",
         "action": "orbital-view",
@@ -79,7 +86,7 @@
         "type": "action",
         "action": "analyze-region",
         "title": "Analiza la región",
-        "hint": "Pulsa «Analizar región» para registrar el estado del entorno."
+        "hint": "Pulsa «Analizar región» sobre terreno cartografiado para registrar el estado del entorno."
       },
       {
         "id": "run_time",

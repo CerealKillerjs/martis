@@ -171,4 +171,29 @@ public sealed class RoverTests
         Assert.Equal(38.5, rover.X, 9);
         Assert.Throws<ArgumentOutOfRangeException>(() => rover.Drive(1, 0, -1));
     }
+
+    [Fact]
+    public void InstrumentsAreFreeBeforeLandingAndCostBatteryAfter()
+    {
+        var rover = NewRover();
+        Assert.True(rover.Spend(0.5));
+        Assert.Equal(1.0, rover.Battery, 12);
+
+        rover.Landed(32, 32);
+
+        Assert.True(rover.Spend(0.25));
+        Assert.Equal(0.75, rover.Battery, 12);
+    }
+
+    [Fact]
+    public void AnInstrumentIsRefusedWhenTheBatteryIsShort()
+    {
+        var rover = NewRover();
+        rover.Landed(32, 32);
+        Assert.True(rover.Spend(0.98));
+
+        Assert.False(rover.Spend(0.04));
+        Assert.Equal(0.02, rover.Battery, 9);
+        Assert.Throws<ArgumentOutOfRangeException>(() => rover.Spend(-0.1));
+    }
 }

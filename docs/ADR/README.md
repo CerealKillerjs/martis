@@ -28,5 +28,6 @@
 - [ADR-026 — «Expedición»: el rover sembrador (J1)](ADR-026-expedicion-rover.md) (Propuesto)
 - [ADR-027 — Modos de juego sobre un mismo estado (V1)](ADR-027-modos-sobre-un-estado.md) (Propuesto)
 - [ADR-028 — Guía progresiva, códice y eras de la campaña (H8)](ADR-028-guia-progresiva.md) (Propuesto)
+- [ADR-029 — Conocimiento del terreno: sonda orbital y escáner (V2)](ADR-029-conocimiento-y-escaneo.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).
