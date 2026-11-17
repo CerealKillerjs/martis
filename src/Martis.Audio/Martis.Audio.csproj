@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    ADR-018: audio for the game (sound effects, generative soundtrack, wind).
+    Pure C#, no Godot and no engine references, so it is unit tested inside MARTIS.sln.
+    The only recorded sound is the CC0 grand piano bank (Assets/piano.bank, see PianoBank).
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="Assets/piano.bank" LogicalName="Martis.Audio.piano.bank" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Godot;
@@ -26,6 +27,9 @@ public sealed class SaveService
         _dataRoot = dataRoot;
         _path = path ?? ProjectSettings.GlobalizePath("user://martis.db");
     }
+
+    /// <summary>Absolute path of the SQLite database.</summary>
+    public string Path => _path;
 
     /// <summary>Id of the save game this run writes to, created on the first save.</summary>
     public string? CurrentId { get; set; }
@@ -70,8 +74,8 @@ public sealed class SaveService
         return CurrentId;
     }
 
-    /// <summary>Loads the newest valid snapshot of the most recent save, or null when there is none.</summary>
     /// <summary>
+    /// Loads the newest valid snapshot of the most recent save, or null when there is none.
     /// <paramref name="mission"/> is the campaign mission the save belongs to, with its progress
     /// and economy, or null for an older save or free play, which load as before.
     /// </summary>
@@ -80,14 +84,23 @@ public sealed class SaveService
 
     /// <summary>As above, plus the expedition saved at the snapshot's tick (V5), or null for an older save.</summary>
     public GameSession? LoadLatest(out string message, out MissionSaveRecord? mission, Func<int, WorldOptions?>? worldFor, out string? expedition)
+        => Load(null, out message, out mission, worldFor, out expedition);
+
+    /// <summary>
+    /// Loads the newest valid snapshot of save <paramref name="saveId"/> (the most recent save
+    /// when null), with its mission record and expedition, or null when there is none.
+    /// </summary>
+    public GameSession? Load(string? saveId, out string message, out MissionSaveRecord? mission, Func<int, WorldOptions?>? worldFor, out string? expedition)
     {
         mission = null;
         expedition = null;
         using var store = SaveGameStore.Open(_path);
-        var save = store.ListSaveGames().OrderByDescending(item => item.UpdatedAt).FirstOrDefault();
+        var save = saveId is null
+            ? store.ListSaveGames().OrderByDescending(item => item.UpdatedAt).FirstOrDefault()
+            : store.GetSaveGame(saveId);
         if (save is null)
         {
-            message = "No hay partidas guardadas.";
+            message = saveId is null ? "No hay partidas guardadas." : $"No existe la partida {saveId}.";
             return null;
         }
 
@@ -123,6 +136,35 @@ public sealed class SaveService
         return GameSession.Resume(_dataRoot, snapshot, withMission: true, world);
     }
 
+    /// <summary>
+    /// Saved games, newest first, for the title screen and the Esc menu. Empty when the
+    /// database does not exist yet or cannot be read.
+    /// </summary>
+    public static IReadOnlyList<SaveSummary> List(string? path = null)
+    {
+        path ??= ProjectSettings.GlobalizePath("user://martis.db");
+        if (!System.IO.File.Exists(path))
+        {
+            return [];
+        }
+
+        try
+        {
+            using var store = SaveGameStore.Open(path);
+            return store.ListSaveGames()
+                .OrderByDescending(item => item.UpdatedAt)
+                .Select(item => (Save: item, Ticks: store.SnapshotTicks(item.Id)))
+                .Where(item => item.Ticks.Count > 0)
+                .Select(item => new SaveSummary(item.Save.Id, item.Save.Name, item.Ticks.Max(), item.Save.UpdatedAt))
+                .ToArray();
+        }
+        catch (Exception exception) when (exception is System.Data.Common.DbException or System.IO.IOException or InvalidOperationException)
+        {
+            GD.PushWarning($"Saves could not be listed: {exception.Message}");
+            return [];
+        }
+    }
+
     private static StateSnapshot? TryRead(byte[] payload)
     {
         try
@@ -134,4 +176,10 @@ public sealed class SaveService
             return null;
         }
     }
+}
+
+/// <summary>One saved game as the menus list it: id, name, last sol and when it was saved.</summary>
+public sealed record SaveSummary(string Id, string Name, long Sol, DateTimeOffset SavedAt)
+{
+    public string Label => string.Create(CultureInfo.InvariantCulture, $"{Name} · sol {Sol} · {SavedAt.ToLocalTime():dd/MM HH:mm}");
 }
