@@ -7,7 +7,7 @@
     "status": "PROPOSED",
     "date": "2026-11-16",
     "author": "MARTIS Motor (campaña H1)",
-    "review": "Estructura aprobada por Daniel el 2026-11-16: mapas de 64, 128 y 256 casillas según el capítulo. Los capítulos 2 a 5 se completan en H3–H6."
+    "review": "Estructura aprobada por Daniel el 2026-11-16: mapas de 64, 128 y 256 casillas según el capítulo. Los capítulos 2 a 5 se completan en H3–H7."
   },
   "chapters": [
     {
@@ -108,7 +108,16 @@
       "title": "Mente",
       "summary": "Sistemas nerviosos, sociedades y una especie inteligente que transforma su mundo.",
       "grid": 256,
-      "missions": [],
+      "missions": [
+        {
+          "id": "sociality",
+          "file": "sociality.v1.json"
+        },
+        {
+          "id": "mind",
+          "file": "mind.v1.json"
+        }
+      ],
       "population_budget": "campaign.population_budget.grid_256",
       "gradient": "gradients.v1.json",
       "transitions": "transitions.v1.json",

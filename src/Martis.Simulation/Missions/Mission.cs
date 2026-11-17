@@ -39,6 +39,9 @@ public enum ObjectiveKind
 
     /// <summary>Gain of one pool resource over the whole map since the mission started, at or above an amount in kg (H4).</summary>
     Accumulate,
+
+    /// <summary>The <see cref="IntelligenceIndex"/> at or above a count; min_biomass is the reference biomass of cognition (H7).</summary>
+    Intelligence,
 }
 
 /// <summary>One objective. Thresholds are parameters with classification (H-19 pending).</summary>
@@ -103,6 +106,7 @@ public sealed record MissionDefinition(
                 "occupy" => ObjectiveKind.Occupy,
                 "recycle" => ObjectiveKind.Recycle,
                 "accumulate" => ObjectiveKind.Accumulate,
+                "intelligence" => ObjectiveKind.Intelligence,
                 var other => throw new InvalidDataException($"Unknown objective type '{other}'."),
             };
             objectives.Add(new MissionObjective(
@@ -124,6 +128,11 @@ public sealed record MissionDefinition(
             if (kind == ObjectiveKind.Accumulate && (added.Resource is null || ResourceSlot(added.Resource) < 0))
             {
                 throw new InvalidDataException($"Objective '{added.Id}' needs a pool resource ({string.Join(", ", ResourceColumns.Names)}).");
+            }
+
+            if (kind == ObjectiveKind.Intelligence && (added.MinBiomassKg <= 0 || added.Count is <= 0 or > IntelligenceIndex.Maximum))
+            {
+                throw new InvalidDataException($"Objective '{added.Id}' needs a reference biomass above 0 and a target in (0, {IntelligenceIndex.Maximum}].");
             }
         }
 
@@ -245,6 +254,7 @@ public sealed class MissionTracker
     private long _mutations;
     private double _recycled;
     private int _diversity;
+    private double _intelligence;
 
     public MissionTracker(MissionDefinition definition, BiologyCatalog catalog)
     {
@@ -352,6 +362,14 @@ public sealed class MissionTracker
                 case ObjectiveKind.Recycle when open && _recycled >= objective.Amount:
                     Complete(objective, state.Tick);
                     break;
+                case ObjectiveKind.Intelligence:
+                    _intelligence = IntelligenceIndex.Measure(state, _catalog, objective.MinBiomassKg);
+                    if (open && _intelligence >= objective.Count)
+                    {
+                        Complete(objective, state.Tick);
+                    }
+
+                    break;
                 case ObjectiveKind.Accumulate:
                     var gain = _gains[objective.Id] = Total(state, objective.Resource!) - _baselines[objective.Resource!];
                     if (open && gain >= objective.Amount)
@@ -382,6 +400,7 @@ public sealed class MissionTracker
                 ObjectiveKind.Occupy => Math.Min(_occupied.GetValueOrDefault(objective.Id), objective.Count),
                 ObjectiveKind.Recycle => Math.Min(_recycled, objective.Amount),
                 ObjectiveKind.Accumulate => Math.Clamp(_gains.GetValueOrDefault(objective.Id), 0, objective.Amount),
+                ObjectiveKind.Intelligence => Math.Min(_intelligence, objective.Count),
                 _ => 0,
             },
             Target(objective),
@@ -446,7 +465,7 @@ public sealed class MissionTracker
     private static double Target(MissionObjective objective) => objective.Kind switch
     {
         ObjectiveKind.Sustain or ObjectiveKind.Elapsed => objective.Sols,
-        ObjectiveKind.Mutations or ObjectiveKind.Diversity or ObjectiveKind.Occupy => objective.Count,
+        ObjectiveKind.Mutations or ObjectiveKind.Diversity or ObjectiveKind.Occupy or ObjectiveKind.Intelligence => objective.Count,
         ObjectiveKind.Recycle or ObjectiveKind.Accumulate => objective.Amount,
         _ => 1,
     };

@@ -33,6 +33,19 @@
         "min_biomass": "transition.multicellularity.min_biomass_kg",
         "probability": "transition.multicellularity.probability",
         "founder_fraction": "transition.multicellularity.founder_fraction"
+      },
+      {
+        "id": "sociality",
+        "title": "Socialidad",
+        "partners": [
+          "predator_p01"
+        ],
+        "product": "social_s01",
+        "gene": "REPAIR_CAPACITY",
+        "min_gene": "transition.sociality.min_repair",
+        "min_biomass": "transition.sociality.min_biomass_kg",
+        "probability": "transition.sociality.probability",
+        "founder_fraction": "transition.sociality.founder_fraction"
       }
     ]
   },
@@ -161,6 +174,78 @@
       "source": null,
       "note": "Transición evolutiva de juego propuesta para el capítulo 3 (H5); Ciencia debe revisarla.",
       "rationale": "Fracción de la población que forma el primer organismo multicelular.",
+      "range": [
+        1e-06,
+        0.99
+      ]
+    },
+    {
+      "id": "transition.sociality.min_repair",
+      "field": "min_gene",
+      "value": 0.85,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Transición evolutiva de juego propuesta para el capítulo 5 (H7); Ciencia debe revisarla.",
+      "rationale": "Capacidad de reparación mínima: individuos longevos que aprenden unos de otros.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "transition.sociality.min_biomass_kg",
+      "field": "min_biomass",
+      "value": 0.03,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Transición evolutiva de juego propuesta para el capítulo 5 (H7); Ciencia debe revisarla.",
+      "rationale": "Biomasa mínima de depredadores en la casilla.",
+      "range": [
+        0,
+        1000
+      ]
+    },
+    {
+      "id": "transition.sociality.probability",
+      "field": "probability",
+      "value": 0.03,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Transición evolutiva de juego propuesta para el capítulo 5 (H7); Ciencia debe revisarla.",
+      "rationale": "Probabilidad por sol del salto a la vida social.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "transition.sociality.founder_fraction",
+      "field": "founder_fraction",
+      "value": 0.3,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Transición evolutiva de juego propuesta para el capítulo 5 (H7); Ciencia debe revisarla.",
+      "rationale": "Fracción de los depredadores que forma la primera colonia social.",
       "range": [
         1e-06,
         0.99

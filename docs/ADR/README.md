@@ -24,5 +24,6 @@
 - [ADR-022 — Capítulo 2 «Ciclo cerrado»: gradientes y nuevos objetivos (H4)](ADR-022-capitulo-2.md) (Propuesto)
 - [ADR-023 — Capítulo 3 «Cooperación»: endosimbiosis y multicelularidad (H5)](ADR-023-capitulo-3.md) (Propuesto)
 - [ADR-024 — Capítulo 4 «Cadenas tróficas»: herbivoría y depredación (H6)](ADR-024-capitulo-4.md) (Propuesto)
+- [ADR-025 — Capítulo 5 «Mente»: socialidad e índice de inteligencia (H7)](ADR-025-capitulo-5.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).

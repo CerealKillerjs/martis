@@ -195,6 +195,8 @@ public partial class CampaignMenu : Control
         "grazers" => "Herbívoros",
         "food_web" => "Red trófica",
         "predators" => "Depredadores",
+        "sociality" => "Sociedad",
+        "mind" => "Mente",
         _ => mission.Id.Replace('_', ' '),
     };
 

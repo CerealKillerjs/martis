@@ -157,6 +157,14 @@ public sealed class GameSession
 
     public MissionTracker? Mission { get; }
 
+    /// <summary>
+    /// The intelligence index of the world (H7, 0–100) when the mission measures it, else null.
+    /// The HUD shows it next to the objectives in chapter 5.
+    /// </summary>
+    public double? Intelligence => Mission?.Definition.Objectives.FirstOrDefault(objective => objective.Kind == ObjectiveKind.Intelligence) is { } objective
+        ? IntelligenceIndex.Measure(Engine.State, Biology, objective.MinBiomassKg)
+        : null;
+
     /// <summary>Organisms of the catalog in file order.</summary>
     public IReadOnlyList<OrganismInfo> Organisms { get; }
 

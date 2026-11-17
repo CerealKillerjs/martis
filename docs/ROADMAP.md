@@ -134,7 +134,7 @@ Cada hito va en una rama y un PR propios, apilados.
 - **H4, capítulo 2 (Ciclo cerrado, [ADR-022](ADR/ADR-022-capitulo-2.md)):** gradientes de latitud y relieve (H-30), objetivos de ocupar franjas, reciclar y acumular O₂, y misiones 2.1 a 2.4.
 - **H5, capítulo 3 (Cooperación, [ADR-023](ADR/ADR-023-capitulo-3.md)):** eucariota y multicelular, transiciones por endosimbiosis y biopelícula, y misiones 3.1 a 3.3.
 - **H6, capítulo 4 (Cadenas tróficas, [ADR-024](ADR/ADR-024-capitulo-4.md)):** herbívoros y depredadores con respuesta de Holling y refugio, y misiones 4.1 a 4.3. La dispersión activa queda aplazada.
-- **H7, capítulo 5 (Mente):** cognición, socialidad e índice de inteligencia.
+- **H7, capítulo 5 (Mente, [ADR-025](ADR/ADR-025-capitulo-5.md)):** colonia social que nace de depredadores longevos, caza cooperativa, índice de inteligencia y misiones 5.1 y 5.2. La especie que transforma su mundo queda para después de H8.
 - **H8:** narrativa y equilibrado.
 
 ## Fuera de alcance del MVP (TDD §0, B.5)

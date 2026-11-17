@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "sociality",
+    "name": "SOCIEDAD — 5.1",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (campaña H7)",
+    "review": "Misión del capítulo 5 de la campaña «Génesis» (ADR-025). Umbrales GAME_BALANCE propuestos.",
+    "sequential": false,
+    "briefing": "Los depredadores longevos empiezan a cazar juntos. Si un depredador vive lo bastante para aprender de los demás, nace la primera colonia social: individuos que cooperan, cazan en grupo y se reparten la presa.",
+    "objectives": [
+      {
+        "id": "long_lived_hunter",
+        "type": "design",
+        "capability": "predation",
+        "title": "Diseña un depredador longevo",
+        "hint": "En el editor genético sube «Reparación ADN» del Depredador P01 por encima de 0,85 y suéltalo donde haya herbívoros."
+      },
+      {
+        "id": "first_society",
+        "type": "occupy",
+        "organism": "social_s01",
+        "count": "mission.sociality.cells",
+        "title": "Aparece la primera colonia social",
+        "hint": "Los depredadores longevos con al menos 30 g en una casilla pueden dar el salto. Mantén la cadena trófica debajo."
+      },
+      {
+        "id": "sustain_society",
+        "type": "sustain",
+        "organism": "social_s01",
+        "min_biomass": "mission.sociality.min_biomass_kg",
+        "sols": "mission.sociality.sustain_sols",
+        "title": "Mantén la sociedad",
+        "hint": "Una sociedad caza herbívoros y depredadores: necesita mucha vida por debajo."
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.sociality.cells",
+      "field": "count",
+      "value": 1.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 5 (H7); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Casillas con colonias sociales.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.sociality.min_biomass_kg",
+      "field": "min_biomass",
+      "value": 0.05,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 5 (H7); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa mínima de colonias sociales.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.sociality.sustain_sols",
+      "field": "sols",
+      "value": 60.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 5 (H7); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles seguidos por encima del mínimo.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    }
+  ]
+}

@@ -827,6 +827,11 @@ public partial class Hud : Control
         "phototroph" => "fotótrofo",
         "decomposer" => "descomponedor",
         "extremophile" => "extremófilo",
+        "eukaryote" => "eucariota",
+        "multicellular" => "multicelular",
+        "herbivore" => "herbívoro",
+        "predator" => "depredador",
+        "social" => "social",
         _ => category,
     };
 
