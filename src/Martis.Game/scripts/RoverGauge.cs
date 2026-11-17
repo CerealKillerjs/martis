@@ -46,7 +46,7 @@ public partial class RoverGauge : PanelContainer
         column.AddChild(_keys);
     }
 
-    public void Show(Rover rover, bool driving, bool landed, KnowledgeMap? knowledge = null)
+    public void Show(Rover rover, bool driving, bool landed, KnowledgeMap? knowledge = null, SampleStore? samples = null)
     {
         _battery.Value = rover.Battery;
         var percent = (int)System.Math.Round(rover.Battery * 100);
@@ -60,9 +60,15 @@ public partial class RoverGauge : PanelContainer
         _state.AddThemeColorOverride("font_color", landed && rover.Battery <= 0 ? new Color(1f, 0.55f, 0.4f) : new Color(1, 1, 1, 0.85f));
         var mapped = knowledge is null
             ? string.Empty
-            : System.FormattableString.Invariant($"Mapa {knowledge.Coverage(KnowledgeLevel.Estimated) * 100:0} % estimado · {knowledge.Coverage(KnowledgeLevel.Measured) * 100:0.#} % medido\n");
+            : System.FormattableString.Invariant($"Mapa {knowledge.Coverage(KnowledgeLevel.Estimated) * 100:0} % estimado · {knowledge.Coverage(KnowledgeLevel.Measured) * 100:0.#} % medido");
+        if (samples is not null)
+        {
+            mapped += System.FormattableString.Invariant($" · muestras {samples.Carried}/{samples.Definition.Capacity}");
+        }
+
+        mapped += "\n";
         _keys.Text = mapped + (driving
-            ? "WASD conducir · C escanear · F sembrar · Q/E mirar · Tab estratégico"
+            ? "WASD conducir · C escanear · M muestrear · F sembrar · Tab estratégico"
             : "Tab o F1 conducir el rover · siembra dentro del anillo");
     }
 }

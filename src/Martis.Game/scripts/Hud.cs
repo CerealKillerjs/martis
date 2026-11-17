@@ -435,6 +435,7 @@ public partial class Hud : Control
                 "failure" => "#ff4040",
                 "experiment" => "#c0a0ff",
                 "survey" => "#9fd8ff",
+                "lab" => "#ffc070",
                 _ => "#ffffffcc",
             };
             _feed.AppendText($"[color=#ffffff66]sol {item.Tick}[/color]  [color={colour}]{Escape(item.Text)}[/color]\n");
