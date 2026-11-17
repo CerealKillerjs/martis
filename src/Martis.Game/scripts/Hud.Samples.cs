@@ -44,7 +44,11 @@ public partial class Hud
             return;
         }
 
-        foreach (var sample in store.All.Reverse().Take(6))
+        // The newest six, plus any older analysed biological sample: those are the ones the
+        // player can design from, so they must not scroll out of the shelf.
+        var newest = store.All.Reverse().Take(6).ToList();
+        var designable = store.All.Reverse().Skip(6).Where(sample => sample.State == SampleState.Analyzed && sample.Dominant is not null).Take(3);
+        foreach (var sample in newest.Concat(designable))
         {
             var row = new VBoxContainer();
             row.AddThemeConstantOverride("separation", 2);
@@ -63,6 +67,14 @@ public partial class Hud
             if (sample.State == SampleState.Analyzed && sample.Dominant is not null)
             {
                 row.AddChild(Action("Diseñar desde esta muestra", () => GenomeRequested?.Invoke(sample), "Carga el genoma dominante de la muestra en el laboratorio de diseño"));
+            }
+            else if (sample.Kind == SampleKind.Biological)
+            {
+                row.AddChild(Hint("«Diseñar desde esta muestra» aparecerá cuando termine el análisis."));
+            }
+            else if (sample.State == SampleState.Analyzed)
+            {
+                row.AddChild(Hint("Sin vida en la muestra: no hay genoma para diseñar. Toma muestras donde haya biomasa (capa Biomasa) para diseñar desde ellas."));
             }
 
             _sampleRows.AddChild(row);
@@ -111,6 +123,13 @@ public partial class Hud
         }
 
         return text;
+    }
+
+    private static Label Hint(string text)
+    {
+        var label = Muted(text);
+        label.AddThemeColorOverride("font_color", new Color(1f, 0.85f, 0.55f, 0.8f));
+        return label;
     }
 
     private static Label Muted(string text)
