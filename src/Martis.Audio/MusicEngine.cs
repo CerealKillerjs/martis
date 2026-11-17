@@ -1,7 +1,7 @@
 namespace Martis.Audio;
 
 /// <summary>
-/// Generative soundtrack (ADR-018): calm solo piano in the spirit of quiet sandbox-game
+/// Generative soundtrack (ADR-018): calm solo grand piano (a recorded Steinway, see <see cref="PianoBank"/>) in the spirit of quiet sandbox-game
 /// scores. The piano plays short phrases of a few bars (a wandering melody over a sparse or
 /// broken-chord left hand) separated by rests, over a soft bowed string section and a low
 /// drone, in a concert-hall reverb, through a mastering chain (EQ, glue compression, width,
@@ -30,10 +30,6 @@ public sealed class MusicEngine
     private readonly float _smooth = Dsp.Smoothing(2.5f, SampleRate);
     private readonly Note[] _phrase = new Note[MaxNotesPerPhrase];
     private readonly MasterBus _bus = new(SampleRate, reverbSeconds: 2.2f);
-    private readonly Biquad _bodyLeft = Biquad.Peaking(220, 0.8, 1.5, SampleRate);
-    private readonly Biquad _bodyRight = Biquad.Peaking(220, 0.8, 1.5, SampleRate);
-    private readonly Biquad _boxLeft = Biquad.Peaking(700, 1.2, -1.5, SampleRate);
-    private readonly Biquad _boxRight = Biquad.Peaking(700, 1.2, -1.5, SampleRate);
     private readonly Section _sectionLeft = new(SampleRate);
     private readonly Section _sectionRight = new(SampleRate);
     private MusicStyle _style;
@@ -179,7 +175,7 @@ public sealed class MusicEngine
         var dt = 1f / SampleRate;
         var time = _clock / (float)SampleRate;
 
-        // Piano, then its body: a little warmth around 220 Hz, less "boxiness" at 700 Hz.
+        // Piano: the recorded Steinway, panned by register as heard from the bench.
         var pianoL = 0f;
         var pianoR = 0f;
         for (var v = 0; v < _piano.Length; v++)
@@ -196,9 +192,6 @@ public sealed class MusicEngine
             pianoR += sample * MathF.Sqrt(pan);
         }
 
-        pianoL = _boxLeft.Process(_bodyLeft.Process(pianoL));
-        pianoR = _boxRight.Process(_bodyRight.Process(pianoR));
-
         // Strings: players into two section buses that model the instruments' bodies.
         var stringsL = 0f;
         var stringsR = 0f;
@@ -210,7 +203,7 @@ public sealed class MusicEngine
                 continue;
             }
 
-            var sample = player.Next(SampleRate, StringAttack, StringRelease, _performance) * 0.022f;
+            var sample = player.Next(SampleRate, StringAttack, StringRelease, _performance) * 0.012f;
             stringsL += sample * (1f - player.Pan);
             stringsR += sample * player.Pan;
         }
@@ -423,12 +416,12 @@ public sealed class MusicEngine
     /// </summary>
     private static float CueTrim(MusicMood mood) => mood switch
     {
-        MusicMood.Title => Gain(18.8f),
-        MusicMood.Day => Gain(20f),
-        MusicMood.Night => Gain(18.5f),
-        MusicMood.Thriving => Gain(18.7f),
-        MusicMood.Crisis => Gain(13.6f),
-        _ => Gain(18.1f),
+        MusicMood.Title => Gain(18.9f),
+        MusicMood.Day => Gain(19f),
+        MusicMood.Night => Gain(19.4f),
+        MusicMood.Thriving => Gain(17.1f),
+        MusicMood.Crisis => Gain(14f),
+        _ => Gain(17.4f),
     };
 
     private static float Gain(float decibels) => MathF.Pow(10f, decibels / 20f);
