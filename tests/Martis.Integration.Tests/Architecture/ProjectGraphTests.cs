@@ -40,7 +40,11 @@ public sealed class ProjectGraphTests
         ["Martis.Integration.Tests"] = ["Martis.Simulation", "Martis.Persistence", "Martis.Contracts"],
 
         // T08: the Godot game sits on the same layer as the CLI (ADR-017).
-        ["Martis.Game"] = ["Martis.Simulation", "Martis.Persistence"],
+        ["Martis.Game"] = ["Martis.Application", "Martis.Simulation", "Martis.Persistence"],
+
+        // V1 (Documento Maestro v2.0 §16): orchestration between the game and the engine.
+        ["Martis.Application"] = ["Martis.Simulation"],
+        ["Martis.Application.Tests"] = ["Martis.Application"],
 
         // T10 / S1-35: BenchmarkDotNet suite, in the solution under benchmarks/.
         ["Martis.Benchmarks"] = ["Martis.Simulation", "Martis.Contracts"],
@@ -86,6 +90,8 @@ public sealed class ProjectGraphTests
             ["Martis.Contracts"] = [],
             ["Martis.Persistence"] = ["Microsoft.Data.Sqlite"],
             ["Martis.Cli"] = [],
+            ["Martis.Application"] = [],
+            ["Martis.Application.Tests"] = TestPackages,
             ["Martis.Domain.Tests"] = TestPackages,
             ["Martis.Simulation.Tests"] = SimulationTestPackages,
             ["Martis.Persistence.Tests"] = TestPackages,

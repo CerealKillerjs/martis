@@ -49,6 +49,10 @@ public partial class Hud : Control
     private ProgressBar _inoculumBar = null!;
     private Button _researchButton = null!;
     private PanelContainer _researchPanel = null!;
+    private PanelContainer _missionPanel = null!;
+    private PanelContainer _inspectorPanel = null!;
+    private PanelContainer _labPanel = null!;
+    private PanelContainer _feedPanel = null!;
     private VBoxContainer _researchRows = null!;
     private Label _researchPoints = null!;
     private ResearchState? _limits;
@@ -499,9 +503,22 @@ public partial class Hud : Control
 
     public void SelectOverlay(Overlay overlay) => _overlay.Select((int)overlay);
 
+    /// <summary>Which panels a mode shows (V1): each mode is a presentation of the same state.</summary>
+    public void SetPanels(bool mission, bool inspector, bool lab, bool feed)
+    {
+        _missionPanel.Visible = mission;
+        _inspectorPanel.Visible = inspector;
+        _labPanel.Visible = lab;
+        _feedPanel.Visible = feed;
+        if (!lab)
+        {
+            EndDeploy();
+        }
+    }
+
     private void BuildMission()
     {
-        var panel = Panel(new Vector2(290, 0));
+        var panel = _missionPanel = Panel(new Vector2(290, 0));
         panel.SetAnchorsPreset(LayoutPreset.TopLeft);
         panel.OffsetLeft = 12;
         panel.OffsetTop = 70;
@@ -521,7 +538,7 @@ public partial class Hud : Control
 
     private void BuildInspector()
     {
-        var panel = Panel(new Vector2(340, 0));
+        var panel = _inspectorPanel = Panel(new Vector2(340, 0));
         panel.SetAnchorsPreset(LayoutPreset.TopRight);
         panel.OffsetLeft = -352;
         panel.OffsetRight = -12;
@@ -548,7 +565,7 @@ public partial class Hud : Control
 
     private void BuildLab()
     {
-        var panel = Panel(new Vector2(340, 0));
+        var panel = _labPanel = Panel(new Vector2(340, 0));
         panel.SetAnchorsPreset(LayoutPreset.BottomRight);
         panel.GrowVertical = GrowDirection.Begin;
         panel.OffsetLeft = -352;
@@ -596,7 +613,7 @@ public partial class Hud : Control
 
     private void BuildFeed()
     {
-        var panel = Panel(new Vector2(470, 190));
+        var panel = _feedPanel = Panel(new Vector2(470, 190));
         panel.SetAnchorsPreset(LayoutPreset.BottomLeft);
         panel.GrowVertical = GrowDirection.Begin;
         panel.OffsetLeft = 12;

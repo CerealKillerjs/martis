@@ -5,6 +5,7 @@
     <RootNamespace>Martis.Game</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Martis.Application\Martis.Application.csproj" />
     <ProjectReference Include="..\Martis.Simulation\Martis.Simulation.csproj" />
     <ProjectReference Include="..\Martis.Persistence\Martis.Persistence.csproj" />
   </ItemGroup>
