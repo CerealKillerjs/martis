@@ -1,0 +1,171 @@
+{
+  "metadata": {
+    "schema": "martis.rover",
+    "id": "rover_sembradora",
+    "name": "Rover sembrador de la Expedición",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (J1)",
+    "review": "Dirección «Expedición» elegida por Daniel el 2026-11-17. Valores GAME_BALANCE pendientes de ajuste.",
+    "rover": {
+      "speed_cells_per_s": "rover.speed",
+      "reverse_factor": "rover.reverse_factor",
+      "turn_rad_per_s": "rover.turn",
+      "reach_cells": "rover.reach",
+      "battery_cells": "rover.battery",
+      "crawl_factor": "rover.crawl_factor",
+      "charge_radius_cells": "rover.charge_radius",
+      "charge_per_s": "rover.charge_rate"
+    }
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "rover.speed",
+      "field": "speed_cells_per_s",
+      "value": 6.0,
+      "unit": "casillas/s",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el rover (J1); Dani debe ajustarlo jugando.",
+      "rationale": "Velocidad máxima hacia delante del rover (tiempo real, no soles).",
+      "range": [
+        0.5,
+        60
+      ]
+    },
+    {
+      "id": "rover.reverse_factor",
+      "field": "reverse_factor",
+      "value": 0.5,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el rover (J1); Dani debe ajustarlo jugando.",
+      "rationale": "Fracción de la velocidad máxima marcha atrás.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "rover.turn",
+      "field": "turn_rad_per_s",
+      "value": 2.2,
+      "unit": "rad/s",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el rover (J1); Dani debe ajustarlo jugando.",
+      "rationale": "Giro máximo del rover.",
+      "range": [
+        0.1,
+        10
+      ]
+    },
+    {
+      "id": "rover.reach",
+      "field": "reach_cells",
+      "value": 3.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el rover (J1); Dani debe ajustarlo jugando.",
+      "rationale": "Distancia máxima a la que el rover puede inocular una casilla.",
+      "range": [
+        0.5,
+        32
+      ]
+    },
+    {
+      "id": "rover.battery",
+      "field": "battery_cells",
+      "value": 160.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el rover (J1); Dani debe ajustarlo jugando.",
+      "rationale": "Casillas que recorre con la batería llena.",
+      "range": [
+        1,
+        10000
+      ]
+    },
+    {
+      "id": "rover.crawl_factor",
+      "field": "crawl_factor",
+      "value": 0.3,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el rover (J1); Dani debe ajustarlo jugando.",
+      "rationale": "Fracción de la velocidad con la batería vacía (nunca se queda atascado).",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "rover.charge_radius",
+      "field": "charge_radius_cells",
+      "value": 4.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el rover (J1); Dani debe ajustarlo jugando.",
+      "rationale": "Distancia al módulo de aterrizaje a la que el rover se recarga.",
+      "range": [
+        0,
+        64
+      ]
+    },
+    {
+      "id": "rover.charge_rate",
+      "field": "charge_per_s",
+      "value": 0.25,
+      "unit": "1/s",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el rover (J1); Dani debe ajustarlo jugando.",
+      "rationale": "Fracción de batería que recupera por segundo junto al módulo.",
+      "range": [
+        0,
+        10
+      ]
+    }
+  ]
+}

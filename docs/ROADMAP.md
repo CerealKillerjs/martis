@@ -137,6 +137,14 @@ Cada hito va en una rama y un PR propios, apilados.
 - **H7, capítulo 5 (Mente, [ADR-025](ADR/ADR-025-capitulo-5.md)):** colonia social que nace de depredadores longevos, caza cooperativa, índice de inteligencia y misiones 5.1 y 5.2. La especie que transforma su mundo queda para después de H8.
 - **H8:** narrativa y equilibrado.
 
+### Expedición (jugabilidad abierta, elegida por Daniel el 2026-11-17)
+
+- **J1, rover sembrador ([ADR-026](ADR/ADR-026-expedicion-rover.md)):** rover en tercera persona (Tab cambia de vista, WASD conduce), siembra solo dentro de su alcance y batería que se recarga junto al módulo.
+- **J2:** un solo Marte persistente de 256×256 con biomas, niebla y puntos de interés; cada capítulo abre una zona. Va después de H8.
+- **J3:** eventos en tiempo real (tormentas de polvo, impactos, salmueras) y misiones secundarias.
+- **J4:** muestreo de mutantes salvajes y editor visual de rasgos.
+- **J5:** criaturas visibles en los capítulos 4 y 5, y balance.
+
 ## Fuera de alcance del MVP (TDD §0, B.5)
 
 Dinámica molecular, individuos celulares como entidades, atmósfera 3D, meteorología global, fluidos avanzados, GPU compute, multijugador, servidores distribuidos, IA generativa, terraformación global físicamente completa, ECS complejo, multithreading masivo (ADR-007).

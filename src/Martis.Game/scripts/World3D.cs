@@ -44,6 +44,9 @@ public partial class World3D : Node3D
 
     public OrbitCamera Camera { get; private set; } = null!;
 
+    /// <summary>The seeding rover of the «Expedición» view (J1, ADR-026).</summary>
+    public RoverModel Rover { get; private set; } = null!;
+
     /// <summary>Fraction of the current sol, 0 = midnight, 0.5 = noon.</summary>
     public float TimeOfDay { get; set; } = 0.38f;
 
@@ -58,6 +61,8 @@ public partial class World3D : Node3D
         BuildTerrain(seed);
         BuildDomes(width * height);
         BuildLander();
+        Rover = new RoverModel { Name = "Rover" };
+        AddChild(Rover);
         BuildDust();
         _pulseShaderTemplate = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/pulse.gdshader") };
 
@@ -77,6 +82,21 @@ public partial class World3D : Node3D
 
     public void Highlight(int x, int y)
         => _terrainMaterial.SetShaderParameter("highlight_cell", x < 0 ? new Vector2(-1, -1) : new Vector2(x, y));
+
+    /// <summary>World position of a point given in cell units (cell (x, y) spans [x, x+1) × [y, y+1)).</summary>
+    public Vector3 CellPoint(double x, double y)
+    {
+        var wx = ((float)x * Terrain.CellSize) - (Ground.SizeX / 2f);
+        var wz = ((float)y * Terrain.CellSize) - (Ground.SizeZ / 2f);
+        return new Vector3(wx, Ground.HeightAt(wx, wz), wz);
+    }
+
+    /// <summary>Draws the rover's seeding ring on the terrain; a negative radius hides it.</summary>
+    public void ShowReach(double x, double y, double radius)
+    {
+        _terrainMaterial.SetShaderParameter("reach_center", radius < 0 ? new Vector2(-1, -1) : new Vector2((float)x, (float)y));
+        _terrainMaterial.SetShaderParameter("reach_radius", (float)Math.Max(radius, 0));
+    }
 
     public void PlaceLander(int x, int y)
     {

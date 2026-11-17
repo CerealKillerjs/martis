@@ -14,7 +14,8 @@ namespace Martis.Game;
 /// on the main thread (at most one sol per frame, ADR-000 R4 keeps threads out of src)
 /// and wires the 3D world and the HUD. Command-line options after <c>--</c>:
 /// <c>--seed=N</c>, <c>--shot=path.png</c> (scripted demo, screenshot, quit),
-/// <c>--smoke</c> (headless check: play 30 sols, save, load, quit with code 0/1).
+/// <c>--smoke</c> (headless check: play 30 sols, save, load, quit with code 0/1),
+/// <c>--shot=path.png --rover</c> (the same demo seen from the rover's chase camera, J1).
 /// </summary>
 public partial class GameRoot : Node
 {
@@ -251,6 +252,7 @@ public partial class GameRoot : Node
         }
 
         _world.TimeOfDay = (float)((_solProgress + 0.25) % 1.0);
+        UpdateRover(delta);
         _hud.ShowStatus(_view ?? _session.View(), _world.TimeOfDay);
     }
 
@@ -292,7 +294,7 @@ public partial class GameRoot : Node
             var direction = camera.ProjectRayNormal(click.Position);
             if (_world.Ground.Raycast(origin, direction, out var hit) && _world.Ground.CellAt(hit, out var x, out var y))
             {
-                if (_hud.DeployMode)
+                if (_hud.DeployMode && RoverAllows(x, y))
                 {
                     Deploy(x, y);
                 }
@@ -369,6 +371,8 @@ public partial class GameRoot : Node
         {
             _world.PlaceLander(colony % session.Width, colony / session.Width);
         }
+
+        ResetRover(colony);
     }
 
     private void Refresh()
@@ -499,6 +503,7 @@ public partial class GameRoot : Node
             if (!_world.HasLander)
             {
                 _world.PlaceLander(x, y);
+                RoverLanded(x, y);
             }
 
             _world.Camera.FocusOn(_world.Ground.CellCenter(x, y));
@@ -684,6 +689,19 @@ public partial class GameRoot : Node
         var pitch = _options.TryGetValue("pitch", out var p) ? float.Parse(p, CultureInfo.InvariantCulture) : 0.42f;
         _world.Camera.Frame(centre, distance, yaw, pitch, snap: true);
         _hud.Toast("Colonia FIRST COLONY · demostración");
+        if (_options.ContainsKey("rover"))
+        {
+            // Expedición (J1): the rover at the edge of the colony, chase camera behind it.
+            _rover.Place(27 + o, 34 + o, -0.5);
+            RoverLanded(32 + o, 32 + o);
+            _rover.Drive(1, 0, 0.1);
+            var heading = (float)_rover.Heading;
+            var at = _world.CellPoint(_rover.X, _rover.Y);
+            var behind = MathF.Atan2(-MathF.Cos(heading), -MathF.Sin(heading));
+            _world.Camera.Frame(at + (Vector3.Up * 0.8f), 12f, behind + 0.5f, 0.3f, snap: true);
+            _world.Camera.BeginChase();
+            _hud.Toast("Expedición · conduce el rover y siembra dentro del anillo");
+        }
         for (var i = 0; i < 30; i++)
         {
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -711,6 +729,11 @@ public partial class GameRoot : Node
         ok &= loaded is not null && loaded.Tick == 30 && Math.Abs(loaded.View().TotalBiomassKg - biomass) < 1e-12;
         ok &= record?.MissionFile == MissionDefinition.FirstColonyFile
             && loaded!.Mission!.Status().Single(status => status.Id == "analyze_region").CompletedTick is not null;
+        // Expedición (J1): the rover loaded its data, drives, and gates deployments by reach.
+        var start = _rover.X;
+        var roverOk = _rover.CanReach(_session.Width / 2, _session.Height / 2) && !_rover.CanReach(0, 0) && _rover.Drive(1, 0, 0.5) > 0 && _rover.X > start;
+        ok &= roverOk;
+        GD.Print($"MARTIS smoke rover={roverOk} battery={_rover.Battery:0.##}");
         GD.Print($"MARTIS smoke ok={ok} save={id} tick={_session.Tick} biomass={biomass:0.######} {message} {error}");
         GetTree().Quit(ok ? 0 : 1);
     }

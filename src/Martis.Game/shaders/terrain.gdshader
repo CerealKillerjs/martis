@@ -13,6 +13,8 @@ uniform float world_size = 128.0;
 uniform float night = 0.0;             // 0 day, 1 deep night
 uniform vec2 highlight_cell = vec2(-1.0);
 uniform float cells = 64.0;
+uniform vec2 reach_center = vec2(-1.0);  // rover position in cell units (J1); x < 0 hides the ring
+uniform float reach_radius = 3.0;        // cells the rover can seed
 
 varying vec3 world_pos;
 varying vec3 world_normal;
@@ -126,6 +128,16 @@ void fragment() {
             float edge = smoothstep(0.38, 0.5, max(g.x, g.y));
             emission += vec3(1.0, 0.85, 0.4) * (edge * 2.0 + 0.15) * (0.7 + 0.3 * sin(TIME * 4.0));
         }
+    }
+
+    // Seeding reach of the rover (J1, ADR-026): a dashed ring that turns slowly.
+    if (reach_center.x >= 0.0) {
+        vec2 rel = uv * cells - reach_center;
+        float d = length(rel);
+        float ring = 1.0 - smoothstep(0.0, 0.09, abs(d - reach_radius));
+        float dash = step(0.0, sin(atan(rel.y, rel.x) * 24.0 + TIME * 1.5));
+        float inside = (1.0 - smoothstep(reach_radius - 0.6, reach_radius, d)) * 0.05;
+        emission += vec3(0.35, 1.0, 0.65) * (ring * mix(0.35, 1.4, dash) + inside);
     }
 
     // Micro relief: wind ripples and pebbles as a normal perturbation.
