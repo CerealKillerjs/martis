@@ -1,195 +1,190 @@
 # MARTIS
 
-Motor de simulación científica en C# / .NET y juego 3D en Godot 4.7.2 (`src/Martis.Game`). El juego no forma parte de la solución: el motor se compila y se prueba sin Godot.
+MARTIS es un juego de simulación científica sobre Marte. El jugador es una IA autónoma que, con robots, siembra vida microbiana en el Marte real. Esa vida evoluciona hasta formar ecosistemas, inteligencia y civilización, y la terraformación avanza región a región.
 
-![Colonia FIRST COLONY al atardecer](docs/images/t08-atardecer.png)
+El proyecto tiene dos partes:
 
-Este árbol corresponde al hito **T01 Infrastructure**, al modelo de dominio de **T02**, a la base de motor de **T03a**, al escenario MarsBaseline v0.4 de **T03b** y al prototipo CLI del TDD §19 (S1-31 a S1-33): snapshot completo del estado, exportación JSON canónica y el comando `simulate` que carga el escenario, avanza los ticks, valida y guarda los resultados. **T04** añade el motor metabólico: especies y reacciones balanceadas en `data/reactions`, organismos en `data/organisms` y la opción `--introduce` para inocular poblaciones ([ADR-012](docs/ADR/ADR-012-modelo-metabolico.md)). **T05** añade mortalidad, inanición, capacidad de carga, extinción y reciclaje ([ADR-013](docs/ADR/ADR-013-dinamica-de-poblaciones.md)). **T06** añade mutación, deriva, fusión de variantes y `mutations.csv` ([ADR-014](docs/ADR/ADR-014-evolucion.md)). **T07** añade el guardado en SQLite con `--save`, `--snapshot-interval` y `--resume` ([ADR-015](docs/ADR/ADR-015-guardado-sqlite.md)). **T09** añade el descomponedor y el extremófilo, el diseño de genomas y la misión FIRST COLONY ([ADR-016](docs/ADR/ADR-016-ecosistema-y-first-colony.md)).
+- **Un motor de simulación** en C# / .NET 10, determinista y sin dependencias de Godot. Simula ambiente, metabolismo, poblaciones agregadas, evolución, ecosistemas, clima regional y guardado. Se compila y se prueba sin el editor.
+- **Un juego 3D** en Godot 4.7.2 .NET (`src/Martis.Game`), con el relieve real de Marte (HRSC-MOLA y CTX), un rover en tercera persona y los modos Exploración, Estratégico, Laboratorio y Planetario sobre un único estado.
 
-## Requisitos
+![Rover en Jezero, a escala real](docs/images/m3-jezero-suelo.png)
 
-- **.NET SDK 10.0.404** (LTS, runtime 10.0.15), fijado en [`global.json`](global.json).
-- `rollForward`: `latestPatch` (misma banda 10.0.4xx; no salta de feature band ni a .NET 11). Decisión del lead, alineada con ADR-002.
-- `allowPrerelease`: `false`.
-- TFM de todos los proyectos: **net10.0** (`Directory.Build.props`).
+> **Documento de referencia:** el [Documento Maestro v2.0](docs/maestro/MARTIS_Documento_Maestro_v2.0.docx) (GDD + TDD) gobierna el diseño y la arquitectura desde el 2026-11-17. También está en [texto plano](docs/maestro/MARTIS_Documento_Maestro_v2.0.txt), que se puede buscar con grep. El TDD v1.0 ([docs/tdd](docs/tdd/MARTIS_TDD_v1.0.txt)) queda como antecedente: sus reglas normativas siguen vigentes donde el Documento Maestro no dice otra cosa.
 
-El 2026-11-15, 10.0.404 es el SDK más alto publicado en el canal 10.0 ([descargas de .NET 10](https://dotnet.microsoft.com/download/dotnet/10.0), metadatos `10.0/releases.json`: `latest-sdk` = `10.0.404`). Con `latestPatch` el SDK activo sigue siendo **10.0.404** mientras no exista un parche posterior de la banda 10.0.4xx.
+**¿Vienes a colaborar?** Empieza por [CONTRIBUTING.md](CONTRIBUTING.md) y por [docs/ESTADO.md](docs/ESTADO.md), que explica qué está hecho, qué falta y por dónde seguir.
+
+## Inicio rápido
+
+### Requisitos
+
+| Herramienta | Versión | Para qué |
+| --- | --- | --- |
+| .NET SDK | **10.0.404**, fijado en [`global.json`](global.json) (`rollForward: latestPatch`) | motor, tests, CLI y juego |
+| Godot .NET | **4.7.2-stable**, la versión *mono*/.NET ([archivo de descargas](https://godotengine.org/download/archive/)) | jugar y editar escenas |
+| Python 3 + `rasterio pandas pyarrow pillow` | opcional | solo para regenerar el relieve de `data/planets` |
 
 Instalación del SDK exacto:
 
 ```bash
 curl -fsSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
-bash dotnet-install.sh --version 10.0.404
+bash dotnet-install.sh --version 10.0.404     # Windows: dotnet-install.ps1 -Version 10.0.404
 dotnet --version
 ```
 
-En Windows, el instalador equivalente es `dotnet-install.ps1 -Version 10.0.404`.
-
-## Compilar y probar
-
-Desde la raíz del repositorio:
+### Compilar y probar el motor
 
 ```bash
 dotnet restore MARTIS.sln
-dotnet build MARTIS.sln -c Release
-dotnet test MARTIS.sln -c Release
+dotnet build MARTIS.sln -c Release      # 0 avisos
+dotnet test MARTIS.sln -c Release       # unos 1.100 tests; Simulation tarda ~4 min
 ```
 
-`Martis.Integration.Tests` tiene una referencia de compilación a Simulation, Persistence y Contracts. Además obliga a compilar `Martis.Cli` (`ReferenceOutputAssembly=false`): el proyecto de tests no usa tipos del CLI, solo necesita el ensamblado ya construido en `src/Martis.Cli/bin/<Configuration>/net10.0/Martis.Cli.dll`.
+### Jugar
 
-Versión del motor:
+```bash
+dotnet build src/Martis.Game/Martis.Game.csproj
+godot --path src/Martis.Game            # o abre src/Martis.Game/project.godot en el editor
+```
+
+La primera vez, o después de añadir scripts nuevos, ejecuta `godot --headless --path src/Martis.Game --import` para que Godot genere los ficheros `.uid`.
+
+### Comprobar el juego sin pantalla
+
+```bash
+godot --headless --path src/Martis.Game -- --smoke         # recorre todo el juego y termina con 0 si va bien
+godot --headless --path src/Martis.Game -- --title-smoke   # pantalla de inicio
+```
+
+El smoke imprime una línea `MARTIS smoke …=True` por sistema: llegada, conocimiento, muestras, robots, calor, valle, menú Esc, rover, secciones, historia y guardado. Los dos smokes deben pasar antes de abrir un PR que toque el juego.
+
+## Cómo se juega
+
+La pantalla de inicio ofrece **Continuar**, **Nueva partida**, **Campaña**, **Cargar partida**, **Opciones** y **Salir**. El modo historia es una sola partida sobre un único Marte persistente. Empieza en Isidis occidental, en el lugar de aterrizaje de Perseverance, y avanza de los microbios a la civilización. Cada era abre nuevas secciones del planeta.
+
+![Pantalla de inicio](docs/images/menu-titulo.png)
+
+| Tecla | Acción |
+| --- | --- |
+| **Esc** | menú: modos F1–F4, guardar, cargar, nueva partida, campaña, sonido, título y salir |
+| F1 / F2 / F3 / F4 | Exploración / Estratégico / Laboratorio / Planetario (Tab alterna Exploración y Estratégico) |
+| WASD o flechas | conducir el rover (Exploración) o mover la cámara |
+| F · C · M | sembrar · escanear · tomar muestra (Exploración) |
+| B · H · X | construir estación · calefactor · reparar (Exploración) |
+| G | enviar el rover al punto elegido (fuera de Exploración) |
+| R | árbol de investigación |
+| 0–4 | capa del mapa: ninguna, temperatura, agua, radiación, biomasa |
+| Espacio | pausa |
+| F5 / F9 | guardar / cargar |
+
+Las partidas se guardan en `user://martis.db` (SQLite, el mismo formato que el CLI).
+
+| Exploración | Laboratorio |
+| --- | --- |
+| ![Exploración](docs/images/v1-exploration.png) | ![Laboratorio](docs/images/v1-laboratory.png) |
+| **Estratégico** | **Planetario** |
+| ![Estratégico](docs/images/v1-strategic.png) | ![Planetario](docs/images/v1-planetary.png) |
+
+### Opciones de línea de comandos del juego
+
+Se pasan después de `--`. Todas son para pruebas y capturas; quien juega no las necesita.
+
+| Opción | Efecto |
+| --- | --- |
+| `--smoke`, `--title-smoke` | pruebas automáticas, sin pantalla |
+| `--shot=x.png --hour=0.7` | captura de la colonia a una hora del sol |
+| `--real-shot=x.png` | captura sobre el relieve real |
+| `--menu-shot=x.png`, `--title-shot=x.png --title-time=9` | capturas de los menús |
+| `--mission=<id>` | empieza directamente en una misión de `data/missions` |
+| `--procedural` | terreno inventado en lugar del Marte real (como antes de M1) |
+| `--seed=<n>`, `--grid=<64/128/256>`, `--db=<ruta>`, `--era=<n>`, `--section=<id>` | semilla, tamaño de mapa, base de datos, era y sección de inicio |
+
+Para hacer capturas en Linux sin GPU: `xvfb-run` y `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json` (paquete `mesa-vulkan-drivers`).
+
+## CLI del motor
+
+El CLI ejecuta la simulación sin juego, siguiendo el flujo del TDD §19. Sirve para experimentos reproducibles y para depurar.
 
 ```bash
 dotnet run --project src/Martis.Cli -c Release -- --version
-```
-
-Salida esperada: `MARTIS 0.1.0` y código de salida 0. Un argumento que no sea `--version` ni un `simulate` válido termina con código 2. `0.1.0` es la versión de producto del motor (`Version` en `Directory.Build.props`), no un dato científico.
-
-`simulate` ejecuta el flujo del TDD §19: carga `mars_baseline` desde `data/scenarios/MarsBaseline`, crea el mundo de 64×64, inicializa el ambiente y los cinco flujos `pcg32-v1`, avanza `--ticks` con la validación activada, toma el snapshot completo y escribe los resultados en `--output`. Imprime el tick final.
-
-```bash
 dotnet run --project src/Martis.Cli -c Release -- simulate --scenario mars_baseline --seed 12345 --ticks 1000 --output results/experiment_001
-# con biología (pipeline-v3): 0,5 kg del fotótrofo A01 en la celda (32, 32)
-dotnet run --project src/Martis.Cli -c Release -- simulate --scenario mars_baseline --seed 12345 --ticks 300 --output results/experiment_002 --introduce phototroph_a01@32,32:0.5
-# FIRST COLONY: fotótrofo diseñado + descomponedor; se completa en el tick 200 (mission.json)
-dotnet run --project src/Martis.Cli -c Release -- simulate --scenario mars_baseline --seed 5 --ticks 400 --output results/first_colony --introduce "phototroph_a01@32,32:0.5+UV_PROTECTION=0.85" --introduce decomposer_d01@32,32:0.05 --mission first_colony --mission-action analyze-region --mission-action run-experiment
-# guardar cada 50 ticks y continuar más tarde (el id se imprime en stderr: «Save id: save-1»)
+# FIRST COLONY: fotótrofo diseñado + descomponedor
+dotnet run --project src/Martis.Cli -c Release -- simulate --scenario mars_baseline --seed 5 --ticks 400 --output results/first_colony \
+  --introduce "phototroph_a01@32,32:0.5+UV_PROTECTION=0.85" --introduce decomposer_d01@32,32:0.05 \
+  --mission first_colony --mission-action analyze-region --mission-action run-experiment
+# guardar cada 50 ticks y continuar más tarde
 dotnet run --project src/Martis.Cli -c Release -- simulate --scenario mars_baseline --seed 12345 --ticks 100 --output results/a --introduce phototroph_a01@32,32:0.5 --save results/partida.db --snapshot-interval 50
 dotnet run --project src/Martis.Cli -c Release -- simulate --scenario mars_baseline --save results/partida.db --resume save-1 --ticks 100 --output results/b
 ```
 
-Opciones extra: `--root <dir>` apunta a la raíz del repositorio si el comando no se lanza desde dentro de él (por defecto busca `data/scenarios/MarsBaseline` subiendo desde el directorio actual y desde el ejecutable). `--history-interval <n>` fija cada cuántos ticks se escribe una fila de historial (por defecto 30, la frecuencia orientativa de TDD §8.1; es un valor de ingeniería, no del modelo).
+Códigos de salida: **0** éxito; **1** fallo de ejecución (violación de invariante, datos ausentes o error de escritura); **2** argumentos inválidos.
 
-Códigos de salida: **0** éxito; **1** fallo de ejecución (violación de invariante, datos del escenario ausentes o error de escritura); **2** argumentos inválidos (convención de `docs/SPRINT_01.md`).
+En `--output` se escriben `metadata.json`, `final_snapshot.json` (JSON canónico `martis-state-v1`), `resource_history.csv`, `population_history.csv`, `mutations.csv`, `mass_balance.csv` y `simulation.log`. Con la misma semilla, plataforma y runtime, dos ejecuciones escriben los mismos bytes (VAL-010).
 
-Ficheros de `--output` (H-16):
-
-| Fichero | Contenido |
-| --- | --- |
-| `metadata.json` | estado, semilla (texto, para no perder bits de `ulong`), ticks, escenario y versión de datos, versión del motor, del pipeline, del esquema de snapshot y del PRNG, runtime, SDK de compilación, RID y SHA-256 del snapshot |
-| `final_snapshot.json` | `StateSnapshot` completo en JSON canónico (`martis-state-v1`): configuración, tick, estado de los cinco flujos, todas las celdas y todas las poblaciones con su genoma |
-| `resource_history.csv` | totales de los nueve depósitos y del hielo (kg) en el tick 0, cada `--history-interval` ticks y en el último |
-| `population_history.csv` | número de poblaciones, abundancia y biomasa totales en los mismos ticks (todo 0 hasta T05) |
-| `simulation.log` | escenario, semilla, pipeline, avisos del cargador y resultado; ante un fallo, una línea por violación con VAL-id, semilla, tick, celda (índice y x, y), población, paso y valor |
-
-Ninguna salida lleva hora, ruta ni nombre de máquina: dos ejecuciones con la misma semilla en la misma plataforma y runtime escriben los mismos bytes (VAL-010, TDD §6). Si una validación falla, el CLI escribe igualmente los cinco ficheros; el snapshot es el último tick confirmado y `metadata.json` dice `"status": "failed"`. `mutations.csv` y `mass_balance.csv` llegan con T06 y T04.
-
-El JSON de `final_snapshot.json` es exportación y depuración (ADR-004). El formato binario de guardado en SQLite llega en T07.
-
-## Grafo de dependencias
-
-La tabla del TDD §1.2 más la arista **Simulation → Contracts**, aprobada por el lead (H-01). Contracts no referencia Simulation.
-
-| Proyecto | Referencias |
-| --- | --- |
-| Martis.Domain | ninguna (solo BCL, sin paquetes) |
-| Martis.Simulation | Domain, Contracts |
-| Martis.Contracts | Domain |
-| Martis.Persistence | Domain, Contracts, paquete Microsoft.Data.Sqlite |
-| Martis.Cli | Simulation, Persistence |
-| Martis.Domain.Tests | Domain |
-| Martis.Simulation.Tests | Simulation |
-| Martis.Persistence.Tests | Persistence |
-| Martis.Integration.Tests | Simulation, Persistence, Contracts |
+## Arquitectura
 
 ```mermaid
 graph TD
+  Game[Martis.Game · Godot] --> Application
+  Game --> Simulation
+  Game --> Persistence
+  Game --> Audio[Martis.Audio]
+  Application[Martis.Application] --> Simulation
   Cli[Martis.Cli] --> Simulation[Martis.Simulation]
   Cli --> Persistence[Martis.Persistence]
   Simulation --> Domain[Martis.Domain]
-  Simulation --> Contracts
-  Contracts[Martis.Contracts] --> Domain
+  Simulation --> Contracts[Martis.Contracts]
+  Contracts --> Domain
   Persistence --> Contracts
   Persistence --> Domain
-  Game[Martis.Game · Godot] --> Simulation
-  Game --> Persistence
 ```
 
-`Martis.Game` (juego 3D, T08) está en `src/Martis.Game` pero no en `MARTIS.sln` (H-17). `benchmarks/Martis.Benchmarks` (T10) mide el motor con BenchmarkDotNet; resultados en [docs/BENCHMARK.md](docs/BENCHMARK.md).
-
-## Estructura
-
-```
-MARTIS.sln
-global.json
-Directory.Build.props
-Directory.Packages.props
-src/Martis.Domain/          Biology/ Genetics/ Ecology/ Environment/ Common/ World/ Validation/
-src/Martis.Simulation/      Engine/ Systems/ Algorithms/ Random/ Spatial/ Validation/
-src/Martis.Contracts/       Commands/ Snapshots/ Events/
-src/Martis.Persistence/     SQLite/ Serialization/ Migrations/
-src/Martis.Cli/             Commands/ Program.cs
-tests/Martis.Domain.Tests/
-tests/Martis.Simulation.Tests/
-tests/Martis.Persistence.Tests/
-tests/Martis.Integration.Tests/
-data/                       genes/ organisms/ reactions/ environments/ scenarios/
-.github/workflows/ci.yml
-```
-
-T02 llena Biology, Genetics, Environment, World y Validation. T03a añade `Parameters` en Domain, el PRNG y el motor en Simulation, y el comando `simulate` en el CLI. Ecology sigue vacío. El diccionario está en [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md).
-
-## Versiones de paquetes
-
-Fijadas el 2026-11-15 en [`Directory.Packages.props`](Directory.Packages.props). Central Package Management; los `.csproj` no repiten la versión. `RestorePackagesWithLockFile` escribe un `packages.lock.json` junto a cada proyecto. Son las últimas estables de cada id compatibles con `net10.0` (el nuspec de `Microsoft.Data.Sqlite` 11.0.0 declara TFM `net10.0`).
-
-| Paquete | Versión |
+| Proyecto | Contenido |
 | --- | --- |
-| [xunit](https://www.nuget.org/packages/xunit/2.9.3) | 2.9.3 |
-| [xunit.runner.visualstudio](https://www.nuget.org/packages/xunit.runner.visualstudio/4.0.1) | 4.0.1 |
-| [Microsoft.NET.Test.Sdk](https://www.nuget.org/packages/Microsoft.NET.Test.Sdk/18.12.0) | 18.12.0 |
-| [coverlet.collector](https://www.nuget.org/packages/coverlet.collector/10.1.1) | 10.1.1 |
-| [Microsoft.Data.Sqlite](https://www.nuget.org/packages/Microsoft.Data.Sqlite/11.0.0) | 11.0.0 |
-| [CsCheck](https://www.nuget.org/packages/CsCheck/5.0.1) | 5.0.1 |
+| `src/Martis.Domain` | tipos del modelo: biología, genética, ambiente, mundo, validación. Solo BCL |
+| `src/Martis.Contracts` | comandos (solo datos, sin `Apply`), snapshots y eventos |
+| `src/Martis.Simulation` | motor de ticks y sistemas: metabolismo, poblaciones, evolución, ecología, economía, misiones, expedición, terraformación, planetas y `GameSession`, la fachada que usa el juego |
+| `src/Martis.Persistence` | guardado SQLite y formato binario de snapshots |
+| `src/Martis.Application` | lógica de juego sin Godot: modos, órdenes y control del tiempo |
+| `src/Martis.Audio` | audio en C# puro: piano grabado (VCSL, CC0), música por estados de ánimo, efectos y masterización |
+| `src/Martis.Cli` | CLI `simulate` |
+| `src/Martis.Game` | juego Godot. **No está en `MARTIS.sln`**: lo compila Godot.NET.Sdk |
+| `benchmarks/Martis.Benchmarks` | BenchmarkDotNet, `-- --profile N` para tiempo por paso ([docs/BENCHMARK.md](docs/BENCHMARK.md)) |
+| `tests/*` | xUnit por proyecto, más `Martis.Integration.Tests` (arquitectura, CLI, extremo a extremo) |
+| `data/` | datos versionados (`*.v1.json`): escenario MarsBaseline, reacciones, organismos, misiones, campaña «Génesis», economía, expedición y planetas |
+| `data/planets/mars/` | relieve real por sección (PNG de 16 bits + metadatos), generado con `tools/planet/build_region.py` |
+| `tools/` | `planet/build_region.py` (relieve real) y `piano-bank/build_bank.py` (banco de piano) |
 
-El id `xunit` 2.9.3 es la última versión estable de ese paquete (xUnit v2). El adaptador 4.0.1 declara compatibilidad con xUnit.net 1.9.2 y posteriores. CsCheck 5.0.1 es la última estable publicada en nuget.org el 2026-11-16 y solo la usan las pruebas de propiedades de `Martis.Simulation.Tests`. El motor no la referencia: su azar es `pcg32-v1`.
+### Reglas que comprueban los tests
 
-## Pruebas de arquitectura
+Las comprueban las pruebas de arquitectura (`Category=Architecture`). Romperlas hace fallar la CI:
 
-En `tests/Martis.Integration.Tests`, con el rasgo `Category=Architecture`:
+- El grafo de arriba sin ciclos. Domain no referencia nada; Contracts solo referencia Domain; Simulation no referencia Persistence, Cli, Godot ni SQLite. El CLI no referencia Contracts ni Domain directamente.
+- El juego solo usa la API de `GameSession` (`GameBoundaryTests`).
+- Determinismo: en `src/` no aparecen `System.Random`, `Random.Shared`, `GetHashCode()`, `Parallel.*`, `AsParallel()`, `Task.Run`, `DateTime.Now`/`UtcNow` ni `Guid.NewGuid()`. Todo el azar sale de los cinco flujos `pcg32-v1` (ADR-003).
+- No hay recursos gratis: las reacciones están balanceadas por elemento y nunca se consume más de lo disponible (VAL-006/007/008).
+- No hay datos científicos inventados: cada número del modelo lleva fuente o la clasificación `MODEL_ASSUMPTION`, `GAME_BALANCE` o `SPECULATIVE` (ADR-000 R5).
+- Las poblaciones son agregadas, con variantes por celda; no hay individuos como objetos (ADR-006, Documento Maestro ARC-004).
 
-- Por reflexión (`Assembly.GetReferencedAssemblies`): `Martis.Domain` no referencia ensamblados `Godot*`, `Microsoft.Data.Sqlite*`, `SQLitePCL*` ni `Martis.*`. Simulation referencia Domain y Contracts, y no referencia Persistence, Cli, Godot ni SQLite. Contracts referencia solo Domain: nunca Simulation, Persistence, Cli, SQLite ni Godot.
-- Por los `.csproj` (BCL, sin paquetes extra): el grafo de arriba, sin ciclos. La reflexión no ve una referencia de proyecto que ningún método usa; el examen del `.csproj` sí.
-- El código de `src/` no llama a `System.Random`, `Random.Shared`, `GetHashCode()`, `Parallel.*`, `AsParallel()`, `Task.Run`, `DateTime.Now`, `DateTime.UtcNow` ni `Guid.NewGuid()`. En Domain y Simulation tampoco llama a `Environment.TickCount` ni a `Stopwatch`. Los comentarios pueden nombrarlas; el escáner los quita antes de buscar.
-
-`dotnet test` puede imprimir `VSTEST_ARTIFACTS_DIRECTORY environment variable was not found... outdated Microsoft.NET.Test.Sdk`. Sale de `testhost` 18.12.0 (el paquete fijado, que es el último estable) cuando el proceso no define esa variable. No es un aviso del compilador: `dotnet build -c Release` termina con 0 avisos. Definir la variable apunta el directorio de artefactos del host y el texto desaparece. La CI la define.
+Las decisiones están en [docs/ADR](docs/ADR/README.md) (ADR-000 a ADR-039).
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) en `ubuntu-latest` y `windows-latest`: `actions/setup-dotnet` lee `global.json` y cachea NuGet (`cache: true`, clave `**/packages.lock.json`), luego `dotnet restore MARTIS.sln --locked-mode`. A continuación `git diff --exit-code -- '**/packages.lock.json'` y `git status --porcelain` sobre esos ficheros: el restore con SDK 10.0.404 puede recrear un lock que no estaba en el índice, y el paso falla si el diff no está vacío o si `status` muestra alguno. Después, `dotnet build -c Release --no-restore` y `dotnet test -c Release --no-build`. En Linux compila además el juego con `dotnet build src/Martis.Game/Martis.Game.csproj` (Godot.NET.Sdk llega por NuGet). No instala el editor de Godot.
+GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) en `ubuntu-latest` y `windows-latest`. Los pasos son restore en `--locked-mode` (los `packages.lock.json` no pueden cambiar), build Release, tests y, en Linux, compilación del juego con Godot.NET.Sdk. La CI no instala el editor de Godot, así que los smokes del juego se ejecutan en local.
 
-## Juego (T08)
+## Documentación
 
-Requisitos: [Godot 4.7.2-stable .NET](https://godotengine.org/download/archive/) y el SDK de .NET 10. Detalle en [ADR-017](docs/ADR/ADR-017-juego-3d-godot.md).
-
-```bash
-dotnet build src/Martis.Game/Martis.Game.csproj
-godot --path src/Martis.Game                       # jugar
-godot --headless --path src/Martis.Game -- --smoke # 30 soles, guardar, cargar; sale con 0
-godot --path src/Martis.Game -- --shot=captura.png --hour=0.7   # demostración y captura
-```
-
-Controles: botón derecho gira la cámara, rueda acerca, botón central o WASD desplaza, Q/E giran. Espacio pausa, 0–4 cambian la capa (temperatura, agua, radiación, biomasa), F5 guarda, F9 carga. Clic izquierdo inspecciona una celda; con «Desplegar» activo, inocula el diseño del laboratorio. Las partidas se guardan en `user://martis.db` con el mismo formato que el CLI.
-
-| Noche | Capa de agua |
+| Documento | Para qué |
 | --- | --- |
-| ![Colonias de noche](docs/images/t08-noche.png) | ![Capa de agua](docs/images/t08-capa-agua.png) |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | flujo de trabajo: ramas, PRs, ADR, pruebas y convenciones |
+| [docs/ESTADO.md](docs/ESTADO.md) | estado actual, pendientes conocidos y siguientes pasos |
+| [docs/maestro/](docs/maestro/) | Documento Maestro v2.0 (diseño y arquitectura vigentes) |
+| [docs/ADR/](docs/ADR/README.md) | registro de decisiones |
+| [docs/TDD_HUECOS.md](docs/TDD_HUECOS.md) | huecos y deudas abiertas (H-nn) |
+| [docs/PR_CHECKLIST.md](docs/PR_CHECKLIST.md) | lista de revisión de cada PR |
+| [docs/DATA_DICTIONARY.md](docs/DATA_DICTIONARY.md), [docs/INVARIANTES.md](docs/INVARIANTES.md) | diccionario de datos e invariantes VAL-001…010 |
+| [docs/BENCHMARK.md](docs/BENCHMARK.md) | rendimiento medido |
+| [docs/ROADMAP.md](docs/ROADMAP.md), [docs/SPRINT_01.md](docs/SPRINT_01.md) | plan original T01–T10 y Sprint 1 (completados; histórico) |
 
-## Fuera de este hito
+## Licencias de recursos
 
-- `EnvironmentSystem` mantiene la temperatura constante (sin ciclos diurno ni estacional) y MarsBaseline es uniforme (H-30).
-- VAL-010 se comprueba en la misma plataforma; la matriz completa está en [docs/INVARIANTES.md](docs/INVARIANTES.md).
-- El rendimiento con la carga de §7.4 está medido pero no cumple el objetivo (H-29, [docs/BENCHMARK.md](docs/BENCHMARK.md)).
-- No hay exportación del juego ni progreso de misión en la partida guardada (H-31).
-
-## Regla de Contracts
-
-`Martis.Contracts` solo contiene datos: `ISimulationCommand` no tiene `Apply`. El handler está en `Martis.Simulation` y el motor aplica la cola al empezar el tick. Contracts referencia únicamente Domain: nunca Simulation, Persistence, Cli, SQLite ni Godot.
-
-## Decisiones del lead en este PR
-
-- **H-01.** Simulation referencia Contracts, además de Domain.
-- **H-02.** El ciclo se evita dejando los datos en Contracts y la aplicación en Simulation. Sin tipos de comando en este hito.
-- **Roll-forward.** `global.json` usa `latestPatch` con la versión 10.0.404, como indica ADR-002. En la revisión el lead lo nombra H-27.
-- **H-17.** `Martis.Game` sigue fuera de `MARTIS.sln`. La CI no depende del editor de Godot; desde T08 compila el juego con Godot.NET.Sdk.
-- Los cuatro proyectos de test del brief se mantienen. Contracts y el CLI se cubren desde `Martis.Integration.Tests`. ADR-000 lo actualiza el lead; este PR no lo modifica.
+Todo el audio se sintetiza en código, salvo el piano: es un Steinway B del [VCSL](https://github.com/sgossner/VCSL) (CC0). El relieve procede de HRSC-MOLA y de DTMs CTX públicos; el script de `tools/planet` indica las fuentes. El proyecto todavía no tiene licencia de código (H-23).

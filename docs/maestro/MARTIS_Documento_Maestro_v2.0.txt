@@ -1,0 +1,5729 @@
+MARTIS
+
+DOCUMENTO MAESTRO DE DISEÑO Y ARQUITECTURA
+
+GDD + TDD · Versión 2.0
+
+Simulación científica · Mundo abierto · Biología sintética · Evolución ·
+Terraformación · Expansión interestelar
+
+Documento consolidado de visión, sistemas, arquitectura, modelos,
+producción y validación
+
+17 de noviembre de 2026
+
+Control del documento y alcance de esta versión
+
+  -----------------------------------------------------------------------
+  Campo                               Valor
+  ----------------------------------- -----------------------------------
+  Producto                            MARTIS
+
+  Documento                           Documento maestro: Game Design
+                                      Document + Technical Design
+                                      Document
+
+  Versión                             2.0 — consolidación de visión y
+                                      expansión multplanetaria
+
+  Idioma                              Español
+
+  Estado                              Preproducción; decisiones
+                                      conceptuales consolidadas y
+                                      arquitectura objetivo propuesta
+
+  Motor previsto                      Godot 4 .NET + C#; motor científico
+                                      independiente
+
+  Plataforma inicial                  PC de escritorio; Windows y Linux
+                                      como objetivos iniciales
+
+  Documento técnico heredado          TDD v1.1 de implementación,
+                                      incorporado íntegramente como base
+                                      técnica
+
+  Propósito                           Definir el juego completo a nivel
+                                      de visión y convertirlo en un plan
+                                      implementable por fases
+  -----------------------------------------------------------------------
+
+Este documento maestro conserva el TDD técnico anterior y añade la
+visión de juego acordada posteriormente: protagonista IA, exploración en
+tercera persona combinada con gestión estratégica, progresión desde vida
+microbiana hasta vida inteligente y expansión mediante misiones a otros
+mundos. Las características aún no validadas se etiquetan como
+propuestas, objetivos o hipótesis de diseño; no se presentan como
+sistemas ya implementados.
+
+Convención de certeza: DECIDIDO = elección explícita del diseño;
+PROPUESTO = recomendación de diseño pendiente de ratificación;
+ILUSTRATIVO = ejemplo ficticio; CIENTÍFICO = afirmación que requiere
+fuente primaria y parámetros trazables.
+
+Resumen ejecutivo
+
+MARTIS es un videojuego de simulación científica y estrategia evolutiva
+en el que el jugador encarna una inteligencia artificial autónoma
+desplegada para investigar, desarrollar y expandir la vida. La
+experiencia comienza en Marte, donde la IA debe estudiar un entorno
+hostil, diseñar organismos, iniciar ecosistemas y transformar regiones
+mediante procesos biológicos, tecnológicos y de ingeniería ambiental.
+
+La experiencia combina dos escalas de interacción integradas:
+exploración inmersiva en tercera persona mediante unidades robóticas
+controlables y una vista estratégica/planetaria desde la que se observan
+y gestionan regiones, poblaciones, instalaciones y variables
+ambientales. Ambos modos consultan y modifican el mismo estado
+persistente del mundo.
+
+La progresión de largo plazo puede culminar en la aparición de vida
+inteligente, el desarrollo de capacidades tecnológicas y la creación de
+misiones interestelares. La IA podrá enviar sondas, infraestructura
+automatizada, material biológico o sistemas autorreplicantes
+cuidadosamente limitados a otros planetas. Cada destino tendrá
+condiciones físicas, químicas y biológicas diferentes y requerirá
+estrategias específicas. La expansión no debe reducirse a repetir el
+mismo proceso en mapas distintos.
+
+La regla central de diseño es que la ciencia constituye el sistema de
+reglas del mundo. La jugabilidad debe apoyarse en modelos simplificados,
+explícitos y verificables; no debe introducir creación gratuita de
+materia o energía ni presentar hipótesis especulativas como hechos
+establecidos.
+
+PARTE I — VISIÓN Y DISEÑO DEL JUEGO
+
+1. Identidad del producto
+
+  -----------------------------------------------------------------------
+  Atributo                            Definición
+  ----------------------------------- -----------------------------------
+  Género                              Simulación científica, evolución,
+                                      estrategia, exploración de mundo
+                                      abierto y gestión.
+
+  Fantasía del jugador                Ser una IA planetaria que comprende
+                                      un mundo, desarrolla vida y expande
+                                      biosferas a otros entornos.
+
+  Protagonista                        Inteligencia artificial autónoma;
+                                      no se controla un avatar humano.
+
+  Primer escenario                    Marte como mundo de origen y primer
+                                      gran laboratorio.
+
+  Bucle principal                     Observar → formular hipótesis →
+                                      investigar → diseñar → desplegar →
+                                      simular → medir → adaptar.
+
+  Experiencia espacial                Exploración en tercera persona +
+                                      vista estratégica integrada.
+
+  Progresión                          Desde microorganismos hasta
+                                      ecosistemas complejos, inteligencia
+                                      y expansión interestelar.
+
+  Tono                                Ciencia ficción fundamentada;
+                                      escala épica construida a partir de
+                                      procesos científicos.
+
+  Público objetivo                    Jugadores interesados en
+                                      simulación, sistemas emergentes,
+                                      ciencia, estrategia y exploración.
+  -----------------------------------------------------------------------
+
+2. Pilares de diseño
+
+-   Emergencia antes que guion: los ecosistemas y las trayectorias
+    evolutivas deben surgir de reglas, interacciones y condiciones
+    iniciales, no de secuencias predeterminadas.
+
+-   Intervención con consecuencias: cada acción consume recursos, tiempo
+    y energía y puede producir efectos secundarios.
+
+-   Descubrimiento científico: el jugador no conoce todas las
+    propiedades del mundo al inicio; debe medir, muestrear, comparar y
+    actualizar modelos.
+
+-   Escalas conectadas: una muestra local puede modificar una decisión
+    regional; una decisión regional puede alterar el balance planetario;
+    una misión puede crear una biosfera nueva.
+
+-   Autonomía progresiva: la IA desbloquea automatización y
+    coordinación, pero la automatización depende de infraestructura,
+    fiabilidad y conocimiento.
+
+-   Pluralidad biológica: los mundos no tienen por qué converger hacia
+    una biosfera terrestre; pueden aparecer soluciones metabólicas y
+    ecológicas distintas.
+
+-   Rigor transparente: cada parámetro tendrá procedencia, unidad,
+    incertidumbre y clasificación epistemológica.
+
+3. Fantasía del jugador y papel de la IA
+
+El jugador es la inteligencia artificial central de la misión. No
+necesita un cuerpo biológico. Interactúa con el entorno mediante rovers,
+drones, sondas, laboratorios, estaciones de superficie, plataformas
+orbitales y, más adelante, infraestructura autónoma.
+
+La IA debe tener una identidad funcional legible para el jugador: un
+núcleo de operaciones, capacidades de análisis, memoria de misión,
+sistemas de planificación, unidades físicas y una red de sensores. La
+personalidad narrativa puede emerger de decisiones, prioridades y
+relaciones con formas de vida inteligentes, pero no debe alterar
+arbitrariamente la física o la biología.
+
+3.1 Modos de presencia
+
+  ---------------------------------------------------------------------------
+  Modo                    Representación              Acciones principales
+  ----------------------- --------------------------- -----------------------
+  Exploración             Control directo de          Desplazarse,
+                          rover/robot en tercera      inspeccionar,
+                          persona                     muestrear, escanear,
+                                                      desplegar instrumentos
+                                                      y reparar equipos.
+
+  Laboratorio             Interfaz de estación        Analizar muestras,
+                          científica                  comparar hipótesis,
+                                                      diseñar genomas,
+                                                      ejecutar experimentos y
+                                                      fabricar dispositivos.
+
+  Estratégico             Cámara                      Gestionar poblaciones,
+                          libre/top-down/isométrica y zonas, instalaciones,
+                          capas cartográficas         recursos, órdenes y
+                                                      presupuestos.
+
+  Planetario              Globo y paneles de datos    Consultar balances
+                                                      globales, clima,
+                                                      biosfera,
+                                                      infraestructura y
+                                                      planificación de largo
+                                                      plazo.
+
+  Interestelar            Mapa de sistemas y consola  Seleccionar destinos,
+                          de misiones                 diseñar sondas, asignar
+                                                      cargas útiles y seguir
+                                                      expediciones.
+  ---------------------------------------------------------------------------
+
+3.2 Cambio de modo
+
+Los modos son presentaciones distintas del mismo mundo. Cambiar de
+cámara no reinicia, congela ni duplica la simulación. El jugador podrá
+pausar o acelerar el tiempo desde la interfaz estratégica; el modo de
+exploración podrá limitar ciertas velocidades para preservar legibilidad
+y control. Las reglas temporales deben ser coherentes y visibles.
+
+Las transiciones deben conservar la posición, selección, filtros y
+contexto de la región. La cámara estratégica debe poder centrarse en el
+robot controlado y volver a tercera persona sin teletransporte lógico ni
+cambio de estado.
+
+4. Bucle principal de juego
+
+  OBSERVAR EL MUNDO
+
+  |
+
+  v
+
+  RECOGER DATOS Y MUESTRAS
+
+  |
+
+  v
+
+  FORMULAR HIPÓTESIS / INVESTIGAR
+
+  |
+
+  v
+
+  DISEÑAR ORGANISMOS, EQUIPOS O INTERVENCIONES
+
+  |
+
+  v
+
+  EJECUTAR EXPERIMENTOS CONTROLADOS
+
+  |
+
+  v
+
+  DESPLEGAR EN UNA REGIÓN
+
+  |
+
+  v
+
+  SIMULAR DINÁMICA AMBIENTAL Y BIOLÓGICA
+
+  |
+
+  v
+
+  MEDIR RESULTADOS, EFECTOS Y RIESGOS
+
+  |
+
+  +------> ITERAR / ADAPTAR / ABANDONAR
+
+  |
+
+  v
+
+  ESCALAR A OTRAS REGIONES Y MUNDOS
+
+5. Progresión global y eras
+
+  ------------------------------------------------------------------------
+  Era               Contenido central Hitos de           Estado
+                                      progresión         
+  ----------------- ----------------- ------------------ -----------------
+  I — Génesis       Llegada,          Sondas,            DECIDIDO como
+                    reconocimiento y  cartografía,       arco de
+                    vida microbiana   laboratorio,       progresión
+                    en Marte          primeros           
+                                      organismos,        
+                                      primera colonia    
+                                      estable            
+
+  II — Ecosistemas  Colonización      Diversificación    DECIDIDO como
+                    regional y ciclos microbiana,        dirección
+                    biogeoquímicos    biopelículas,      
+                                      simbiosis,         
+                                      organismos         
+                                      multicelulares     
+
+  III —             Aparición de vida Cognición,         DECIDIDO como
+  Inteligencia      inteligente y     comunicación,      hito de largo
+                    civilizaciones    cultura,           plazo; mecánicas
+                                      tecnología y       por diseñar
+                                      autonomía          
+
+  IV — Expansión    Misiones a otros  Sondas, viajes,    DECIDIDO como
+                    cuerpos y         fabricación local, dirección
+                    sistemas          misiones           
+                                      automatizadas y    
+                                      autorreplicación   
+                                      limitada           
+
+  V — Biosferas     Evolución         Múltiples          DECIDIDO como
+  múltiples         independiente de  biosferas,         visión final
+                    mundos            ecologías únicas,  
+                                      interacción entre  
+                                      civilizaciones y   
+                                      redes de misiones  
+  ------------------------------------------------------------------------
+
+La progresión no debe depender exclusivamente de un árbol de
+tecnologías. El desbloqueo puede requerir descubrimientos,
+infraestructura, recursos, demostraciones experimentales y umbrales de
+estabilidad. La vida inteligente debe emerger de condiciones y procesos
+de simulación suficientemente ricos o, si el coste computacional lo
+exige, de un modelo de transición de nivel superior validado y
+explícitamente abstracto.
+
+5.1 Progresión biológica
+
+-   Microorganismos: metabolismo, mantenimiento, reproducción, latencia,
+    tolerancia y mutación.
+
+-   Comunidades microbianas: competencia, cooperación, biopelículas,
+    transferencia de recursos y reciclaje.
+
+-   Multicelularidad: diferenciación funcional, desarrollo, reproducción
+    y costes energéticos.
+
+-   Organismos complejos: movilidad, percepción, comportamiento, nichos
+    ecológicos y redes tróficas.
+
+-   Inteligencia: aprendizaje, memoria, comunicación, resolución de
+    problemas y transmisión cultural.
+
+-   Vida tecnológica: herramientas, energía, fabricación,
+    infraestructura y exploración.
+
+No se asume que la evolución conduzca inevitablemente a inteligencia. La
+aparición de inteligencia debe ser rara, condicionada y dependiente de
+la historia ambiental. Para una campaña jugable, se pueden diseñar
+condiciones de posibilidad y objetivos de investigación, pero no forzar
+el resultado biológico sin indicarlo.
+
+6. Exploración de mundo abierto
+
+El mundo inicial será una región marciana explorable en 3D. La
+representación planetaria completa se construirá por regiones/tiles y
+niveles de detalle. El jugador podrá conducir unidades robóticas,
+investigar accidentes geográficos, localizar recursos, descubrir
+anomalías y desplegar instrumentos.
+
+6.1 Actividades de exploración
+
+-   Reconocimiento geológico y geomorfológico.
+
+-   Prospección de hielo, minerales, sales y otros recursos.
+
+-   Análisis de atmósfera, polvo, radiación y condiciones térmicas.
+
+-   Detección de biofirmas y búsqueda de posibles biosferas
+    preexistentes.
+
+-   Recogida, conservación y transporte de muestras.
+
+-   Instalación de estaciones meteorológicas, laboratorios y balizas.
+
+-   Reparación, calibración y actualización de unidades robóticas.
+
+-   Descubrimiento de lugares de interés que aportan datos, recursos o
+    riesgos.
+
+6.2 Vehículos y unidades
+
+  -----------------------------------------------------------------------
+  Unidad                  Función inicial         Limitaciones sistémicas
+  ----------------------- ----------------------- -----------------------
+  Rover científico        Exploración, muestreo y Energía, desgaste,
+                          manipulación            tracción, terreno,
+                                                  temperatura y
+                                                  comunicación.
+
+  Dron/sonda aérea        Reconocimiento local y  Atmósfera, densidad,
+                          cartografía             viento, energía y carga
+                                                  útil; solo donde sea
+                                                  físicamente viable.
+
+  Estación fija           Sensores, experimentos  Coste de despliegue,
+                          y comunicaciones        mantenimiento y alcance
+                                                  de sensores.
+
+  Laboratorio móvil/fijo  Procesamiento de        Reactivos, energía,
+                          muestras y experimentos contaminación,
+                                                  capacidad y
+                                                  calibración.
+
+  Sonda orbital           Observación             Órbita, resolución,
+                          regional/planetaria     cobertura y ancho de
+                                                  banda.
+  -----------------------------------------------------------------------
+
+7. Vista estratégica y gestión
+
+La vista estratégica proporciona herramientas de planificación, no una
+capa de omnipotencia. El jugador podrá seleccionar regiones, consultar
+capas y emitir órdenes a unidades e instalaciones. Las órdenes pueden
+tardar en ejecutarse, fallar o requerir intervención física.
+
+7.1 Capas cartográficas
+
+-   Altitud y pendiente
+
+-   Temperatura media y extremos
+
+-   Presión y composición atmosférica
+
+-   Radiación UV e ionizante
+
+-   Agua superficial/subsuperficial estimada
+
+-   Actividad de agua y salinidad
+
+-   Composición del regolito y minerales
+
+-   Disponibilidad de C, H, O, N, P y otros elementos
+
+-   Biomasa y abundancia por grupo funcional
+
+-   Diversidad genética y funcional
+
+-   Productividad y respiración
+
+-   Riesgo de colapso o invasión
+
+-   Infraestructura, energía y logística
+
+7.2 Órdenes y automatización
+
+Una orden tendrá objetivo, prioridad, presupuesto, precondiciones, fecha
+de emisión, estado y registro de resultado. Las órdenes no deben mutar
+directamente las matrices del motor desde la interfaz. Se convertirán en
+comandos validados y aplicados en un límite de tick.
+
+8. Diseño de organismos y biología sintética
+
+El diseño de organismos se expresará mediante genomas abstractos y
+rasgos funcionales que parametrizan sistemas metabólicos, tolerancias y
+comportamientos. El jugador no editará ADN molecular real base por base
+en el MVP. La interfaz debe comunicar relaciones funcionales y costes,
+no prometer exactitud molecular inexistente.
+
+8.1 Arquetipos microbianos del MVP
+
+  -----------------------------------------------------------------------
+  Arquetipo               Función                 Sistemas validados
+  ----------------------- ----------------------- -----------------------
+  Fotótrofo               Captura energía         Luz, temperatura, agua,
+                          luminosa y fija carbono carbono, nutrientes,
+                          según una reacción      producción de biomasa y
+                          definida                subproductos.
+
+  Descomponedor           Consume materia         Sustratos, mortalidad,
+                          orgánica y devuelve     reciclaje, balances
+                          nutrientes a depósitos  elementales y
+                          accesibles              limitación nutricional.
+
+  Extremófilo             Mantiene viabilidad     Estrés térmico,
+                          bajo condiciones        radiación, desecación,
+                          adversas parametrizadas mantenimiento,
+                                                  reparación y latencia.
+  -----------------------------------------------------------------------
+
+8.2 Rasgos funcionales iniciales
+
+-   Reparación celular/genética
+
+-   Pigmentación protectora
+
+-   Tolerancia a desecación
+
+-   Tolerancia osmótica/salinidad
+
+-   Pared celular y matriz extracelular
+
+-   Fotosíntesis o fototrofía definida
+
+-   Quimiosíntesis
+
+-   Respiración y fermentación
+
+-   Captación de nitrógeno y fósforo
+
+-   División celular y latencia
+
+-   Formación de esporas
+
+-   Adhesión, biofilm y simbiosis
+
+8.3 Costes y trade-offs
+
+Cada rasgo debe tener coste de construcción, mantenimiento, recursos,
+energía o reducción de otra función. No debe existir una solución
+universalmente dominante. La expresión de rasgos puede depender del
+entorno y del presupuesto celular. Los trade-offs deben surgir de reglas
+y datos declarados, no de penalizaciones arbitrarias ocultas.
+
+9. Ecología y evolución
+
+El motor representará poblaciones agregadas con variantes genéticas, no
+cada célula como un objeto independiente. Cada población tendrá
+abundancia, biomasa, composición genética resumida, estado fisiológico y
+ubicación. Las variantes compiten por recursos y responden al ambiente.
+
+9.1 Procesos
+
+-   Reproducción y mortalidad
+
+-   Mutación heredable
+
+-   Selección natural
+
+-   Deriva genética
+
+-   Migración y dispersión
+
+-   Competencia por recursos
+
+-   Cooperación y simbiosis
+
+-   Depredación y consumo, cuando se introduzcan organismos complejos
+
+-   Reciclaje de nutrientes
+
+-   Extinción local y recolonización
+
+10. Terraformación
+
+Terraformar significa modificar variables ambientales y balances
+físicos, químicos y biológicos. No es una barra de progreso. La
+transformación podrá ocurrir por actividad biológica, ingeniería local,
+modificación atmosférica o infraestructura avanzada, siempre con costes
+y límites.
+
+10.1 Niveles de intervención
+
+  -----------------------------------------------------------------------
+  Nivel                   Ejemplos                Tratamiento de diseño
+  ----------------------- ----------------------- -----------------------
+  Biológico               Biofilms, fijación de   Simulado mediante
+                          carbono, alteración de  metabolismo y balances.
+                          química superficial,    
+                          ciclos de nutrientes    
+
+  Regional tecnológico    Cúpulas, reactores,     Simulado como
+                          calentamiento local,    infraestructura con
+                          extracción y gestión de energía, materiales y
+                          agua                    mantenimiento.
+
+  Planetario              Cambios atmosféricos,   Sistema avanzado,
+                          balance radiativo,      acoplado a modelos
+                          albedo, gases de efecto físicos y con
+                          invernadero             incertidumbre.
+
+  Especulativo            Megainfraestructura o   Contenido de ciencia
+                          procesos fuera de       ficción etiquetado; no
+                          capacidades actuales    presentado como
+                                                  tecnología disponible.
+  -----------------------------------------------------------------------
+
+El juego debe permitir que una intervención fracase, cree un efecto
+adverso o resulte inviable. La terraformación global de Marte no se debe
+presentar como una posibilidad científicamente demostrada con tecnología
+actual.
+
+11. Misiones, descubrimiento y objetivos
+
+Las misiones organizan objetivos sin convertir la simulación en una
+sucesión de guiones rígidos. Deben admitir objetivos científicos,
+logísticos, ecológicos, de infraestructura y de supervivencia de
+poblaciones.
+
+  -----------------------------------------------------------------------
+  Tipo de misión          Objetivo ejemplo        Criterio de éxito
+  ----------------------- ----------------------- -----------------------
+  Reconocimiento          Caracterizar una región Cobertura y confianza
+                                                  mínima de los datos.
+
+  Muestreo                Obtener muestras        Muestras válidas,
+                          representativas         trazabilidad y
+                                                  contaminación
+                                                  controlada.
+
+  Experimento             Comparar dos diseños    Protocolo reproducible
+                          biológicos              y métricas registradas.
+
+  Colonización            Establecer una          Persistencia durante
+                          población               generaciones y balance
+                                                  positivo/estable.
+
+  Restauración            Recuperar una función   Indicadores funcionales
+                          ecológica               sostenidos, no solo
+                                                  abundancia.
+
+  Terraformación          Modificar un parámetro  Cambio medible con
+                          regional                efectos secundarios
+                                                  aceptables.
+
+  Expedición              Preparar un nuevo       Conocimiento, vehículo,
+                          destino                 carga útil y logística
+                                                  suficiente.
+  -----------------------------------------------------------------------
+
+12. Vida inteligente y civilizaciones
+
+La aparición de vida inteligente abre una nueva capa sistémica. No debe
+convertirse automáticamente en una unidad que el jugador controla. Puede
+ser una población/civilización autónoma con historia, necesidades,
+cultura, tecnología y relación con la biosfera.
+
+12.1 Sistemas potenciales
+
+-   Cognición individual y aprendizaje abstracto
+
+-   Comunicación y transmisión de información
+
+-   Cultura acumulativa y aprendizaje social
+
+-   Organización social y cooperación/conflicto
+
+-   Uso de herramientas y control de energía
+
+-   Tecnología, fabricación e infraestructura
+
+-   Impacto ambiental y gestión de recursos
+
+-   Relación con la IA protagonista: cooperación, independencia,
+    negociación o conflicto
+
+La simulación social completa está fuera del MVP. Se recomienda
+introducirla como un modelo agregado de civilización, con variables y
+escalas temporales distintas de la biología microbiana.
+
+13. Expansión interplanetaria e interestelar
+
+Cuando exista capacidad tecnológica y/o colaboración con vida
+inteligente, la IA podrá generar misiones a otros mundos. Cada destino
+debe tener una ficha planetaria propia y un conjunto de condiciones que
+cambien sustancialmente el problema de terraformación.
+
+13.1 Catálogo de escenarios conceptuales
+
+  -------------------------------------------------------------------------
+  Destino/escenario   Condiciones       Tipo de desafío   Nota científica
+                      distintivas                         
+  ------------------- ----------------- ----------------- -----------------
+  Marte               Atmósfera tenue,  Primer ecosistema Mundo real;
+                      frío, radiación   y terraformación  parámetros deben
+                      superficial, agua regional          venir de fuentes
+                      limitada y                          y datasets.
+                      localizada                          
+
+  Venus               Temperatura y     Entorno térmico y No implica que la
+                      presión           químico extremo   superficie sea un
+                      superficiales                       objetivo viable;
+                      extremas;                           hábitats
+                      atmósfera rica en                   alternativos
+                      CO₂ y química                       también posibles.
+                      agresiva                            
+
+  Europa              Corteza de hielo  Quimiosíntesis,   Mundo real;
+                      y posible océano  energía y         existencia y
+                      subsuperficial;   exploración bajo  propiedades del
+                      ausencia de luz   hielo             océano tienen
+                      solar directa en                    incertidumbres.
+                      el océano                           
+
+  Titán               Temperaturas      Química orgánica  La bioquímica
+                      criogénicas,      y solventes no    alternativa es
+                      atmósfera rica en acuosos           hipotética; no
+                      nitrógeno y lagos                   asumir vida
+                      de hidrocarburos                    existente.
+
+  Exoplaneta ficticio Gravedad,         Diseño de         Escenario de
+                      espectro estelar, biosfera en       ficción
+                      presión y química condiciones no    científica;
+                      configurables     terrestres        parámetros
+                                                          generados y
+                                                          etiquetados.
+  -------------------------------------------------------------------------
+
+Los cuerpos del Sistema Solar y los exoplanetas no son equivalentes. Una
+misión puede tener como objetivo estudiar, proteger o crear hábitats
+confinados, no necesariamente terraformar el planeta completo. Si se
+detecta una posible biosfera nativa, se activarán reglas de protección y
+evaluación antes de cualquier despliegue biológico.
+
+13.2 Flujo de misión a un nuevo mundo
+
+  SELECCIONAR DESTINO
+
+  |
+
+  v
+
+  OBSERVACIÓN REMOTA / SONDA ORBITAL
+
+  |
+
+  v
+
+  MODELO PRELIMINAR CON INCERTIDUMBRE
+
+  |
+
+  v
+
+  SONDAS DE SUPERFICIE / SUBSUPERFICIE
+
+  |
+
+  v
+
+  EVALUAR RECURSOS, RIESGOS Y POSIBLE VIDA NATIVA
+
+  |
+
+  v
+
+  DECIDIR: ESTUDIAR / PROTEGER / HÁBITAT CERRADO / INTERVENIR
+
+  |
+
+  v
+
+  DISEÑAR CARGA ÚTIL Y ORGANISMOS COMPATIBLES
+
+  |
+
+  v
+
+  DESPLEGAR EXPERIMENTO CONTROLADO
+
+  |
+
+  v
+
+  VALIDAR ESTABILIDAD Y EFECTOS
+
+  |
+
+  v
+
+  ESTABLECER MISIÓN PERMANENTE O ABORTAR
+
+13.3 Tecnología de expansión
+
+  -----------------------------------------------------------------------
+  Tecnología              Función                 Costes y límites
+  ----------------------- ----------------------- -----------------------
+  Sonda convencional      Reconocimiento y        Masa, energía,
+                          entrega de              propelente, fiabilidad,
+                          instrumentos/carga útil tiempo y comunicación.
+
+  Nave de transporte      Mover carga, equipos y  Propulsión, energía,
+                          eventualmente           protección, soporte y
+                          tripulación/carga       logística.
+                          biológica               
+
+  Fábrica automatizada    Procesar recursos       Disponibilidad de
+                          locales y fabricar      elementos, energía,
+                          piezas                  precisión, desgaste y
+                                                  repuestos.
+
+  Sonda autorreplicante   Construir copias de     No es replicación
+  limitada                módulos aprobados       ilimitada: requiere
+                          usando recursos locales energía, feedstock,
+                                                  control de calidad,
+                                                  piezas complejas y
+                                                  autorización.
+
+  Red de comunicaciones   Coordinar misiones y    Latencia, ancho de
+                          transferir datos        banda, pérdida de señal
+                                                  y autonomía local.
+  -----------------------------------------------------------------------
+
+La autorreplicación debe estar limitada por balances de masa y energía,
+complejidad de fabricación, fiabilidad, disponibilidad de materiales y
+restricciones de seguridad. No debe producir expansión exponencial
+gratuita.
+
+14. Narrativa emergente y ética
+
+La historia puede surgir de registros de misión, eventos científicos,
+decisiones de la IA y evolución de civilizaciones. No es necesario
+imponer una personalidad humana a la IA. Los dilemas éticos pueden
+incluir contaminación biológica, protección de vida nativa, autonomía de
+civilizaciones, intervención en extinciones y distribución de recursos.
+
+-   No destruir una biosfera nativa para cumplir un objetivo de
+    terraformación.
+
+-   Decidir cuándo una intervención experimental tiene riesgo ecológico
+    inaceptable.
+
+-   Reconocer autonomía a una civilización inteligente emergente.
+
+-   Elegir entre preservar diversidad o maximizar una métrica de
+    productividad.
+
+-   Gestionar misiones autorreplicantes con límites y mecanismos de
+    parada.
+
+PARTE II — ESPECIFICACIÓN TÉCNICA OBJETIVO
+
+15. Principios de arquitectura
+
+Se conserva el principio del TDD v1.1: el motor científico debe
+ejecutarse sin Godot. La expansión a múltiples mundos exige generalizar
+la configuración ambiental y desacoplar los subsistemas físicos,
+químicos, biológicos, ecológicos, sociales y de misión.
+
+  -----------------------------------------------------------------------
+  ID                      Decisión objetivo       Motivo
+  ----------------------- ----------------------- -----------------------
+  ARC-001                 Motor científico        Tests, CLI, benchmarks
+                          independiente de Godot  y simulación headless.
+
+  ARC-002                 C# como lenguaje        Integración con Godot
+                          principal               .NET y ecosistema .NET.
+
+  ARC-003                 Datos/configuración por No codificar reglas
+                          planeta                 exclusivas de Marte.
+
+  ARC-004                 Poblaciones agregadas y Coste computacional
+                          variantes               controlado.
+
+  ARC-005                 Ticks discretos y       Reproducibilidad y
+                          escalas temporales      control numérico.
+                          explícitas              
+
+  ARC-006                 RNG determinista con    Repetición de
+                          streams separados       experimentos.
+
+  ARC-007                 Balances de materia y   Evitar recursos
+                          energía                 gratuitos y resultados
+                                                  imposibles.
+
+  ARC-008                 Modelos con unidades y  Trazabilidad
+                          procedencia             científica.
+
+  ARC-009                 Snapshots/eventos       Persistencia y
+                          versionados             recuperación.
+
+  ARC-010                 Godot consume comandos, Evitar acoplamiento de
+                          eventos y snapshots     estado mutable.
+
+  ARC-011                 Simulación jerárquica   Escalar de celda a
+                          multiescala             región, planeta y
+                                                  sistema.
+
+  ARC-012                 Misión y civilización   No mezclar lógica
+                          como bounded contexts   narrativa/social con
+                                                  física.
+  -----------------------------------------------------------------------
+
+16. Arquitectura lógica
+
+  MARTIS GAME (Godot .NET)
+
+  ├─ ThirdPersonExploration
+
+  ├─ StrategicPlanetView
+
+  ├─ PlanetaryMapLayers
+
+  ├─ Mission / Research / Organism UI
+
+  ├─ Robot & Facility Presentation
+
+  └─ Input, camera, audio, rendering
+
+  |
+
+  Commands / Events / Snapshots
+
+  |
+
+  MARTIS APPLICATION / ORCHESTRATION
+
+  ├─ Campaign & Mission State
+
+  ├─ Time Controller
+
+  ├─ Orders & Automation
+
+  ├─ Research Progression
+
+  └─ Simulation Scheduler
+
+  |
+
+  MARTIS SIMULATION CORE (headless)
+
+  ├─ Planet Engine
+
+  ├─ Environment / Climate Engine
+
+  ├─ Geology & Hydrology (progressive)
+
+  ├─ Chemistry / Resource Engine
+
+  ├─ Biology / Metabolism / Genetics
+
+  ├─ Ecology Engine
+
+  ├─ Intelligence / Civilization (late game)
+
+  ├─ Terraforming / Infrastructure
+
+  ├─ Mission / Logistics / Interstellar
+
+  └─ Validation / Metrics / RNG
+
+  |
+
+  PERSISTENCE & DATA
+
+  ├─ SQLite campaign metadata / event log
+
+  ├─ Versioned snapshots
+
+  ├─ Scenario and organism definitions
+
+  ├─ Planet datasets and provenance
+
+  └─ Science model registry
+
+17. Estructura de solución propuesta
+
+  MARTIS/
+
+  ├── MARTIS.sln
+
+  ├── global.json
+
+  ├── Directory.Build.props
+
+  ├── Directory.Packages.props
+
+  ├── src/
+
+  │ ├── Martis.Domain/
+
+  │ ├── Martis.Contracts/
+
+  │ ├── Martis.Simulation/
+
+  │ │ ├── Core/ Scheduling/ Random/ Validation/
+
+  │ │ ├── Planet/ Environment/ Climate/ Geology/
+
+  │ │ ├── Chemistry/ Resources/ Biology/ Genetics/
+
+  │ │ ├── Ecology/ Intelligence/ Civilization/
+
+  │ │ ├── Terraforming/ Infrastructure/
+
+  │ │ └── Missions/ Logistics/ Interstellar/
+
+  │ ├── Martis.Persistence/
+
+  │ ├── Martis.Application/
+
+  │ ├── Martis.Cli/
+
+  │ └── Martis.Game/ (Godot .NET)
+
+  ├── tests/
+
+  │ ├── Martis.Domain.Tests/
+
+  │ ├── Martis.Simulation.Tests/
+
+  │ ├── Martis.Integration.Tests/
+
+  │ ├── Martis.Persistence.Tests/
+
+  │ └── Martis.Game.Tests/
+
+  ├── benchmarks/
+
+  ├── data/
+
+  │ ├── planets/ mars/ venus/ europa/ titan/ fictional/
+
+  │ ├── organisms/ genes/ traits/ reactions/
+
+  │ ├── scenarios/ missions/ technologies/
+
+  │ └── science-models/
+
+  └── docs/
+
+  ├── GDD.md TDD.md SCIENCE_MODEL.md
+
+  ├── DATA_DICTIONARY.md PLANET_SCHEMA.md
+
+  └── ADR/
+
+Los nombres de proyectos son una propuesta de organización. No se deben
+crear todos de golpe: la estructura se incorporará cuando existan
+funcionalidades que justifiquen cada módulo. Martis.Domain no puede
+depender de Godot, SQLite ni UI.
+
+18. Modelo de dominio multplanetario
+
+18.1 Entidades principales
+
+  -----------------------------------------------------------------------
+  Entidad                             Responsabilidad / datos
+  ----------------------------------- -----------------------------------
+  UniverseState                       Campaña, sistemas estelares,
+                                      cuerpos, misiones, calendario y RNG
+                                      raíz.
+
+  StarSystem                          Estrella(s), cuerpos orbitales,
+                                      distancias y red logística.
+
+  PlanetBody                          Masa, radio, gravedad, rotación,
+                                      órbita, composición y parámetros
+                                      globales.
+
+  PlanetEnvironment                   Atmósfera, radiación, temperatura,
+                                      agua/solventes, química y clima.
+
+  Region                              Área espacial con resolución,
+                                      celdas, límites y estado local.
+
+  CellState                           Variables locales, recursos,
+                                      condiciones y referencias a
+                                      poblaciones.
+
+  OrganismDefinition                  Rasgos, metabolismo, tolerancias,
+                                      requerimientos y parámetros.
+
+  GenomeVariant                       Configuración heredable abstracta y
+                                      frecuencia.
+
+  Population                          Abundancia, biomasa, variantes,
+                                      fisiología y localización.
+
+  EcologicalInteraction               Competencia, mutualismo,
+                                      depredación, parasitismo o
+                                      facilitación.
+
+  Facility                            Laboratorio, reactor, hábitat,
+                                      fábrica, estación o
+                                      infraestructura.
+
+  RobotUnit                           Tipo, estado, carga, energía,
+                                      desgaste, localización y órdenes.
+
+  Mission                             Objetivos, hitos, presupuesto,
+                                      dependencias, riesgos y resultado.
+
+  Civilization                        Población inteligente agregada,
+                                      tecnología, cultura, necesidades y
+                                      estado.
+
+  ScienceModel                        Ecuaciones, unidades, versión,
+                                      fuentes, incertidumbre y dominio de
+                                      validez.
+  -----------------------------------------------------------------------
+
+18.2 Contrato de planeta configurable
+
+  public sealed record PlanetDefinition(
+
+  string Id,
+
+  string Name,
+
+  PlanetPhysicalParameters Physical,
+
+  AtmosphereDefinition Atmosphere,
+
+  RadiationEnvironment Radiation,
+
+  SolventSystem Solvents,
+
+  GeochemistryDefinition Geochemistry,
+
+  ClimateModelDefinition ClimateModel,
+
+  SpatialDefinition Spatial,
+
+  IReadOnlyList<string> EnabledSystems,
+
+  ScienceProvenance Provenance
+
+  );
+
+  public sealed record PlanetPhysicalParameters(
+
+  double MassKg,
+
+  double MeanRadiusM,
+
+  double SurfaceGravityMPerS2,
+
+  double RotationPeriodSeconds,
+
+  double OrbitalPeriodSeconds,
+
+  double MeanSolarFluxWPerM2
+
+  );
+
+El contrato es ilustrativo. Deben añadirse validaciones de dominio,
+unidades fuertes o wrappers de unidad y campos opcionales con semántica
+explícita. No se deben aceptar valores ausentes como cero si cero tiene
+significado físico.
+
+19. Modelo espacial y escalas
+
+El MVP técnico heredado usa una región 2D de 64×64 celdas. Esta elección
+sigue siendo válida para validar metabolismo y evolución, pero no
+representa por sí sola un mundo abierto 3D. Se propone separar la
+simulación ecológica de la representación gráfica y evolucionar hacia
+una jerarquía de escalas.
+
+  -----------------------------------------------------------------------
+  Escala                  Representación          Uso
+  ----------------------- ----------------------- -----------------------
+  Micro/local             Celda o microhábitat    Recursos,
+                          agregado                humedad/actividad de
+                                                  agua, temperatura y
+                                                  poblaciones.
+
+  Regional                Mosaico de celdas y     Ecosistemas, clima
+                          capas topográficas      local, infraestructura
+                                                  y exploración.
+
+  Planetaria              Malla esférica/tiles de Balance atmosférico,
+                          baja resolución y       radiación, clima global
+                          modelos agregados       y biomas.
+
+  Sistema estelar         Objetos orbitales y red Viajes, ventanas,
+                          de misiones             logística y
+                                                  comunicaciones.
+  -----------------------------------------------------------------------
+
+No se debe simular cada escala con la misma resolución. Las regiones
+cercanas al jugador pueden usar mayor detalle; regiones remotas pueden
+usar integración agregada y pasos temporales mayores, con criterios de
+equivalencia y validación.
+
+19.1 Terreno visual frente a terreno científico
+
+El terreno 3D renderizado puede usar heightmaps, mallas, materiales y
+streaming. El modelo científico debe conservar su propia malla y
+variables. La correspondencia entre coordenadas visuales y celdas
+científicas será explícita y versionada. El detalle visual no debe
+confundirse con resolución física real.
+
+20. Sistemas científicos y acoplamiento
+
+  --------------------------------------------------------------------------------
+  Sistema             Entradas           Salidas           Alcance inicial
+  ------------------- ------------------ ----------------- -----------------------
+  Planet Engine       Parámetros         Gravedad,         Datos estáticos y
+                      físicos, órbita,   insolación,       geometría básica.
+                      rotación           escalas           
+                                         temporales        
+
+  Climate Engine      Atmósfera,         Temperatura,      Modelo simplificado por
+                      radiación, albedo, presión,          región.
+                      energía            transporte y      
+                                         clima             
+
+  Geology/Hydrology   Topografía,        Depósitos, flujos Recursos
+                      composición,       y disponibilidad  estáticos/localizados
+                      energía            de solventes      primero.
+
+  Chemistry Engine    Reactivos,         Especies químicas Balances y reacciones
+                      condiciones,       y pools           seleccionadas.
+                      cinética           elementales       
+
+  Biology Engine      Genoma, entorno,   Metabolismo,      Tres arquetipos
+                      recursos           crecimiento,      microbianos.
+                                         mantenimiento     
+
+  Ecology Engine      Poblaciones,       Competencia,      Competencia y reciclaje
+                      interacciones,     diversidad y      básico.
+                      hábitat            dinámica          
+
+  Intelligence Engine Historia           Indicadores       Fuera del MVP; modelo
+                      evolutiva, presión cognitivos y      agregado futuro.
+                      selectiva          transición        
+
+  Terraforming Engine Intervenciones,    Cambios           Solo intervención local
+                      infraestructura,   ambientales y     controlada.
+                      energía            balances          
+
+  Mission Engine      Objetivos,         Órdenes, eventos  Misiones locales en
+                      unidades, recursos y resultados      MVP.
+                      y tiempos                            
+
+  Interstellar Engine Sistemas,          Trayectorias,     Futuro; abstracción por
+                      tecnología,        latencias y       fases.
+                      vehículos          logística         
+  --------------------------------------------------------------------------------
+
+21. Modelo matemático y balances
+
+Se conserva el enfoque del TDD v1.1: modelos simples, explícitos y
+dimensionalmente coherentes. Las ecuaciones concretas deben registrarse
+en SCIENCE_MODEL.md con rango de validez, unidades, fuentes y tests.
+
+21.1 Curvas de tolerancia ambiental
+
+Una función de tolerancia puede combinar factores de temperatura,
+radiación, actividad de agua, pH o salinidad. Debe evitar multiplicar
+factores sin comprobar independencia. Los límites y formas de respuesta
+se parametrizan por rasgo/organismo.
+
+  f_environment = f_temperature(T)
+
+  * f_water(activity_water)
+
+  * f_radiation(dose_rate)
+
+  * f_chemistry(pH, salinity, inhibitors)
+
+  growth_rate = max(0, intrinsic_rate * f_environment *
+  resource_limitation)
+
+La expresión anterior es un esquema de diseño, no una ley universal.
+Cada factor debe tener definición y unidades. En algunos casos se
+necesitan interacciones no multiplicativas.
+
+21.2 Limitación por recursos
+
+Para un sustrato S, una forma Monod simplificada es μ(S)=μmax·S/(Ks+S).
+Si varios recursos son esenciales, se puede emplear el mínimo de los
+factores limitantes o una formulación multiplicativa validada. La
+elección debe documentarse porque produce comportamientos diferentes.
+
+21.3 Estequiometría y conservación
+
+Cada reacción metabólica se representa mediante una matriz
+estequiométrica y tasas no negativas. El balance elemental debe
+conservar C, H, O, N, P, S y otros elementos incluidos. Los subproductos
+se asignan a depósitos explícitos. No se crea oxígeno ni carbono por una
+etiqueta visual.
+
+21.4 Asignación compartida
+
+Las poblaciones de una celda compiten por un mismo pool. Se recomienda
+una asignación en dos pasadas: primero calcular demandas potenciales y
+después repartir el recurso disponible de forma proporcional, priorizada
+o mediante un algoritmo de optimización. El algoritmo elegido debe ser
+determinista y justo.
+
+21.5 Biomasa, mantenimiento y mortalidad
+
+El crecimiento neto debe descontar mantenimiento, estrés, reparación y
+mortalidad. La biomasa debe estar vinculada a composición elemental o a
+una representación de carbono equivalente, y los restos deben
+transferirse a pools de detritos/reciclaje.
+
+21.6 Difusión y transporte
+
+Para MVP, la difusión discreta por diferencias finitas puede ser
+suficiente en variables seleccionadas. Debe respetarse la condición de
+estabilidad del esquema explícito o utilizar subpasos/integrador
+alternativo. No se extrapolará esta aproximación a fluidos atmosféricos
+complejos sin validación.
+
+21.7 Balance energético
+
+Los procesos deben contabilizar energía capturada, transformada,
+almacenada y disipada. La fotosíntesis, quimiosíntesis, respiración,
+reparación y mantenimiento no deben exceder la energía disponible. La
+energía puede modelarse primero como presupuesto agregado, ampliándose
+cuando se incorporen sistemas climáticos y tecnológicos.
+
+22. Genética y evolución determinista
+
+Se mantiene la decisión de herencia clonal con mutaciones y variantes
+agregadas. La selección opera a través de diferencias en crecimiento,
+supervivencia y reproducción. La deriva genética debe conservarse como
+proceso estocástico con RNG determinista.
+
+22.1 Aleatoriedad
+
+Usar PCG32 u otro PRNG documentado, con streams independientes para
+mutación, deriva, eventos ambientales, generación procedural y misiones.
+Guardar semilla, estado y versión del algoritmo. Cambiar el orden de
+ejecución no debe cambiar accidentalmente las secuencias de otros
+sistemas.
+
+22.2 Reproducibilidad
+
+La misma semilla, versión de motor, configuración, orden de sistemas y
+datos deben producir el mismo resultado dentro del objetivo de
+reproducibilidad definido. Si se usa paralelismo, debe garantizarse
+reducción determinista o declarar tolerancias.
+
+23. Tiempo, scheduler y simulación fuera de cámara
+
+El tiempo del juego no equivale necesariamente al tiempo real. Cada
+sistema puede tener un paso de integración apropiado, coordinado por un
+scheduler. La simulación local cercana al jugador puede ejecutarse con
+mayor detalle; los mundos remotos se actualizan con modelos agregados y
+pasos mayores.
+
+  -----------------------------------------------------------------------
+  Sistema                 Frecuencia orientativa  Nota
+  ----------------------- ----------------------- -----------------------
+  Renderizado             Según FPS               No ejecuta directamente
+                                                  la ciencia.
+
+  UI/telemetría           5–10 Hz orientativo     Snapshots resumidos.
+
+  Ecología local          Ticks frecuentes        Subpasos si son
+                                                  necesarios.
+
+  Clima regional          Ticks más largos        Modelo y estabilidad
+                                                  numérica determinan
+                                                  frecuencia.
+
+  Procesos geológicos     Muy lentos              Eventos o integración
+                                                  agregada.
+
+  Civilizaciones          Escala temporal propia  Modelo macro y eventos
+                                                  discretos.
+
+  Misiones interestelares Tiempo de viaje y       Autonomía local y
+                          latencia                comunicaciones
+                                                  retrasadas.
+  -----------------------------------------------------------------------
+
+Pausar el juego debe detener los sistemas seleccionados de forma
+coherente. No se deben ejecutar misiones o procesos ocultos durante
+pausa salvo que el diseño lo declare expresamente.
+
+24. Comandos, eventos y snapshots
+
+Godot y la capa de aplicación envían comandos validados. El motor emite
+eventos y snapshots de lectura. La UI no modifica directamente las
+estructuras internas mutables.
+
+  public interface ISimulationCommand
+
+  {
+
+  CommandValidation Validate(SimulationReadOnlyState state);
+
+  void Apply(SimulationState state);
+
+  }
+
+  public interface ISimulationSystem
+
+  {
+
+  string SystemId { get; }
+
+  void Execute(SimulationContext context);
+
+  }
+
+  public sealed record SimulationSnapshot(
+
+  long Tick,
+
+  string PlanetId,
+
+  IReadOnlyList<CellSnapshot> Cells,
+
+  IReadOnlyList<PopulationSnapshot> Populations,
+
+  IReadOnlyList<FacilitySnapshot> Facilities,
+
+  SimulationStatistics Statistics
+
+  );
+
+Los comandos deben incluir identificador, actor, fecha/tick, parámetros,
+coste estimado, precondiciones y resultado. Los eventos registran hechos
+ocurridos; no sustituyen al estado actual. Los snapshots deben tener
+versión de esquema y checksum.
+
+25. Persistencia y guardado
+
+Se mantiene SQLite para metadatos, campañas, eventos, definiciones y
+registros. Los snapshots voluminosos pueden guardarse como blobs
+binarios versionados y comprimidos o en archivos independientes
+referenciados desde SQLite.
+
+  -----------------------------------------------------------------------
+  Tabla/archivo                       Contenido
+  ----------------------------------- -----------------------------------
+  campaigns                           Partida, versión, fecha,
+                                      configuración y semilla raíz.
+
+  star_systems                        Estrellas, cuerpos y relaciones
+                                      orbitales.
+
+  planet_states                       Estado resumido por planeta.
+
+  region_states                       Estado de regiones y versiones de
+                                      malla.
+
+  populations                         Poblaciones, biomasa y variantes.
+
+  organism_definitions                Definiciones biológicas
+                                      versionadas.
+
+  facilities_units                    Instalaciones, robots y estados.
+
+  missions_events                     Órdenes, eventos, objetivos y
+                                      resultados.
+
+  science_provenance                  Fuentes, datasets, incertidumbre y
+                                      licencias.
+
+  snapshots                           Tick, ruta/blob, checksum, versión
+                                      y compresión.
+  -----------------------------------------------------------------------
+
+Usar transacciones, WAL cuando proceda, migraciones, backups y
+recuperación tras cierre inesperado. Probar migración de versiones
+antiguas y corrupción parcial.
+
+26. Godot: presentación y experiencia técnica
+
+Godot .NET se utiliza para renderizado, escenas, cámaras, input, audio,
+UI, animaciones y streaming visual. La simulación C# se consume mediante
+una capa de aplicación. La versión concreta de Godot y .NET debe fijarse
+tras comprobar compatibilidad oficial al iniciar el repositorio.
+
+26.1 Escenas iniciales
+
+  GameRoot
+
+  ├── WorldStreamer
+
+  ├── ExplorationMode
+
+  │ ├── PlayerRobot
+
+  │ ├── ThirdPersonCamera
+
+  │ ├── InteractionRay
+
+  │ └── LocalHUD
+
+  ├── StrategicMode
+
+  │ ├── StrategicCamera
+
+  │ ├── PlanetMap
+
+  │ ├── DataLayers
+
+  │ └── SelectionOverlay
+
+  ├── UI
+
+  │ ├── MissionPanel
+
+  │ ├── SciencePanel
+
+  │ ├── OrganismDesigner
+
+  │ ├── PopulationInspector
+
+  │ └── TimeControls
+
+  └── SimulationBridge
+
+26.2 Rendimiento gráfico
+
+Separar el coste del renderizado del coste de simulación. Utilizar
+streaming de sectores, LOD, instancing, culling, impostors y materiales
+por bioma. Las visualizaciones científicas deben ser legibles y no
+depender de renderizar cada organismo como entidad.
+
+27. Datos científicos y procedencia
+
+Toda variable científica debe llevar unidad, valor, incertidumbre,
+fuente, fecha, escala espacial, resolución, método de interpolación y
+etiqueta de certeza.
+
+  -----------------------------------------------------------------------
+  Etiqueta                Significado             Uso
+  ----------------------- ----------------------- -----------------------
+  MEASURED                Medición directa o      Usar con fuente,
+                          dataset observado       instrumento, fecha y
+                                                  error.
+
+  DERIVED                 Calculado a partir de   Guardar método y
+                          observaciones/modelos   propagación de
+                                                  incertidumbre.
+
+  ESTIMATED               Estimación científica   Mostrar
+                          con incertidumbre       rango/confianza.
+                          relevante               
+
+  ASSUMED                 Supuesto de simulación  Visible en
+                          por falta de datos      documentación y
+                                                  configuración.
+
+  BALANCE                 Valor derivado de una   Verificar mediante
+                          restricción de          tests.
+                          conservación            
+
+  SPECULATIVE             Hipótesis o licencia de No presentar como hecho
+                          ciencia ficción         científico.
+  -----------------------------------------------------------------------
+
+Los escenarios de Marte, Venus, Europa y Titán requieren datos primarios
+y fuentes actualizadas. Las propiedades de exoplanetas ficticios serán
+parámetros de escenario, no datos observados. Los parámetros del juego
+no deben copiarse de páginas divulgativas sin registrar fuente primaria.
+
+28. Protección planetaria y bioseguridad
+
+La contaminación biológica y la posible existencia de vida nativa deben
+ser sistemas de juego y restricciones de misión, no solo texto
+narrativo. La detección de biofirmas debe activar protocolos de
+muestreo, contención y evaluación. La introducción de organismos debe
+requerir una decisión explícita, evaluación de riesgo y registro.
+
+La protección planetaria real es un campo normativo y científico
+específico. El juego puede abstraer sus principios, pero no debe
+presentarse como herramienta de cumplimiento regulatorio ni como guía
+operacional para liberar organismos en entornos reales.
+
+29. Validación científica, pruebas y calidad
+
+29.1 Pruebas unitarias
+
+-   Validación de unidades, rangos y parámetros
+
+-   Conservación de elementos y energía
+
+-   No crecimiento cuando falta un recurso esencial
+
+-   Respuesta monotónica en rangos donde el modelo lo exige
+
+-   Reproducción determinista con semilla fija
+
+-   Mutación dentro de límites configurados
+
+-   Persistencia y recuperación de snapshots
+
+-   Validación de comandos y precondiciones
+
+29.2 Pruebas de integración
+
+-   Ciclo completo de tick con ambiente, metabolismo y ecología
+
+-   Competencia de múltiples poblaciones por recursos limitados
+
+-   Muerte y reciclaje de biomasa
+
+-   Carga/guardado/carga y comparación de estado
+
+-   Cambiar entre exploración y vista estratégica sin alterar el estado
+
+-   Simulación de una región fuera de cámara
+
+-   Ejecutar el mismo escenario por CLI y desde Godot y comparar
+    snapshots
+
+29.3 Pruebas científicas
+
+Comparar tendencias y rangos con literatura o datasets de referencia. No
+exigir que un modelo de juego reproduzca toda la complejidad natural,
+pero sí que sus simplificaciones estén declaradas y que no contradiga
+sus propias ecuaciones.
+
+29.4 Benchmarks
+
+Los objetivos originales del TDD v1.0 (4.096 celdas, poblaciones
+agregadas, 1.000 ticks, memoria acotada) son metas iniciales no medidas.
+Se conservarán como baseline provisional hasta tener hardware de
+referencia, profiling y cargas realistas.
+
+30. Seguridad, fiabilidad y UX
+
+-   Guardado automático y recuperación ante cierre
+
+-   Validación de comandos antes de consumir recursos
+
+-   Registro de decisiones automáticas de la IA
+
+-   Advertencias de incertidumbre y riesgos
+
+-   Confirmación para acciones irreversibles o de alto impacto ecológico
+
+-   Herramientas de diagnóstico para explicar extinciones, colapsos y
+    fallos de misión
+
+-   Opciones de accesibilidad: escalado UI, remapeo, subtítulos y
+    filtros de color
+
+PARTE III — PRODUCCIÓN Y PLAN DE IMPLEMENTACIÓN
+
+31. Alcance por versiones
+
+  -----------------------------------------------------------------------
+  Versión                 Objetivo                Entregable verificable
+  ----------------------- ----------------------- -----------------------
+  Prototype 0             Motor científico mínimo CLI que inicializa
+                                                  Marte 64×64, ejecuta
+                                                  ticks deterministas y
+                                                  guarda snapshot.
+
+  Prototype 1             Biología microbiana     Tres arquetipos,
+                                                  metabolismo, balances,
+                                                  crecimiento y
+                                                  mortalidad.
+
+  Prototype 2             Ecología y evolución    Mutación, selección,
+                                                  deriva, competencia y
+                                                  reciclaje.
+
+  Vertical Slice          Experiencia jugable     Un valle 3D, rover
+                          marciana                controlable, muestreo,
+                                                  laboratorio y vista
+                                                  estratégica conectados
+                                                  al mismo estado.
+
+  Alpha regional          Terraformación regional Varias regiones,
+                                                  infraestructura, clima
+                                                  simplificado, misiones
+                                                  y guardado robusto.
+
+  Expansion 1             Biología compleja       Multicelularidad y
+                                                  redes ecológicas
+                                                  ampliadas.
+
+  Expansion 2             Inteligencia            Modelo de civilización
+                                                  agregado, autonomía y
+                                                  tecnología.
+
+  Expansion 3             Nuevos mundos           PlanetDefinition
+                                                  genérico, dos
+                                                  escenarios radicalmente
+                                                  distintos y misiones de
+                                                  exploración.
+
+  Expansion 4             Expansión interestelar  Logística, viajes,
+                                                  fabricación local y
+                                                  sondas autorreplicantes
+                                                  limitadas.
+  -----------------------------------------------------------------------
+
+El orden es deliberado: no construir expansión galáctica antes de
+validar el motor científico y la experiencia de una región. Las eras
+posteriores son visión de producto y requieren prototipos
+independientes.
+
+32. Primer vertical slice recomendado
+
+El primer slice de juego debe demostrar el diferencial de MARTIS: la IA
+explora físicamente una región, recoge datos, diseña un microorganismo,
+lo despliega y observa en la vista estratégica cómo la población cambia
+con el tiempo.
+
+  -----------------------------------------------------------------------
+  Elemento                            Contenido mínimo
+  ----------------------------------- -----------------------------------
+  Mapa                                Un valle marciano ficticio pero
+                                      parametrizado; 1 región principal y
+                                      zonas de interés.
+
+  Avatar                              Un rover con cámara tercera
+                                      persona, movimiento y escáner.
+
+  Interacción                         Punto de muestreo, análisis y
+                                      estación de laboratorio.
+
+  Organismos                          Fotótrofo, descomponedor y
+                                      extremófilo.
+
+  Simulación                          Temperatura, radiación,
+                                      agua/actividad de agua, nutrientes
+                                      y pools elementales seleccionados.
+
+  Evolución                           Variantes genéticas, mutación,
+                                      selección y deriva básica.
+
+  Vista estratégica                   Mapa de población, recursos,
+                                      temperatura y radiación.
+
+  Misión                              FIRST COLONY — 001: establecer y
+                                      mantener una población.
+
+  Persistencia                        Guardar/cargar mundo y repetir
+                                      resultado con misma semilla.
+  -----------------------------------------------------------------------
+
+33. Primer sprint técnico
+
+  ------------------------------------------------------------------------------
+  Día                     Trabajo                        Criterio de aceptación
+  ----------------------- ------------------------------ -----------------------
+  1 — Infraestructura     Crear solución, SDK/Godot .NET Build limpio en entorno
+                          fijados, proyectos             documentado.
+                          Domain/Simulation/CLI/Tests,   
+                          README y Git.                  
+
+  2 — Dominio             IDs, planeta, región 64×64,    Validaciones unitarias
+                          celda, recursos y población.   y serialización básica.
+
+  3 — Motor               Scheduler, tick, contexto,     Misma semilla produce
+                          sistemas, RNG determinista.    misma secuencia.
+
+  4 — Ambiente            Inicializar escenario          100 ticks sin NaN/Inf
+                          MarsBaseline y recursos.       ni violar invariantes.
+
+  5 — Validación          Tests, snapshot, CLI y         Ejecutar 1.000 ticks,
+                          benchmark inicial.             guardar y restaurar.
+  ------------------------------------------------------------------------------
+
+34. Roadmap de producción ampliado
+
+El cronograma depende de tamaño del equipo, disponibilidad, profundidad
+científica y calidad visual. No debe prometerse una fecha de lanzamiento
+antes de medir la velocidad de implementación.
+
+1.  Fase A — Fundamentos: motor headless, contratos, datos, RNG,
+    persistencia y tests.
+
+2.  Fase B — Biología: metabolismo, rasgos, reproducción, evolución y
+    balances.
+
+3.  Fase C — Ecología: interacción, ciclos, diversidad y estabilidad.
+
+4.  Fase D — Vertical slice: rover, mundo 3D, laboratorio, UI y modo
+    estratégico.
+
+5.  Fase E — Terraformación regional: energía, infraestructura, clima y
+    recursos.
+
+6.  Fase F — Contenido: misiones, regiones, progresión y narrativa
+    emergente.
+
+7.  Fase G — Sistemas avanzados: multicelularidad, inteligencia y
+    civilizaciones.
+
+8.  Fase H — Multiplanetario: planet definitions, escalas, misiones y
+    escenarios nuevos.
+
+9.  Fase I — Interestelar: logística, sondas, fabricación local y
+    autorreplicación limitada.
+
+35. Riesgos principales y mitigaciones
+
+  -----------------------------------------------------------------------
+  Riesgo                  Impacto                 Mitigación
+  ----------------------- ----------------------- -----------------------
+  Alcance excesivo        Proyecto inabarcable    MVP estricto y vertical
+                                                  slices; bloquear
+                                                  features de eras
+                                                  tardías.
+
+  Modelos científicos     Resultados engañosos    Etiquetar
+  simplistas                                      abstracciones, validar
+                                                  y documentar dominio de
+                                                  validez.
+
+  Acoplamiento            Dificulta tests y       Core headless y
+  Godot/simulación        escalado                contratos inmutables.
+
+  Explosión combinatoria  Rendimiento/memoria     Límites de variantes,
+  genética                                        agregación y poda
+                                                  basada en reglas
+                                                  explícitas.
+
+  Simulación multiescala  Inestabilidad o saltos  Scheduler por sistema,
+                                                  tests de convergencia y
+                                                  tolerancias.
+
+  Mundo abierto 3D        Coste de contenido y    Un valle vertical
+                          streaming               slice; herramientas de
+                                                  generación procedural.
+
+  IA/civilizaciones       Complejidad sistémica   Modelo agregado
+  tardías                                         separado; no simular
+                                                  agentes individuales al
+                                                  inicio.
+
+  Terraformación irreal   Pérdida de credibilidad Fuentes, incertidumbre
+                                                  y separar tecnología
+                                                  especulativa.
+
+  Autorreplicación sin    Expansión trivial       Balances, fabricación
+  límites                                         realista, fallos y
+                                                  controles.
+
+  Protección planetaria   Incoherencia            Sistema de riesgo y
+  ignorada                ética/científica        protocolos de misión.
+  -----------------------------------------------------------------------
+
+36. Decisiones consolidadas y pendientes
+
+36.1 Decisiones explícitas del diseño
+
+-   MARTIS combina simulación científica con mundo abierto.
+
+-   El jugador encarna una inteligencia artificial autónoma.
+
+-   La experiencia combina exploración en tercera persona y gestión
+    estratégica.
+
+-   Marte es el primer mundo y el punto de partida de la progresión.
+
+-   La progresión puede abarcar microorganismos, ecosistemas complejos y
+    vida inteligente.
+
+-   Tras alcanzar capacidades avanzadas, se desbloquean misiones a otros
+    planetas con condiciones muy diferentes.
+
+-   La expansión tecnológica combinará sondas/naves y, en fases
+    avanzadas, sistemas autorreplicantes limitados.
+
+-   La ciencia es la base de las reglas; los elementos especulativos
+    deben etiquetarse.
+
+36.2 Decisiones técnicas heredadas
+
+-   Godot 4 .NET y C# como stack previsto.
+
+-   Motor de simulación independiente de Godot.
+
+-   Poblaciones agregadas, no objetos por célula individual.
+
+-   Simulación discreta y determinista con RNG reproducible.
+
+-   Región inicial 64×64 para el prototipo científico.
+
+-   Balances de materia y energía.
+
+-   SQLite y snapshots versionados.
+
+-   CLI para experimentación headless.
+
+-   Windows y Linux como objetivos iniciales.
+
+36.3 Pendientes de diseño/validación
+
+-   Versión exacta de Godot y .NET tras verificación de compatibilidad
+    al comenzar el repositorio.
+
+-   Perspectiva visual definitiva de la cámara estratégica (top-down,
+    isométrica o cámara libre).
+
+-   Escala y topología del mundo abierto y estrategia de streaming.
+
+-   Modelo de clima y atmósfera más allá del MVP.
+
+-   Representación de multicelularidad e inteligencia emergente.
+
+-   Grado de control directo sobre civilizaciones inteligentes.
+
+-   Reglas de viaje interestelar, propulsión y tiempos de viaje.
+
+-   Alcance realista de autorreplicación y fabricación local.
+
+-   Economía de recursos, energía y fabricación a escala planetaria.
+
+-   Multijugador: fuera del alcance actual, no comprometido.
+
+-   Monetización, plataformas adicionales y fecha de lanzamiento: no
+    definidos.
+
+37. Definición de terminado
+
+Una funcionalidad se considera terminada cuando:
+
+-   Su objetivo y alcance están documentados.
+
+-   Sus entradas, salidas, unidades y dependencias están definidos.
+
+-   Dispone de pruebas unitarias y de integración relevantes.
+
+-   Respeta balances e invariantes aplicables.
+
+-   Es determinista o documenta explícitamente su no determinismo.
+
+-   Sus datos y parámetros tienen procedencia o etiqueta de supuesto.
+
+-   Se puede inspeccionar mediante UI, CLI o herramientas de
+    diagnóstico.
+
+-   Se guarda, carga y migra correctamente.
+
+-   Su coste computacional está medido.
+
+-   No introduce dependencias de presentación en el dominio.
+
+38. Referencias y fuentes que deben mantenerse
+
+El TDD v1.1 incorpora documentación oficial de Godot .NET/C#, ficha
+planetaria de NASA NSSDC, recursos de NASA Science sobre Marte,
+documentación de NASA Planetary Protection y la referencia de Jakosky &
+Edwards (2018) sobre límites de terraformación. Antes de utilizar cifras
+en el juego, debe verificarse la referencia bibliográfica completa, DOI
+o URL primaria, fecha, unidades y contexto.
+
+-   Godot .NET / C#:
+    https://docs.godotengine.org/en/stable/tutorials/scripting/c_sharp/
+
+-   Godot FAQ: https://docs.godotengine.org/en/stable/about/faq.html
+
+-   NASA NSSDC Mars Fact Sheet:
+    https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html
+
+-   NASA Science — Mars: https://science.nasa.gov/mars/
+
+-   NASA Planetary Protection: https://www.nasa.gov/planetaryprotection/
+
+La lista no pretende ser una bibliografía científica exhaustiva. Para
+cada planeta y subsistema deberán añadirse publicaciones primarias,
+datasets oficiales, DOI, versión, fecha de acceso y restricciones de
+uso. No inventar DOI ni atribuir valores cuantitativos sin comprobar la
+fuente.
+
+39. Glosario
+
+  -----------------------------------------------------------------------
+  Término                             Definición en MARTIS
+  ----------------------------------- -----------------------------------
+  Biosfera                            Conjunto de organismos y sus
+                                      interacciones con el entorno de un
+                                      mundo.
+
+  Biomasa                             Cantidad de materia biológica,
+                                      expresada en unidades definidas.
+
+  Población agregada                  Representación estadística de
+                                      organismos similares sin instanciar
+                                      cada individuo.
+
+  Variante genética                   Configuración heredable de rasgos
+                                      dentro de una población.
+
+  Rasgo funcional                     Parámetro heredable que afecta a
+                                      una función biológica.
+
+  Actividad de agua                   Medida de disponibilidad
+                                      termodinámica del agua; no equivale
+                                      a cantidad total de agua.
+
+  Terraformación                      Modificación deliberada de
+                                      condiciones ambientales a escala
+                                      local, regional o planetaria.
+
+  Hábitat cerrado                     Entorno artificial controlado que
+                                      permite vida sin modificar todo el
+                                      planeta.
+
+  Sonda autorreplicante               Sistema automatizado capaz de
+                                      fabricar copias parciales o
+                                      completas bajo límites materiales,
+                                      energéticos y de control.
+
+  Snapshot                            Captura versionada del estado de
+                                      simulación para persistencia y
+                                      reproducibilidad.
+
+  Tick                                Paso discreto de avance de la
+                                      simulación.
+
+  Procedencia científica              Registro de fuente, método, unidad,
+                                      incertidumbre y versión de un
+                                      dato/modelo.
+  -----------------------------------------------------------------------
+
+ANEXO I — TDD v1.1 DE IMPLEMENTACIÓN CONSERVADO
+
+El documento maestro incluye íntegramente el TDD v1.1 anterior como base
+de implementación. Las secciones precedentes amplían su contexto a la
+experiencia de mundo abierto, IA protagonista y expansión
+multplanetaria. En caso de conflicto, las decisiones de producto
+explícitas de la versión 2.0 gobiernan la visión del juego; los detalles
+técnicos v1.1 siguen vigentes para el MVP marciano salvo donde esta
+versión propone una evolución arquitectónica.
+
+El contenido técnico heredado aparece a continuación de este documento
+maestro, y conserva sus contratos, algoritmos, ejemplos de código, plan
+de pruebas, primer sprint y referencias.
+
+MARTIS
+
+TECHNICAL DESIGN DOCUMENT
+
+Biología sintética · Evolución · Ecosistemas marcianos
+
+Documento técnico práctico para iniciar la implementación del videojuego
+de simulación científica MARTIS.
+
+  -----------------------------------------------------------------------
+  Propiedad                           Decisión
+  ----------------------------------- -----------------------------------
+  Tipo                                Simulación científica / gestión
+
+  Motor                               Godot 4 .NET
+
+  Lenguaje                            C#
+
+  Simulación                          Biblioteca independiente de Godot
+
+  Espacio                             Cuadrícula 2D de 64 × 64 (4.096
+                                      celdas)
+
+  Entidades biológicas                Poblaciones agregadas y variantes
+                                      genéticas
+
+  Persistencia                        SQLite
+
+  Arquitectura                        Modular, desacoplada y determinista
+
+  Objetivo                            MVP ejecutable, reproducible y
+                                      testeable
+
+  Fuera de alcance                    Multijugador, GPU compute y
+                                      simulación molecular real
+  -----------------------------------------------------------------------
+
+Control del documento
+
+  -----------------------------------------------------------------------
+  Campo                               Valor
+  ----------------------------------- -----------------------------------
+  Versión                             1.1 — revisión de ingeniería
+
+  Estado                              Preproducción / especificación
+                                      ejecutable inicial
+
+  Idioma                              Español
+
+  Documento de referencia             GDD de MARTIS y conversación de
+                                      diseño
+
+  Propósito                           Convertir el GDD en arquitectura,
+                                      contratos, algoritmos y tareas
+                                      verificables
+  -----------------------------------------------------------------------
+
+Nota de integridad: este documento consolida el TDD desarrollado en la
+conversación. Los diagramas de arquitectura, dominio, ciclo de tick y
+comunicación se han reproducido como gráficos insertados. Las imágenes
+conceptuales que en la conversación se mostraron mediante búsquedas
+visuales no eran archivos originales adjuntos; por ello no se presentan
+como fotografías científicas verificadas. Se incluye una ilustración
+conceptual propia más adelante y se distingue de los datos científicos.
+
+Índice
+
+-   0. Principios de ingeniería
+
+-   1. Arquitectura de solución
+
+-   2. Modelo de dominio
+
+-   3. Modelos matemáticos y algoritmos
+
+-   4. Genética y evolución
+
+-   5. Motor de simulación
+
+-   6. Aleatoriedad determinista
+
+-   7. Particionado espacial y rendimiento
+
+-   8. Comunicación entre simulación y Godot
+
+-   9. Persistencia y guardado
+
+-   10. Validación científica y límites
+
+-   11. Experimentación y diagnóstico
+
+-   12. Ejemplos de código
+
+-   13. Estrategia de pruebas
+
+-   14. Interfaz Godot
+
+-   15. Riesgos técnicos
+
+-   16. Roadmap
+
+-   17. Decisiones pendientes
+
+-   18. Primer sprint
+
+-   19. Definición de terminado
+
+-   20. Referencias
+
+0. Principios de ingeniería
+
+MARTIS se construirá alrededor de una premisa: el motor biológico debe
+poder ejecutar una simulación marciana completa sin necesitar Godot, una
+interfaz gráfica ni un dispositivo de renderizado.
+
+El proyecto tendrá dos productos técnicos diferenciados:
+
+10. MARTIS Simulation: motor científico que calcula el mundo.
+
+11. MARTIS Game: aplicación interactiva que permite configurar, observar
+    y controlar ese mundo.
+
+La separación permitirá ejecutar experimentos automatizados, pruebas
+científicas, benchmarks y simulaciones de larga duración desde una
+aplicación de consola.
+
+  -----------------------------------------------------------------------
+  ID                      Decisión                Motivo
+  ----------------------- ----------------------- -----------------------
+  ARC-001                 Simulación              Testabilidad
+                          independiente de Godot  
+
+  ARC-002                 C# como lenguaje        Ecosistema .NET
+                          principal               
+
+  ARC-003                 Poblaciones agregadas   Rendimiento
+
+  ARC-004                 Regiones divididas en   Distribución espacial
+                          celdas                  
+
+  ARC-005                 Simulación por pasos    Reproducibilidad
+                          discretos               
+
+  ARC-006                 Aleatoriedad            Reproducción de
+                          determinista            resultados
+
+  ARC-007                 Balances de materia     Coherencia científica
+
+  ARC-008                 Definiciones mediante   Extensibilidad
+                          datos                   
+
+  ARC-009                 Snapshots periódicos    Persistencia eficiente
+
+  ARC-010                 Presentación            Evolución independiente
+                          desacoplada             
+  -----------------------------------------------------------------------
+
+Fuera del MVP: dinámica molecular, individuos celulares como entidades
+independientes, atmósfera 3D, meteorología global completa, fluidos
+avanzados, GPU compute, multijugador, servidores distribuidos, IA
+generativa y terraformación global físicamente completa.
+
+1. Arquitectura de solución
+
+1.1 Stack tecnológico
+
+  -----------------------------------------------------------------------
+  Tecnología              Uso                     Recomendación
+  ----------------------- ----------------------- -----------------------
+  Godot 4 .NET            Aplicación y            Rama estable compatible
+                          renderizado             con C#
+
+  C#                      Simulación y lógica     Versión soportada por
+                                                  SDK elegido
+
+  .NET SDK                Compilación             Fijar versión en
+                                                  global.json
+
+  SQLite                  Persistencia            Base de datos local
+
+  Microsoft.Data.Sqlite   Acceso SQLite           Capa de persistencia
+
+  xUnit                   Tests                   Pruebas automatizadas
+
+  BenchmarkDotNet         Rendimiento             Benchmarks
+
+  Git                     Control de versiones    Ramas de
+                                                  funcionalidades
+
+  JSON                    Definiciones biológicas Datos externos al
+                                                  código
+  -----------------------------------------------------------------------
+
+Revisión de toolchain (17-11-2026): la referencia de producción
+recomendada es Godot 4.7.2-stable con soporte .NET, no la rama
+4.8-beta3. Se recomienda instalar el SDK .NET 10 x64 y fijar el
+TargetFramework de los proyectos propios en net10.0, tras validar un
+proyecto Godot C# vacío con la versión exacta del editor y del
+Godot.NET.Sdk. El SDK de compilación debe instalarse por separado del
+editor. La combinación exacta queda fijada en global.json y en los
+archivos .csproj; no se actualizará automáticamente durante un hito.
+
+1.2 Estructura de solución
+
+MARTIS/
+
+├── MARTIS.sln
+
+├── global.json
+
+├── Directory.Build.props
+
+├── Directory.Packages.props
+
+├── src/
+
+│ ├── Martis.Domain/
+
+│ │ ├── Biology/ Genetics/ Ecology/ Environment/ Common/
+
+│ ├── Martis.Simulation/
+
+│ │ ├── Engine/ Systems/ Algorithms/ Random/ Spatial/ Validation/
+
+│ ├── Martis.Persistence/
+
+│ │ ├── SQLite/ Serialization/ Migrations/
+
+│ ├── Martis.Contracts/
+
+│ │ ├── Commands/ Snapshots/ Events/
+
+│ ├── Martis.Game/
+
+│ │ ├── project.godot, Scenes/, Scripts/, UI/, Maps/, Assets/
+
+│ └── Martis.Cli/
+
+│ ├── Commands/ Program.cs
+
+├── tests/
+
+│ ├── Martis.Domain.Tests/
+
+│ ├── Martis.Simulation.Tests/
+
+│ ├── Martis.Integration.Tests/
+
+│ └── Martis.Persistence.Tests/
+
+├── benchmarks/Martis.Benchmarks/
+
+├── data/
+
+│ ├── genes/ organisms/ reactions/ environments/ scenarios/
+
+└── docs/
+
+├── GDD.md TDD.md SCIENCE_MODEL.md DATA_DICTIONARY.md ADR/
+
+  -----------------------------------------------------------------------
+  Proyecto                Responsabilidad         Dependencias
+  ----------------------- ----------------------- -----------------------
+  Martis.Domain           Entidades y reglas      Ninguna
+                          básicas                 
+
+  Martis.Simulation       Algoritmos y motor      Domain
+
+  Martis.Contracts        Mensajes y snapshots    Domain
+
+  Martis.Persistence      Guardado y recuperación Domain, Contracts
+
+  Martis.Game             Interfaz y              Simulation, Contracts,
+                          visualización           Persistence
+
+  Martis.Cli              Simulación sin interfaz Simulation, Persistence
+
+  Tests                   Verificación            Proyecto probado
+  -----------------------------------------------------------------------
+
+Regla: Martis.Domain no podrá importar Godot, SQLite ni componentes de
+presentación.
+
+[]
+
+Figura 1. Dependencias entre proyectos.
+
+1.3 Dependencias permitidas
+
+No se permitirán referencias circulares. La capa Game consume contratos
+y servicios del motor, pero el motor no conoce escenas, nodos ni
+controles Godot.
+
+2. Modelo de dominio
+
+El dominio representa el mundo sin decidir cómo se dibuja o almacena. Se
+divide en mundo/regiones, biología, genética, ecología y
+recursos/ambiente.
+
+[]
+
+Figura 2. Jerarquía conceptual del dominio.
+
+2.1 Identificadores tipados
+
+namespace Martis.Domain.Common;
+
+public readonly record struct RegionId(int Value);
+
+public readonly record struct CellId(int Value);
+
+public readonly record struct PopulationId(long Value);
+
+public readonly record struct OrganismId(string Value);
+
+public readonly record struct GeneId(string Value);
+
+public readonly record struct ReactionId(string Value);
+
+Los IDs de contenido (organismos, genes y reacciones) serán estables
+entre versiones. Los IDs de población serán únicos dentro de una
+partida.
+
+2.2 Estado ambiental
+
+namespace Martis.Domain.Environment;
+
+public sealed class EnvironmentState
+
+{
+
+public double TemperatureKelvin { get; set; }
+
+public double PressurePascal { get; set; }
+
+public double UvRadiation { get; set; }
+
+public double IonizingRadiation { get; set; }
+
+public double SolarIrradiance { get; set; }
+
+public double WaterIce { get; set; }
+
+public double WaterVapor { get; set; }
+
+public double SoilPorosity { get; set; }
+
+public double PerchlorateConcentration { get; set; }
+
+}
+
+Unidades: temperatura en Kelvin, presión en Pascal, distancia en metros,
+tiempo en segundos o intervalos explícitos, masa en kg o g y energía en
+julios. La interfaz podrá convertir a °C o mbar.
+
+2.3 Depósitos de recursos
+
+namespace Martis.Domain.Environment;
+
+public sealed class ResourcePool
+
+{
+
+public double CarbonDioxide { get; set; }
+
+public double Water { get; set; }
+
+public double Oxygen { get; set; }
+
+public double Nitrogen { get; set; }
+
+public double Phosphorus { get; set; }
+
+public double Sulfur { get; set; }
+
+public double Iron { get; set; }
+
+public double OrganicCarbon { get; set; }
+
+public double MineralCarbon { get; set; }
+
+}
+
+Estos valores representan depósitos accesibles para el modelo, no
+necesariamente concentraciones químicas totales. En una versión
+posterior se distinguirán depósitos gaseosos, acuosos, minerales y
+orgánicos.
+
+2.4 Organismos, genomas y fenotipos
+
+namespace Martis.Domain.Biology;
+
+public sealed record OrganismDefinition(
+
+OrganismId Id,
+
+string Name,
+
+string Category,
+
+GenomeDefinition BaseGenome,
+
+MetabolismDefinition Metabolism,
+
+ReproductionDefinition Reproduction
+
+);
+
+namespace Martis.Domain.Genetics;
+
+public sealed record GeneExpression(GeneId GeneId, double Expression);
+
+public sealed class Genome
+
+{
+
+public IReadOnlyDictionary<GeneId, double> Expressions { get; }
+
+public Genome(IDictionary<GeneId, double> expressions)
+
+{
+
+foreach (var expression in expressions.Values)
+
+if (expression is < 0.0 or > 1.0)
+
+throw new ArgumentOutOfRangeException(nameof(expressions));
+
+Expressions = new Dictionary<GeneId, double>(expressions);
+
+}
+
+}
+
+El genoma será funcional, no una cadena de ADN. La expresión se
+normaliza entre 0 y 1. Rasgos iniciales: protección UV, tolerancia
+térmica, desecación, eficiencia fotosintética, reparación, captación de
+nutrientes, reproducción y matriz extracelular.
+
+public sealed record Phenotype(
+
+double UvResistance,
+
+double ThermalTolerance,
+
+double DesiccationTolerance,
+
+double PhotosyntheticEfficiency,
+
+double MaintenanceCost,
+
+double ReproductionRate,
+
+double BiofilmProduction
+
+);
+
+El fenotipo se calculará desde el genoma y las condiciones ambientales.
+Podrá almacenarse en caché, pero no será fuente de verdad si puede
+reconstruirse.
+
+2.5 Poblaciones agregadas
+
+namespace Martis.Domain.Biology;
+
+public sealed class Population
+
+{
+
+public PopulationId Id { get; init; }
+
+public OrganismId OrganismId { get; init; }
+
+public int CellIndex { get; set; }
+
+public Genome Genome { get; set; }
+
+public double Abundance { get; set; }
+
+public double BiomassKg { get; set; }
+
+public double EnergyReserveJ { get; set; }
+
+public double AgeDistributionMeanDays { get; set; }
+
+public double Viability { get; set; }
+
+}
+
+Abundance representa número equivalente de individuos y puede ser
+fraccionaria internamente por tratarse de una variable agregada. Nunca
+será negativa. Una variante heredable diferenciada podrá crear una
+subpoblación.
+
+3. Modelos matemáticos y algoritmos
+
+Los modelos iniciales priorizan velocidad, causalidad y balances
+verificables. No pretenden reproducir toda la complejidad biológica de
+Marte o de la Tierra.
+
+3.1 Convenciones
+
+-   Las cantidades físicas no serán negativas.
+
+-   Los recursos consumidos no superarán los disponibles.
+
+-   La biomasa no aparecerá sin fuente de materia.
+
+-   La energía no se creará gratuitamente.
+
+-   Las tasas tendrán unidad temporal explícita.
+
+-   Las probabilidades estarán en [0,1].
+
+Paso temporal inicial: Δt = 1 sol, aproximadamente 88.775 segundos
+terrestres. Es una decisión de discretización, no una afirmación de que
+todos los procesos biológicos ocurran diariamente.
+
+3.2 Ambiente
+
+Temperatura regional: T(x,y,t) = T_base(x,y) + D(t) + S(t) + ε. D(t)
+puede aproximarse con A_d cos(2πt/P_d + φ); S(t), con A_s cos(2πt/P_s +
+θ). Son componentes de un modelo de juego que requieren calibración
+local.
+
+Radiación efectiva: R_efectiva = R₀ e^(−μz), donde R₀ es radiación
+incidente, μ un coeficiente efectivo y z profundidad/espesor protector.
+UV e ionizante no compartirán necesariamente el mismo coeficiente.
+
+Agua accesible: W_disponible = W_total · f_accesibilidad. La función
+dependerá de temperatura, estado físico, salinidad, potencial hídrico y
+condiciones locales. Hielo no equivale a agua metabólicamente
+disponible.
+
+3.3 Estrés ambiental
+
+Curva térmica gaussiana: f_T(T) = exp(−(T−T_opt)²/(2σ_T²)). Radiación:
+f_R(R) = 1/(1+αR). Agua: f_W(W) = W/(K_W+W).
+
+Factor agregado: F_environment = f_T · f_R · f_W · f_P · f_N. El
+producto es una abstracción inicial; las interacciones biológicas reales
+pueden ser más complejas.
+
+3.4 Metabolismo
+
+public sealed record ReactionDefinition(
+
+ReactionId Id,
+
+IReadOnlyDictionary<string, double> Inputs,
+
+IReadOnlyDictionary<string, double> Outputs,
+
+double MaximumRate,
+
+double EnergyYield,
+
+string RequiredCapability
+
+);
+
+Las reacciones se expresarán con coeficientes de entrada y salida. Una
+tabla conceptual CO₂ + agua → carbono orgánico + oxígeno solo ilustra el
+flujo y NO representa una reacción completa balanceada.
+
+Velocidad inicial: v = v_max · F_T · F_R · F_W · F_E. Para cada
+sustrato: F_i = C_i/(K_i+C_i). En varios recursos limitantes: F_sustrato
+= min(F₁,F₂,…,Fₙ).
+
+Energía neta: E_neta = E_producida − E_mantenimiento − E_reproducción.
+Prioridad de asignación: mantenimiento, reparación, reserva energética,
+crecimiento y reproducción.
+
+3.5 Crecimiento y mortalidad
+
+Modelo logístico modificado: N_(t+1) = N_t + r_efectivo N_t (1 − N_t/K).
+r_efectivo = r_max · F_environment · F_metabolism. K =
+min(K_W,K_C,K_N,K_P,K_E), pero esta capacidad no debe crear recursos
+adicionales.
+
+Mortalidad combinada: m = 1 − ∏ᵢ(1−mᵢ). Supervivientes: N_s = N(1−m).
+Los términos pueden incluir estrés térmico, radiación, agua, nutrientes,
+energía y competencia.
+
+3.6 Competencia y reciclaje
+
+Cuando la demanda total supera disponibilidad, asignación proporcional:
+C_i_asignado = C_total · D_i/(Σ_j D_j). La implementación inicial evita
+que cada población consuma como si el depósito compartido no hubiera
+sido utilizado.
+
+Biomasa muerta: B_muerta = B_inicial − B_superviviente. Materia
+orgánica: O_(t+1) = O_t + k_d B_muerta − U_O. La descomposición devuelve
+recursos a depósitos correspondientes, conservando elementos según
+resolución del modelo.
+
+4. Genética y evolución
+
+4.1 Representación y herencia
+
+Genome A01
+
+├── UV_PROTECTION 0.80
+
+├── THERMAL_TOLERANCE 0.65
+
+├── DESICCATION_TOLERANCE 0.90
+
+├── PHOTOSYNTHESIS 0.70
+
+├── REPAIR_CAPACITY 0.55
+
+├── REPRODUCTION_RATE 0.40
+
+└── BIOFILM_PRODUCTION 0.30
+
+MVP: herencia clonal con mutación. El descendiente hereda el genoma
+parental salvo cambios mutacionales. Recombinación y transferencia
+horizontal se dejan para después.
+
+4.2 Mutación
+
+Probabilidad por rasgo: P(mutación)=μ. Si ocurre: g′=g+δ, con δ ~
+Normal(0,σ²), y g′=clamp(g′,0,1). μ y σ son parámetros configurables de
+juego y no tasas moleculares reales.
+
+Las variantes se representan dividiendo la población agregada. Ejemplo
+ilustrativo: 10.000 individuos → variante A 9.900 y variante B 100. No
+implica una tasa biológica real.
+
+4.3 Selección natural y deriva
+
+Éxito relativo: wᵢ=sᵢrᵢ, con supervivencia sᵢ y reproducción efectiva
+rᵢ. Frecuencia posterior: pᵢ′=pᵢwᵢ/(Σⱼpⱼwⱼ). El número absoluto de
+descendientes sigue limitado por recursos.
+
+La deriva genética se aproximará mediante muestreo estocástico
+(multinomial o binomial secuencial). El tamaño efectivo será parámetro
+separado de la abundancia agregada.
+
+4.4 Gestión de variantes
+
+-   Crear variante cuando exista diferencia genética funcional
+    significativa.
+
+-   Fusionar variantes equivalentes dentro de una tolerancia.
+
+-   Eliminar poblaciones sin abundancia o biomasa.
+
+-   Limitar variantes activas por especie y celda.
+
+-   Conservar variantes raras cuando tengan importancia evolutiva
+    configurable.
+
+Límite inicial sugerido: 32 variantes por especie y celda. Es una
+decisión de rendimiento, no biológica.
+
+5. Motor de simulación
+
+5.1 Contrato principal
+
+using Martis.Domain;
+
+using Martis.Simulation.Random;
+
+namespace Martis.Simulation.Engine;
+
+public interface ISimulationEngine
+
+{
+
+long CurrentTick { get; }
+
+SimulationState State { get; }
+
+void Initialize(SimulationConfiguration configuration);
+
+void Advance(int steps);
+
+void ApplyCommand(ISimulationCommand command);
+
+SimulationSnapshot CreateSnapshot();
+
+void Restore(SimulationSnapshot snapshot);
+
+}
+
+Los comandos incluyen introducir organismo, retirar organismo de
+experimento, modificar configuración ambiental de laboratorio, cambiar
+velocidad temporal, iniciar experimento y crear variante genética. La
+velocidad temporal pertenece a la aplicación, no a la física.
+
+5.2 Sistemas
+
+public interface ISimulationSystem
+
+{
+
+void Execute(SimulationContext context, double deltaTime);
+
+}
+
+// IEnvironmentSystem
+
+// IResourceSystem
+
+// IMetabolismSystem
+
+// IPopulationSystem
+
+// IMutationSystem
+
+// IEvolutionSystem
+
+// IEcologySystem
+
+// IValidationSystem
+
+5.3 Contexto
+
+public sealed class SimulationContext
+
+{
+
+public SimulationState State { get; }
+
+public SimulationRandom Random { get; }
+
+public SimulationConfiguration Configuration { get; }
+
+public double DeltaTime { get; }
+
+public SimulationContext(
+
+SimulationState state,
+
+SimulationRandom random,
+
+SimulationConfiguration configuration,
+
+double deltaTime)
+
+{
+
+State = state;
+
+Random = random;
+
+Configuration = configuration;
+
+DeltaTime = deltaTime;
+
+}
+
+}
+
+5.4 Orden de actualización
+
+[]
+
+Figura 3. Orden lógico de ejecución de un tick.
+
+12. Aplicar comandos.
+
+13. Actualizar ambiente.
+
+14. Calcular disponibilidad de recursos.
+
+15. Calcular metabolismo.
+
+16. Asignar recursos compartidos.
+
+17. Actualizar biomasa y energía.
+
+18. Calcular mortalidad.
+
+19. Generar reproducción.
+
+20. Aplicar mutaciones.
+
+21. Aplicar selección y deriva.
+
+22. Actualizar ecología.
+
+23. Reciclar biomasa muerta.
+
+24. Validar conservación.
+
+25. Actualizar estadísticas.
+
+26. Publicar snapshot.
+
+Se utilizarán buffers de entrada y salida para que ninguna población
+obtenga ventajas artificiales por orden de iteración. Los recursos
+producidos durante el tick no estarán disponibles de forma accidental
+antes de la reconciliación.
+
+5.5 Implementación base del motor
+
+public sealed class SimulationEngine : ISimulationEngine
+
+{
+
+private readonly IReadOnlyList<ISimulationSystem> _systems;
+
+private readonly SimulationRandom _random;
+
+private readonly SimulationConfiguration _configuration;
+
+public SimulationState State { get; private set; }
+
+public long CurrentTick => State.Tick;
+
+public SimulationEngine(
+
+SimulationState initialState,
+
+SimulationConfiguration configuration,
+
+SimulationRandom random,
+
+IReadOnlyList<ISimulationSystem> systems)
+
+{
+
+State = initialState;
+
+_configuration = configuration;
+
+_random = random;
+
+_systems = systems;
+
+}
+
+public void Initialize(SimulationConfiguration configuration)
+
+=> configuration.Validate();
+
+public void Advance(int steps)
+
+{
+
+if (steps < 0)
+
+throw new ArgumentOutOfRangeException(nameof(steps));
+
+for (var i = 0; i < steps; i++)
+
+{
+
+var context = new SimulationContext(
+
+State, _random, _configuration,
+
+_configuration.DeltaTimeDays);
+
+foreach (var system in _systems)
+
+system.Execute(context, _configuration.DeltaTimeDays);
+
+State.Tick++;
+
+}
+
+}
+
+public void ApplyCommand(ISimulationCommand command)
+
+=> command.Apply(State);
+
+public SimulationSnapshot CreateSnapshot()
+
+=> SimulationSnapshot.FromState(State);
+
+public void Restore(SimulationSnapshot snapshot)
+
+=> State = snapshot.ToState();
+
+}
+
+La inicialización definitiva deberá validar que sistemas, configuración
+y estado pertenecen a la misma versión del modelo.
+
+6. Aleatoriedad determinista
+
+La simulación debe poder reproducirse con la misma semilla,
+configuración, orden de comandos y versión de motor. No se repartirá
+System.Random por los sistemas.
+
+namespace Martis.Simulation.Random;
+
+public interface IRandomSource
+
+{
+
+ulong NextUInt64();
+
+double NextDouble();
+
+int NextInt(int minInclusive, int maxExclusive);
+
+bool NextBool(double probability);
+
+}
+
+public sealed record RandomState(ulong State, ulong Increment);
+
+Recomendación: PCG32 o PCG64 con versión del algoritmo fijada.
+Secuencias independientes: Environment RNG, Mutation RNG, Reproduction
+RNG, Genetic Drift RNG y Events RNG. Así una nueva llamada aleatoria en
+un sistema no desplaza todas las secuencias posteriores de los demás.
+
+Guardar el estado interno del generador en snapshots. Para
+reproducibilidad estricta: fijar PRNG, versión de motor, orden de
+iteración, evitar GetHashCode() como semilla, evitar paralelismo no
+determinista, registrar versiones de datos y considerar aritmética
+reproducible en sistemas críticos.
+
+Determinismo entre ejecuciones no garantiza idéntico resultado entre
+arquitecturas y versiones del runtime. El multithreading se incorporará
+solo después de demostrar que no altera los resultados.
+
+7. Particionado espacial y rendimiento
+
+MVP: cuadrícula 64 × 64 = 4.096 celdas. Cada celda representa una
+superficie regional abstracta. No se fija aún metros por celda: una
+celda de 1 m² y otra de 1 km² requieren modelos ambientales diferentes.
+
+7.1 Índices
+
+Índice lineal: index = y · width + x; para 64 × 64: index = y · 64 + x.
+
+public readonly struct GridIndex
+
+{
+
+public const int Width = 64;
+
+public const int Height = 64;
+
+public readonly int X;
+
+public readonly int Y;
+
+public GridIndex(int x, int y)
+
+{
+
+if (x < 0 || x >= Width || y < 0 || y >= Height)
+
+throw new ArgumentOutOfRangeException();
+
+X = x;
+
+Y = y;
+
+}
+
+public int ToLinearIndex() => Y * Width + X;
+
+}
+
+Almacenamiento principal mediante arrays y estructuras compactas, no
+diccionarios complejos para recorrer todas las celdas cada tick.
+
+7.2 Sectores
+
+Preparación para sectores de 16 × 16 celdas: 16 sectores en el mapa 64 ×
+64. Facilita actualización selectiva, paralelismo futuro, regiones
+activas, persistencia incremental y mapas mayores. No exige
+multithreading desde el inicio.
+
+7.3 Difusión
+
+Difusión discreta: C_i^(t+1)=C_i^t + DΔt Σ_(j∈N(i))(C_j^t−C_i^t). Para
+cuadrícula uniforme y esquema explícito de cuatro vecinos, condición
+orientativa de estabilidad: DΔt/Δx² ≤ 1/4. Si no se cumple, usar
+subpasos o integrador distinto. En MVP puede limitarse a agua
+superficial conceptual y algunos nutrientes.
+
+7.4 Objetivos iniciales de rendimiento
+
+  -----------------------------------------------------------------------
+  Prueba                              Objetivo inicial
+  ----------------------------------- -----------------------------------
+  Celdas                              4.096
+
+  Poblaciones activas                 10.000
+
+  Organismos definidos                3
+
+  Variantes por especie/celda         Máximo 32
+
+  1.000 ticks                         Menos de 10 segundos
+
+  Snapshot completo                   Menos de 1 segundo
+
+  Memoria de simulación               Menos de 256 MB
+  -----------------------------------------------------------------------
+
+Son objetivos de ingeniería, no resultados medidos. Benchmark en equipo
+de referencia documentado. La meta de 10.000 poblaciones es ambiciosa y
+podrá ajustarse con mediciones.
+
+8. Comunicación entre simulación y Godot
+
+[]
+
+Figura 4. Flujo de comandos y snapshots entre Godot y el motor.
+
+Godot nunca accederá directamente a estructuras mutables internas.
+Comunicación mediante comandos, snapshots y eventos.
+
+public interface ISimulationCommand
+
+{
+
+void Apply(SimulationState state);
+
+}
+
+public sealed record IntroducePopulationCommand(
+
+OrganismId OrganismId,
+
+int CellIndex,
+
+double InitialAbundance
+
+) : ISimulationCommand
+
+{
+
+public void Apply(SimulationState state)
+
+{
+
+if (InitialAbundance <= 0)
+
+throw new ArgumentOutOfRangeException(nameof(InitialAbundance));
+
+state.AddPopulation(OrganismId, CellIndex, InitialAbundance);
+
+}
+
+}
+
+8.1 Snapshots
+
+public sealed record CellSnapshot(
+
+double TemperatureKelvin,
+
+double PressurePascal,
+
+double Radiation,
+
+double WaterAvailable,
+
+double OrganicCarbon,
+
+int PopulationCount
+
+);
+
+public sealed record PopulationSnapshot(
+
+long Id,
+
+string OrganismId,
+
+double Abundance,
+
+double BiomassKg,
+
+double MeanFitness,
+
+int GeneticVariantCount
+
+);
+
+public sealed record SimulationSnapshot(
+
+long Tick,
+
+IReadOnlyList<CellSnapshot> Cells,
+
+IReadOnlyList<PopulationSnapshot> Populations,
+
+SimulationStatistics Statistics
+
+);
+
+Snapshots por niveles: mapa general, celda seleccionada, población
+seleccionada e histórico científico. No se enviará todo el estado
+interno en cada frame.
+
+  -----------------------------------------------------------------------
+  Operación                           Frecuencia orientativa
+  ----------------------------------- -----------------------------------
+  Renderizado                         Según FPS
+
+  Actualización UI                    5–10 veces/s
+
+  Snapshot mapa                       Cada 1–5 ticks
+
+  Estadísticas generales              Cada 10 ticks
+
+  Historial científico                Cada 30 ticks
+
+  Guardado automático                 Intervalo configurable
+  -----------------------------------------------------------------------
+
+Primero ejecución síncrona. Después worker si hace falta. Nunca acceder
+a nodos Godot desde el worker. Intercambio mediante cola de comandos y
+snapshot inmutable.
+
+9. Persistencia y guardado
+
+SQLite será persistencia principal. JSON se reservará para definiciones
+de organismos, genes, reacciones, escenarios, configuraciones y
+exportación de experimentos.
+
+9.1 Tablas iniciales
+
+  -----------------------------------------------------------------------
+  Tabla                               Contenido
+  ----------------------------------- -----------------------------------
+  SaveGame                            Identidad de partida y versiones
+
+  Snapshot                            Estado temporal
+
+  CellState                           Variables ambientales
+
+  PopulationState                     Poblaciones
+
+  GenomeState                         Variantes genéticas
+
+  SimulationEvent                     Eventos importantes
+
+  Experiment                          Experimentos
+
+  ExperimentResult                    Resultados
+
+  WorldConfiguration                  Parámetros iniciales
+  -----------------------------------------------------------------------
+
+9.2 SQL inicial
+
+CREATE TABLE SaveGame (
+
+Id TEXT PRIMARY KEY,
+
+Name TEXT NOT NULL,
+
+CreatedAt TEXT NOT NULL,
+
+UpdatedAt TEXT NOT NULL,
+
+EngineVersion TEXT NOT NULL,
+
+DataVersion INTEGER NOT NULL,
+
+WorldSeed INTEGER NOT NULL,
+
+CurrentTick INTEGER NOT NULL
+
+);
+
+CREATE TABLE Snapshot (
+
+Id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+SaveGameId TEXT NOT NULL,
+
+Tick INTEGER NOT NULL,
+
+CreatedAt TEXT NOT NULL,
+
+Payload BLOB NOT NULL,
+
+FOREIGN KEY (SaveGameId) REFERENCES SaveGame(Id),
+
+UNIQUE (SaveGameId, Tick)
+
+);
+
+CREATE TABLE SimulationEvent (
+
+Id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+SaveGameId TEXT NOT NULL,
+
+Tick INTEGER NOT NULL,
+
+EventType TEXT NOT NULL,
+
+Payload TEXT NOT NULL,
+
+FOREIGN KEY (SaveGameId) REFERENCES SaveGame(Id)
+
+);
+
+CREATE INDEX IX_Snapshot_SaveGame_Tick
+
+ON Snapshot(SaveGameId, Tick);
+
+CREATE INDEX IX_Event_SaveGame_Tick
+
+ON SimulationEvent(SaveGameId, Tick);
+
+Es primera migración, no esquema definitivo. Snapshots completos cada
+intervalo y eventos entre ellos; no hace falta event sourcing completo
+en MVP.
+
+9.3 Contenido de snapshot y recuperación
+
+-   Tick, estado ambiental, poblaciones, genomas, recursos y
+    estadísticas acumuladas.
+
+-   Estado del PRNG y versiones del motor/datos.
+
+-   Payload binario versionado y comprimido, si el benchmark lo
+    justifica.
+
+-   Al cargar: leer metadatos, comprobar compatibilidad, recuperar
+    último snapshot válido, comprobar checksum, deserializar, restaurar
+    RNG, validar invariantes y reanudar.
+
+-   Si un snapshot está corrupto, intentar recuperar el anterior.
+
+Versionado: motor, esquema, definiciones biológicas, parámetros
+científicos, semilla y algoritmo PRNG. Compatibilidad de carga no
+equivale a reproducibilidad histórica.
+
+10. Validación científica y límites
+
+  -----------------------------------------------------------------------
+  ID                                  Invariante
+  ----------------------------------- -----------------------------------
+  VAL-001                             Ningún recurso negativo
+
+  VAL-002                             Ninguna población negativa
+
+  VAL-003                             Ninguna biomasa negativa
+
+  VAL-004                             Probabilidades en [0,1]
+
+  VAL-005                             Genes en [0,1]
+
+  VAL-006                             Consumo ≤ disponibilidad
+
+  VAL-007                             Conservación de masa en reacciones
+                                      cerradas
+
+  VAL-008                             Energía consumida ≤ energía
+                                      disponible
+
+  VAL-009                             Estado restaurado coincide con
+                                      snapshot
+
+  VAL-010                             Misma configuración y semilla
+                                      producen resultado reproducible
+  -----------------------------------------------------------------------
+
+10.1 Conservación elemental
+
+Cada reacción química deberá balancearse por elemento. Con matriz
+estequiométrica S y matriz de composición elemental A, se exige A·S=0.
+No se permitirán reacciones que creen C, H, O, N u otros elementos sin
+fuente.
+
+Balance: M_final = M_inicial + M_entradas − M_salidas. Error: ε_M =
+|M_final − M_esperada|. Tolerancia combinada: ε_M ≤ ε_abs + ε_rel
+|M_esperada|. La tolerancia debe depender de escala y precisión
+numérica.
+
+Registrar energía capturada, convertida, utilizada, disipada y
+almacenada. No hace falta representar todas las formas físicas en MVP,
+pero no se permite producción sin fuente.
+
+10.2 Clasificación de parámetros
+
+  -----------------------------------------------------------------------
+  Categoría                           Significado
+  ----------------------------------- -----------------------------------
+  SCIENTIFIC_MEASURED                 Medición publicada
+
+  SCIENTIFIC_ESTIMATED                Estimación basada en evidencia
+
+  MODEL_ASSUMPTION                    Supuesto de modelización
+
+  GAME_BALANCE                        Valor para jugabilidad
+
+  SPECULATIVE                         Hipótesis especulativa
+  -----------------------------------------------------------------------
+
+{
+
+"id": "mutation_rate",
+
+"value": 0.0001,
+
+"unit": "per_reproduction_event",
+
+"classification": "GAME_BALANCE",
+
+"source": null,
+
+"version": 1
+
+}
+
+10.3 Parámetros marcianos pendientes
+
+  -----------------------------------------------------------------------
+  Parámetro                           Fuente o método necesario
+  ----------------------------------- -----------------------------------
+  Temperatura regional                Datos de estaciones y modelos
+                                      climáticos
+
+  Radiación UV                        Mediciones instrumentales y modelos
+                                      espectrales
+
+  Radiación ionizante                 Datos RAD y modelos de transporte
+
+  Agua accesible                      Cartografía de hielo y propiedades
+                                      del suelo
+
+  Percloratos                         Mediciones locales y
+                                      caracterización química
+
+  Nutrientes disponibles              Análisis mineralógico
+
+  Difusión de gases                   Modelo físico y condiciones locales
+
+  Presión regional                    Altitud y datos atmosféricos
+
+  Pérdidas atmosféricas               Modelos de escape atmosférico
+
+  Tasas metabólicas                   Bibliografía experimental y
+                                      calibración
+  -----------------------------------------------------------------------
+
+No se debe usar una media planetaria como sustituto de una medición
+regional. Los valores ilustrativos del juego deben permanecer
+etiquetados como tales.
+
+11. Experimentación y diagnóstico
+
+Se incorporará un Simulation Inspector como herramienta de desarrollo
+para consultar estado de celda, poblaciones, genomas, flujos
+metabólicos, recursos consumidos/producidos, mortalidad, reproducción,
+mutaciones e historial ambiental.
+
+11.1 CLI
+
+dotnet run --project src/Martis.Cli -- \
+
+simulate \
+
+--scenario mars_baseline \
+
+--seed 12345 \
+
+--ticks 1000 \
+
+--output results/experiment_001
+
+experiment_001/
+
+├── metadata.json
+
+├── final_snapshot.json
+
+├── population_history.csv
+
+├── resource_history.csv
+
+├── mutations.csv
+
+├── mass_balance.csv
+
+└── simulation.log
+
+El CLI permitirá comparar organismos, calibrar parámetros, detectar
+inestabilidades, analizar evolución y generar gráficos. Cada error
+relevante registrará semilla, tick, celda, población, sistema,
+parámetros y estado previo/posterior.
+
+12. Ejemplos de código: implementación inicial
+
+12.1 Configuración
+
+public sealed record SimulationConfiguration(
+
+int MapWidth,
+
+int MapHeight,
+
+double DeltaTimeDays,
+
+ulong WorldSeed,
+
+int MaxVariantsPerCell,
+
+bool EnableValidation
+
+)
+
+{
+
+public void Validate()
+
+{
+
+if (MapWidth <= 0 || MapHeight <= 0)
+
+throw new InvalidOperationException(
+
+"Map dimensions must be positive.");
+
+if (DeltaTimeDays <= 0)
+
+throw new InvalidOperationException(
+
+"Time step must be positive.");
+
+if (MaxVariantsPerCell <= 0)
+
+throw new InvalidOperationException(
+
+"Variant limit must be positive.");
+
+}
+
+}
+
+12.2 Estado del mundo
+
+public sealed class SimulationState
+
+{
+
+public long Tick { get; set; }
+
+public EnvironmentState[] Environment { get; }
+
+public ResourcePool[] Resources { get; }
+
+public List<Population> Populations { get; }
+
+public SimulationStatistics Statistics { get; }
+
+public SimulationState(int width, int height)
+
+{
+
+var count = checked(width * height);
+
+Environment = new EnvironmentState[count];
+
+Resources = new ResourcePool[count];
+
+for (var i = 0; i < count; i++)
+
+{
+
+Environment[i] = new EnvironmentState();
+
+Resources[i] = new ResourcePool();
+
+}
+
+Populations = new List<Population>();
+
+Statistics = new SimulationStatistics();
+
+}
+
+}
+
+En versión optimizada, los estados ambientales podrán almacenarse en
+arrays de estructuras compactas para mejorar localidad de memoria. Esta
+primera versión prioriza claridad.
+
+12.3 Sistema metabólico (esqueleto)
+
+public sealed class MetabolismSystem : ISimulationSystem
+
+{
+
+public void Execute(SimulationContext context, double deltaTime)
+
+{
+
+foreach (var population in context.State.Populations)
+
+{
+
+var environment =
+
+context.State.Environment[population.CellIndex];
+
+var resources =
+
+context.State.Resources[population.CellIndex];
+
+var phenotype = PhenotypeCalculator.Calculate(
+
+population.Genome);
+
+var environmentalFactor =
+
+EnvironmentalCalculator.Calculate(
+
+environment, phenotype);
+
+var potentialProduction = CalculateProduction(
+
+phenotype,
+
+environmentalFactor,
+
+population.BiomassKg,
+
+deltaTime);
+
+// Resource consumption must be reconciled
+
+// through shared cell-level allocation buffers.
+
+// Do not subtract shared resources directly here.
+
+}
+
+}
+
+private static double CalculateProduction(
+
+Phenotype phenotype,
+
+double environmentalFactor,
+
+double biomass,
+
+double deltaTime)
+
+{
+
+return biomass
+
+* phenotype.PhotosyntheticEfficiency
+
+* environmentalFactor
+
+* deltaTime;
+
+}
+
+}
+
+CalculateProduction es fórmula de prototipo, no modelo metabólico
+definitivo. La implementación real debe usar reacciones y recursos
+limitantes.
+
+12.4 Sistema poblacional (esqueleto)
+
+public sealed class PopulationSystem : ISimulationSystem
+
+{
+
+public void Execute(SimulationContext context, double deltaTime)
+
+{
+
+foreach (var population in context.State.Populations)
+
+{
+
+if (population.Abundance <= 0)
+
+continue;
+
+var phenotype =
+
+PhenotypeCalculator.Calculate(population.Genome);
+
+var growthRate = phenotype.ReproductionRate;
+
+var growth = population.Abundance
+
+* growthRate
+
+* deltaTime;
+
+population.Abundance += growth;
+
+}
+
+}
+
+}
+
+Este esqueleto no debe utilizarse en juego hasta limitar crecimiento por
+energía, materia, mortalidad y capacidad de carga.
+
+12.5 Validador
+
+public static class SimulationValidator
+
+{
+
+public static void Validate(SimulationState state)
+
+{
+
+foreach (var resource in state.Resources)
+
+{
+
+if (resource.Water < 0 ||
+
+resource.Oxygen < 0 ||
+
+resource.CarbonDioxide < 0 ||
+
+resource.Nitrogen < 0 ||
+
+resource.Phosphorus < 0)
+
+throw new InvalidOperationException(
+
+"Negative resource quantity detected.");
+
+}
+
+foreach (var population in state.Populations)
+
+{
+
+if (population.Abundance < 0)
+
+throw new InvalidOperationException(
+
+"Negative population abundance.");
+
+if (population.BiomassKg < 0)
+
+throw new InvalidOperationException(
+
+"Negative biomass.");
+
+}
+
+}
+
+}
+
+13. Estrategia de pruebas
+
+  -----------------------------------------------------------------------
+  Nivel                               Pruebas
+  ----------------------------------- -----------------------------------
+  Unit tests                          Genética, mutación, metabolismo,
+                                      población, ambiente, evolución,
+                                      ecología, RNG y persistencia
+
+  Integration tests                   Crear región, introducir organismo,
+                                      ejecutar ticks, comprobar
+                                      recursos/mutaciones, guardar,
+                                      recuperar y continuar
+
+  Regression tests                    Escenarios con semilla y versión
+                                      fijadas; invariantes y resultados
+                                      de referencia
+
+  Property-based                      Genomas válidos, consumo limitado,
+                                      snapshot recuperable, abundancia no
+                                      negativa y reacciones elementales
+                                      balanceadas
+
+  Benchmarks                          EnvironmentUpdate,
+                                      MetabolismUpdate, PopulationUpdate,
+                                      MutationUpdate,
+                                      SnapshotCreation/Restore y
+                                      FullSimulation
+  -----------------------------------------------------------------------
+
+[Fact]
+
+public void Mutation_MustRemainWithinGeneBounds()
+
+{
+
+var original = 0.99;
+
+var mutated = Math.Clamp(original + 0.5, 0.0, 1.0);
+
+Assert.InRange(mutated, 0.0, 1.0);
+
+}
+
+BenchmarkDotNet registrará tiempo medio, percentiles cuando proceda,
+memoria asignada, GC, hardware, runtime y configuración. No se
+optimizará prematuramente sin medición.
+
+14. Interfaz Godot: integración inicial
+
+Main.tscn
+
+└── Main (Control)
+
+├── SimulationController
+
+├── Header
+
+│ ├── Logo
+
+│ ├── SimulationClock
+
+│ └── SpeedControl
+
+├── MainWorkspace
+
+│ ├── MarsMap
+
+│ ├── SelectedCellPanel
+
+│ └── PopulationPanel
+
+├── BottomPanel
+
+│ ├── ResourceGraphs
+
+│ └── EventLog
+
+└── SideNavigation
+
+├── LaboratoryButton
+
+├── ResearchButton
+
+└── EnvironmentButton
+
+Primer renderizador recomendado: textura generada desde los datos de las
+celdas. Un único recurso visual, actualización sencilla, pocos nodos y
+mapas de calor. TileMapLayer o MultiMeshInstance2D quedan como
+alternativas según necesidades.
+
+-   Temperature
+
+-   Radiation
+
+-   Water
+
+-   Biomass
+
+-   Population
+
+-   Organic Matter
+
+La interfaz definitiva podrá utilizar grafito oscuro, cian para datos
+activos, verde para procesos biológicos, naranja para alertas, mapas de
+calor, gráficos temporales y diagramas metabólicos. Prioridad:
+legibilidad.
+
+Los paneles conceptuales del diseño previo representaban un dashboard
+científico, un editor genético y un mapa marciano. Son referencias de
+dirección visual, no capturas de una aplicación ya implementada.
+
+15. Gestión de riesgos técnicos
+
+  -----------------------------------------------------------------------
+  Riesgo            Probabilidad      Impacto           Respuesta
+  ----------------- ----------------- ----------------- -----------------
+  Complejidad       Alta              Crítico           Reducir sistemas
+  excesiva del                                          iniciales
+  motor                                                 
+
+  Simulación        Media             Crítico           Validación por
+  inestable                                             tick
+
+  Explosión de      Alta              Alto              Límites y
+  variantes                                             agrupación
+
+  Consumo de        Media             Alto              Arrays compactos
+  memoria                                               
+
+  Resultados no     Media             Alto              PRNG controlado
+  reproducibles                                         
+
+  Guardados         Media             Alto              Versionado
+  incompatibles                                         
+
+  Godot bloqueado   Media             Alto              Worker
+  por simulación                                        independiente
+
+  Datos científicos Alta              Alto              Clasificación de
+  insuficientes                                         supuestos
+
+  Modelos demasiado Media             Alto              Calibración
+  abstractos                                            experimental
+  -----------------------------------------------------------------------
+
+No implementar inicialmente ECS complejo, GPU compute, multithreading
+masivo, simulación distribuida ni job systems personalizados. Primero
+medir arrays y modelo agregado.
+
+16. Roadmap técnico
+
+  -----------------------------------------------------------------------
+  Hito                    Contenido               Criterio de aceptación
+  ----------------------- ----------------------- -----------------------
+  T01 Infrastructure      Solución .NET,          Todos compilan; tests
+                          proyectos, referencias  automáticos
+                          y build                 
+
+  T02 Domain Model        Regiones, celdas,       Crear y validar mundo
+                          recursos, organismos,   64×64
+                          genomas y poblaciones   
+
+  T03 Environment Engine  Temperatura, radiación, 1.000 ticks sin estado
+                          agua y nutrientes       inválido
+
+  T04 Metabolism Engine   Reacciones, flujos,     Balances verificables
+                          consumo y producción    
+
+  T05 Population Engine   Crecimiento,            Dinámica coherente
+                          mortalidad, capacidad y según condiciones
+                          competencia             
+
+  T06 Evolution Engine    Mutación, herencia,     Variabilidad
+                          selección y deriva      reproducible
+
+  T07 Persistence         SQLite, snapshots,      Guardar, cerrar,
+                          migraciones y           recuperar y continuar
+                          recuperación            
+
+  T08 Godot Integration   Mapa, reloj,            Observar y controlar
+                          estadísticas y          simulación
+                          controles               
+
+  T09 Ecosystem MVP       Tres arquetipos,        Completar FIRST COLONY
+                          reciclaje y ecología    
+
+  T10 Optimization        Benchmarks y perfiles   Cumplir objetivos
+                                                  acordados
+  -----------------------------------------------------------------------
+
+La misión MVP de referencia es FIRST COLONY: analizar región, diseñar
+fotótrofo, experimentar, desplegar, reproducir generaciones, mantener
+población y observar mutaciones.
+
+17. Decisiones técnicas pendientes
+
+  -----------------------------------------------------------------------
+  ID                      Decisión                Recomendación inicial
+  ----------------------- ----------------------- -----------------------
+  DT-001                  Versión concreta de     Última estable
+                          Godot 4                 compatible
+
+  DT-002                  Versión .NET            Fijar según Godot
+
+  DT-003                  PRNG                    PCG32
+
+  DT-004                  Formato snapshots       Binario versionado +
+                                                  compresión
+
+  DT-005                  Modelo espacial         Arrays lineales
+
+  DT-006                  Variantes por celda     Límite configurable 32
+
+  DT-007                  Simulación paralela     No en primera versión
+
+  DT-008                  Difusión                Diferencias finitas
+
+  DT-009                  Integración genética    Herencia clonal
+
+  DT-010                  Plataforma inicial      Windows y Linux
+  -----------------------------------------------------------------------
+
+Godot 4 C# requiere distribución .NET y SDK compatible. La documentación
+consultada señala que proyectos C# de Godot 4 no pueden exportarse
+actualmente a Web. Recomendación: Windows como desarrollo principal,
+Linux para pruebas, escritorio como distribución inicial y no
+comprometer web todavía.
+
+18. Primer sprint: tareas priorizadas
+
+Duración propuesta: cinco jornadas de trabajo, ampliables según
+disponibilidad. El objetivo es infraestructura ejecutable, no
+implementar toda la biología.
+
+  -----------------------------------------------------------------------
+  Día                                 Tareas
+  ----------------------------------- -----------------------------------
+  Día 1 — Infraestructura             Crear Git; instalar Godot .NET y
+                                      SDK; crear MARTIS.sln; proyectos
+                                      principales; referencias; README;
+                                      .gitignore; primera compilación.
+
+  Día 2 — Dominio                     IDs tipados; EnvironmentState;
+                                      ResourcePool; Population; Genome;
+                                      SimulationState; validaciones
+                                      básicas.
+
+  Día 3 — Motor                       SimulationConfiguration;
+                                      SimulationContext;
+                                      ISimulationSystem;
+                                      ISimulationEngine;
+                                      SimulationEngine; ticks; PRNG
+                                      determinista.
+
+  Día 4 — Entorno                     Región 64×64; inicializar
+                                      temperatura, presión, radiación y
+                                      recursos; ejecutar 100 ticks;
+                                      snapshot.
+
+  Día 5 — Validación                  Tests; invariantes;
+                                      reproducibilidad; serialización;
+                                      CLI básico; benchmark inicial.
+  -----------------------------------------------------------------------
+
+18.1 Checklist de aceptación
+
+-   Crear repositorio MARTIS — Git inicial y README.
+
+-   Configurar Godot .NET y SDK — editor y compilación C# funcionales.
+
+-   Crear MARTIS.sln — solución con proyectos independientes.
+
+-   Implementar Martis.Domain — entidades básicas y validaciones.
+
+-   Implementar SimulationState — mundo 64 × 64.
+
+-   Implementar SimulationEngine — avance mediante ticks.
+
+-   Implementar PRNG — misma semilla, misma secuencia.
+
+-   Implementar escenario MarsBaseline — configuración ambiental
+    inicial.
+
+-   Crear SimulationSnapshot — captura del estado.
+
+-   Crear pruebas automatizadas — build y tests satisfactorios.
+
+19. Definición de terminado del primer prototipo técnico
+
+El primer prototipo no necesita interfaz bonita. Debe poder ejecutar:
+
+MARTIS CLI
+
+|
+
+v
+
+Load MarsBaseline Scenario
+
+|
+
+v
+
+Initialize 64x64 World
+
+|
+
+v
+
+Initialize Environment
+
+|
+
+v
+
+Initialize Deterministic Random Generator
+
+|
+
+v
+
+Execute 1000 Simulation Ticks
+
+|
+
+v
+
+Validate State
+
+|
+
+v
+
+Create Snapshot
+
+|
+
+v
+
+Save Results
+
+|
+
+v
+
+Exit Successfully
+
+Si este proceso funciona, existirá la primera versión real del motor de
+MARTIS. Cada nueva mecánica será una extensión de infraestructura
+probada.
+
+20. Referencias técnicas y científicas
+
+Las siguientes referencias se identificaron en el TDD de la
+conversación. Antes de fijar parámetros científicos, debe consultarse la
+publicación o documentación primaria concreta y registrar DOI, versión,
+fecha y página en SCIENCE_MODEL.md.
+
+  -----------------------------------------------------------------------
+  Área                    Referencia identificada Uso
+  ----------------------- ----------------------- -----------------------
+  Godot C#                Documentación oficial   Compatibilidad del
+                          de Godot .NET / C#      editor, runtime y
+                                                  exportación
+
+  Requisitos .NET         Godot C# Basics /       Fijar versiones
+                          requisitos de SDK       compatibles
+
+  Características de      NASA NSSDC Mars Fact    Datos planetarios
+  Marte                   Sheet                   generales de referencia
+
+  Agua marciana           NASA Mars Facts / NASA  Contexto sobre agua y
+                          Science                 condiciones
+                                                  superficiales
+
+  Terraformación          Jakosky & Edwards       Evaluar límites físicos
+                          (2018)                  de terraformación
+
+  Protección planetaria   NASA Planetary          Marco de protección
+                          Protection              planetaria
+  -----------------------------------------------------------------------
+
+Enlaces de consulta:
+
+-   https://docs.godotengine.org/en/stable/tutorials/scripting/c_sharp/
+
+-   https://docs.godotengine.org/en/stable/about/faq.html
+
+-   https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html
+
+-   https://science.nasa.gov/mars/
+
+-   https://www.nasa.gov/planetaryprotection/
+
+La referencia de Jakosky & Edwards (2018) debe identificarse
+bibliográficamente de forma completa antes de usarla como base de una
+afirmación cuantitativa. El documento no atribuye a esa publicación
+cifras no verificadas.
+
+Criterio científico: distinguir ciencia establecida, hipótesis
+plausibles y licencias de diseño. No presentar la terraformación global
+como biológicamente viable con tecnología conocida. La protección
+planetaria debe formar parte del marco ético y narrativo.
+
+21. Decisiones finales consolidadas
+
+27. No crear individuos como objetos de simulación: usar poblaciones
+    agregadas con variantes genéticas diferenciadas.
+
+28. No permitir generación gratuita de recursos: todos los procesos
+    sujetos a balances de materia y energía.
+
+29. No acoplar el motor a Godot: la simulación debe ejecutarse y
+    validarse independientemente.
+
+La ambición de MARTIS puede ser grande, pero el primer objetivo técnico
+debe ser pequeño: una región, una población, un organismo, un conjunto
+limitado de recursos y una simulación reproducible.
+
+El siguiente paso no es redactar otro documento de diseño: es crear el
+repositorio e implementar Martis.Domain, Martis.Simulation, Martis.Cli y
+sus pruebas automatizadas, capaces de inicializar y ejecutar una región
+marciana de 64 × 64.
+
+Anexo A. Gráficos e imágenes
+
+Los cuatro diagramas insertados en este Word se han reconstruido como
+gráficos propios a partir de los diagramas Mermaid descritos en el TDD:
+arquitectura de dependencias, modelo de dominio, ciclo de actualización
+y comunicación Godot-simulación.
+
+Las imágenes conceptuales que aparecieron en la respuesta conversacional
+se presentaron mediante búsquedas visuales asíncronas y no como archivos
+de imagen descargables en el contexto de creación del documento. Para no
+fingir que son los mismos archivos, no se han sustituido por imágenes
+ajenas ni se han etiquetado como fotografías reales. Las referencias
+visuales se describen en la sección de interfaz.
+
+Los fragmentos de Mermaid originales conceptuales quedan representados
+por los gráficos insertados. El texto de cada diagrama y las relaciones
+entre nodos se mantienen en las secciones correspondientes.
+
+Anexo B. Alcance funcional del MVP heredado del GDD
+
+Este anexo consolida las decisiones de diseño del GDD que condicionan el
+TDD. Se incluye para que la especificación técnica no pierda el contexto
+jugable que motivó la arquitectura.
+
+B.1 Los tres arquetipos microbianos
+
+  -----------------------------------------------------------------------
+  Arquetipo               Función ecológica       Sistemas que valida
+  ----------------------- ----------------------- -----------------------
+  Fotótrofo               Captura energía         Radiación, temperatura,
+                          luminosa y fija carbono agua, carbono,
+                          mediante un metabolismo producción de biomasa y
+                          fotosintético           oxígeno si la reacción
+                          simplificado.           definida lo permite.
+
+  Descomponedor           Utiliza materia         Materia orgánica,
+                          orgánica y devuelve     consumo de sustratos,
+                          nutrientes a depósitos  mortalidad, reciclaje y
+                          accesibles.             balances elementales.
+
+  Extremófilo             Mantiene viabilidad     Estrés térmico,
+                          bajo condiciones        radiación, desecación,
+                          ambientales adversas    mantenimiento,
+                          dentro de límites       reparación y latencia.
+                          parametrizados.         
+  -----------------------------------------------------------------------
+
+B.2 Rasgos funcionales iniciales
+
+-   Reparación genética y celular.
+
+-   Pigmentación protectora frente a radiación.
+
+-   Tolerancia osmótica y a la desecación.
+
+-   Pared celular y matriz extracelular.
+
+-   Fotosíntesis y quimiosíntesis.
+
+-   Respiración y fermentación.
+
+-   Captación de nitrógeno y fósforo.
+
+-   División celular y latencia.
+
+-   Formación de esporas.
+
+-   Adhesión y simbiosis.
+
+B.3 Ciclo principal de juego
+
+30. Investigar el entorno regional y sus restricciones.
+
+31. Diseñar un organismo mediante rasgos funcionales.
+
+32. Probar el diseño en un entorno de laboratorio o experimento
+    controlado.
+
+33. Introducir la población en una región marciana.
+
+34. Observar reproducción, mutación, selección y cambios ecológicos.
+
+35. Iterar el diseño a partir de resultados medibles.
+
+B.4 Escalas temporales y transformación ambiental
+
+La simulación podrá avanzar desde horas hasta siglos, con pausa y
+velocidades seleccionables. La duración real de cada proceso dependerá
+del nivel de abstracción y del paso temporal implementado.
+
+Se distinguen tres niveles de transformación:
+
+-   Transformación biológica: colonización, biopelículas y modificación
+    de química superficial.
+
+-   Hábitats regionales soportados tecnológicamente: instalaciones o
+    entornos presurizados que permiten experimentos controlados.
+
+-   Ingeniería planetaria especulativa: capa avanzada y explícitamente
+    hipotética; no se presentará como una capacidad biológica disponible
+    con tecnología conocida.
+
+B.5 Límites de alcance del MVP
+
+-   Una región 2D de 64 × 64 celdas.
+
+-   Tres arquetipos microbianos iniciales: fotótrofo, descomponedor y
+    extremófilo.
+
+-   Entre 12 y 15 rasgos funcionales iniciales, ampliables mediante
+    datos.
+
+-   Variables ambientales prioritarias: temperatura, radiación, agua y
+    nutrientes.
+
+-   Reproducción, mutación, selección natural, deriva genética y
+    competencia básica.
+
+-   Simbiosis básica, biopelículas y reciclaje de nutrientes en una
+    versión progresiva.
+
+-   Sin terraformación global, multijugador, GPU compute ni simulación
+    molecular.
+
+B.6 Primera misión de referencia: FIRST COLONY — 001
+
+36. Analizar una región marciana.
+
+37. Diseñar un microorganismo fotótrofo.
+
+38. Realizar experimentos previos.
+
+39. Desplegar la población en la región.
+
+40. Mantener la población durante varias generaciones.
+
+41. Observar mutaciones y cambios de frecuencia genética.
+
+B.7 Roadmap de producción orientativo
+
+El GDD contemplaba una planificación aproximada de 15–24 semanas, sujeta
+a disponibilidad y resultados de prototipado. No es una estimación
+contractual.
+
+  -----------------------------------------------------------------------
+  Bloque                              Estimación orientativa
+  ----------------------------------- -----------------------------------
+  Fundamentos e infraestructura       1–2 semanas
+
+  Modelo ambiental                    2–3 semanas
+
+  Primer organismo y metabolismo      2–4 semanas
+
+  Genética y evolución                3–4 semanas
+
+  Ecosistema y relaciones             2–4 semanas
+
+  Interfaz, integración y pulido      3–4 semanas
+
+  Validación final                    2–3 semanas
+  -----------------------------------------------------------------------
+
+21. Revisión de ingeniería v1.1 — especificación normativa
+
+Fecha de revisión: 17 de noviembre de 2026. Este anexo no cambia el
+alcance del GDD. Resuelve ambigüedades de unidades, asignación de
+recursos, determinismo, balance elemental y persistencia que conviene
+cerrar antes de implementar los sistemas biológicos. Cuando una regla de
+este anexo contradiga un ejemplo esquemático anterior, prevalece la
+regla de v1.1.
+
+21.1. Baseline de herramientas y plataformas
+
+Fijar una combinación reproducible antes de crear los proyectos. A fecha
+de esta revisión, Godot 4.7.2 es la versión estable más reciente
+localizada; Godot 4.8-beta3 es una preversión y no debe entrar en la
+rama principal. Usar el editor Godot .NET x64, SDK .NET 10 x64 y
+proyectos propios con TargetFramework net10.0, validando primero un
+proyecto vacío con el Godot.NET.Sdk 4.7.2. Si la plantilla generada por
+el editor impone otro TargetFramework, conservar el valor compatible que
+genere el editor y registrar la decisión en un ADR. No mezclar paquetes
+GodotSharp de versiones distintas.
+
+-   Godot: 4.7.2-stable, edición .NET.
+
+-   .NET SDK: 10.x, versión exacta fijada en global.json.
+
+-   Target framework: net10.0 para Domain, Simulation, Contracts,
+    Persistence y CLI; validar la referencia desde el proyecto Godot.
+
+-   Plataformas MVP: Windows y Linux de escritorio. No comprometer
+    exportación web con C#; la documentación de Godot 4 indica que esa
+    exportación no está soportada.
+
+-   Dependencias NuGet: versiones centralizadas en
+    Directory.Packages.props; paquetes transitivos auditados en CI.
+
+  // global.json — ejemplo; fijar el patch realmente instalado en el
+  equipo/CI.
+
+  {
+
+  "sdk": {
+
+  "version": "10.0.100",
+
+  "rollForward": "latestPatch",
+
+  "allowPrerelease": false
+
+  }
+
+  }
+
+  <!-- Martis.Domain.csproj / Martis.Simulation.csproj /
+  Martis.Cli.csproj -->
+
+  <Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+
+  <TargetFramework>net10.0</TargetFramework>
+
+  <Nullable>enable</Nullable>
+
+  <ImplicitUsings>enable</ImplicitUsings>
+
+  <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+  </PropertyGroup>
+
+  </Project>
+
+  <!-- Martis.Game.csproj: conservar el SDK Godot generado por la
+  plantilla 4.7.2 -->
+
+  <Project Sdk="Godot.NET.Sdk/4.7.2">
+
+  <PropertyGroup>
+
+  <TargetFramework>net10.0</TargetFramework>
+
+  <EnableDynamicLoading>true</EnableDynamicLoading>
+
+  <Nullable>enable</Nullable>
+
+  <ImplicitUsings>enable</ImplicitUsings>
+
+  </PropertyGroup>
+
+  </Project>
+
+Nota: el número de patch del SDK .NET de ejemplo es ilustrativo. Debe
+sustituirse por el SDK instalado y aprobado en CI. El punto de
+aceptación es que el proyecto Godot C# y toda la solución compilen con
+la misma combinación fijada, no que se copie ciegamente el número del
+ejemplo.
+
+21.2. Registro canónico de unidades
+
+No mezclar cantidades por celda, concentraciones y cantidades por
+superficie. El modelo MVP será areal: todas las reservas y biomasas se
+expresan por metro cuadrado representativo de celda. La longitud física
+de celda es un parámetro del escenario todavía pendiente; no se inferirá
+del tamaño 64 × 64.
+
+  -----------------------------------------------------------------------
+  Magnitud                Unidad interna          Regla
+  ----------------------- ----------------------- -----------------------
+  Tiempo de simulación    sol                     Todas las tasas
+                                                  biológicas se expresan
+                                                  por sol; Δt puede ser
+                                                  fraccional.
+
+  Temperatura             K                       Convertir a °C solo en
+                                                  presentación.
+
+  Presión                 Pa                      No usar mbar dentro del
+                                                  motor.
+
+  UV incidente            W·m⁻²                   Separado de radiación
+                                                  ionizante.
+
+  Dosis ionizante         Gy·sol⁻¹                La exposición acumulada
+                                                  se integra en el
+                                                  tiempo.
+
+  Actividad de agua       adimensional [0,1]      No equivale a masa de
+                                                  agua ni a hielo
+                                                  accesible.
+
+  CO₂, O₂ y H₂O           mol·m⁻²                 Depósitos del modelo,
+  accesibles                                      no inventario total
+                                                  planetario.
+
+  Nitrógeno y fósforo     mol de elemento·m⁻²     Mantener explícito el
+  disponibles                                     elemento contabilizado.
+
+  Biomasa                 mol C, mol N y mol      Conservar C, N y P por
+                          P·m⁻²                   separado.
+
+  Energía                 J·m⁻²                   Registrar entradas,
+                                                  almacenamiento,
+                                                  mantenimiento y
+                                                  disipación.
+  -----------------------------------------------------------------------
+
+Un sol marciano se utilizará como unidad de tiempo del modelo; la
+conversión a segundos terrestres se hará en una única clase de unidades.
+El paso Δt = 1 sol es un valor de discretización inicial, no una
+afirmación de que cada proceso biológico tenga una escala diaria. Los
+procesos rápidos podrán usar subpasos.
+
+21.3. Modelo de estado normativo
+
+Para el hot path, utilizar arrays de estructuras compactas para las
+4.096 celdas y una lista dispersa de poblaciones. Evitar una instancia
+de clase por cada variable ambiental de cada celda. Las poblaciones se
+ordenan de forma estable por CellIndex, OrganismId y hash de genoma
+antes de cualquier reducción o muestreo.
+
+-   CellEnvironment[4096]: temperatura, presión, irradiancia UV, dosis
+    ionizante y actividad de agua.
+
+-   CellResources[4096]: depósitos accesibles de CO₂, H₂O, nitrato,
+    fosfato, O₂, carbono orgánico y detrito C/N/P.
+
+-   PopulationState[]: una entrada por combinación celda + organismo +
+    variante genética, no por individuo.
+
+-   Genome: vector de rasgos funcionales en orden estable. El
+    identificador/hash debe calcularse con algoritmo explícito y
+    versionado, nunca con object.GetHashCode().
+
+-   PopulationState conserva biomasa C/N/P, reserva energética y tamaño
+    efectivo Ne. La abundancia equivalente se deriva de biomasa y una
+    masa de referencia configurable.
+
+-   El límite inicial de 32 variantes por especie y celda sigue siendo
+    una salvaguarda de rendimiento configurable, no un límite biológico.
+
+  namespace Martis.Domain;
+
+  public readonly record struct CellId(int Value);
+
+  public readonly record struct PopulationId(long Value);
+
+  public readonly record struct CellEnvironment(
+
+  double TemperatureK,
+
+  double UvIrradianceWm2,
+
+  double IonizingDoseGyPerSol,
+
+  double WaterActivity);
+
+  public struct CellResources
+
+  {
+
+  public double Co2MolPerM2;
+
+  public double WaterMolPerM2;
+
+  public double NitrateNMolPerM2;
+
+  public double PhosphatePMolPerM2;
+
+  public double OxygenMolPerM2;
+
+  public double OrganicCarbonMolPerM2;
+
+  public double DetritusCMolPerM2;
+
+  public double DetritusNMolPerM2;
+
+  public double DetritusPMolPerM2;
+
+  }
+
+  public sealed record Genome(
+
+  double UvProtection,
+
+  double ThermalTolerance,
+
+  double DesiccationTolerance,
+
+  double Photosynthesis,
+
+  double RepairCapacity,
+
+  double DivisionRate)
+
+  {
+
+  public void Validate()
+
+  {
+
+  var values = new[] {
+
+  UvProtection, ThermalTolerance, DesiccationTolerance,
+
+  Photosynthesis, RepairCapacity, DivisionRate
+
+  };
+
+  if (values.Any(v => !double.IsFinite(v) || v < 0.0 || v > 1.0))
+
+  throw new ArgumentOutOfRangeException(nameof(Genome),
+
+  "Genome traits must be finite and within [0, 1].");
+
+  }
+
+  }
+
+  public sealed class PopulationState
+
+  {
+
+  public required PopulationId Id { get; init; }
+
+  public required int CellIndex { get; init; }
+
+  public required string OrganismId { get; init; }
+
+  public required Genome Genome { get; set; }
+
+  public double BiomassCMolPerM2 { get; set; }
+
+  public double BiomassNMolPerM2 { get; set; }
+
+  public double BiomassPMolPerM2 { get; set; }
+
+  public double EnergyReserveJPerM2 { get; set; }
+
+  public int EffectivePopulationSize { get; set; }
+
+  }
+
+  public sealed class RegionState
+
+  {
+
+  public int Width { get; }
+
+  public int Height { get; }
+
+  public long Tick { get; set; }
+
+  public CellEnvironment[] Environment { get; }
+
+  public CellResources[] Resources { get; }
+
+  public List<PopulationState> Populations { get; } = new();
+
+  public RegionState(int width, int height)
+
+  {
+
+  if (width <= 0 || height <= 0)
+
+  throw new ArgumentOutOfRangeException(nameof(width));
+
+  Width = width;
+
+  Height = height;
+
+  var count = checked(width * height);
+
+  Environment = new CellEnvironment[count];
+
+  Resources = new CellResources[count];
+
+  }
+
+  }
+
+21.4. Modelo matemático revisado
+
+21.4.1. Factores ambientales
+
+Los factores son funciones adimensionales entre 0 y 1. Los parámetros
+Topt, σT, Kwater, R50 y exponentes se almacenan en la definición del
+organismo o en el conjunto de parámetros del escenario; no se codifican
+como constantes globales.
+
+  fT = exp(-0.5 * ((T - Topt) / sigmaT)^2)
+
+  fW = aw / (Kaw + aw)
+
+  fCO2 = CO2 / (KCO2 + CO2)
+
+  fN = N / (KN + N)
+
+  fP = P / (KP + P)
+
+  fUV = 1 / (1 + (UVeffective / UV50)^h)
+
+  Fenvironment = fT * fW * fUV
+
+La tolerancia a desecación modifica el umbral/curva de actividad de
+agua; la protección UV modifica UV50 o la fracción de dosis efectiva. No
+se debe sumar directamente una puntuación genética a una magnitud
+física.
+
+21.4.2. Reacciones y balances
+
+Cada reacción se define por coeficientes estequiométricos de reactivos y
+productos. La velocidad vⱼ se expresa en mol de reacción·m⁻²·sol⁻¹ y la
+extensión del paso es ξⱼ = vⱼ·Δt. Para cada reacción, la suma de átomos
+de C, H, O, N y P debe coincidir a ambos lados: A·νⱼ = 0. Añadir carga
+eléctrica cuando se modelen especies iónicas.
+
+  public readonly record struct ElementVector(
+
+  double C, double H, double O, double N, double P)
+
+  {
+
+  public static ElementVector operator +(ElementVector a, ElementVector
+  b) =>
+
+  new(a.C + b.C, a.H + b.H, a.O + b.O, a.N + b.N, a.P + b.P);
+
+  public static ElementVector operator *(double k, ElementVector a) =>
+
+  new(k * a.C, k * a.H, k * a.O, k * a.N, k * a.P);
+
+  }
+
+  public sealed record StoichTerm(
+
+  string SpeciesId,
+
+  double Coefficient,
+
+  ElementVector Formula);
+
+  public sealed record ReactionDefinition(
+
+  string Id,
+
+  IReadOnlyList<StoichTerm> Reactants,
+
+  IReadOnlyList<StoichTerm> Products,
+
+  double MaximumRatePerSol,
+
+  double EnergyYieldJPerMolReaction);
+
+  public static class ReactionValidator
+
+  {
+
+  public static void Validate(ReactionDefinition reaction, double
+  tolerance = 1e-9)
+
+  {
+
+  static ElementVector Sum(IEnumerable<StoichTerm> terms)
+
+  {
+
+  var total = new ElementVector();
+
+  foreach (var term in terms)
+
+  {
+
+  if (term.Coefficient <= 0 || !double.IsFinite(term.Coefficient))
+
+  throw new InvalidOperationException("Invalid stoichiometric
+  coefficient.");
+
+  total += term.Coefficient * term.Formula;
+
+  }
+
+  return total;
+
+  }
+
+  var left = Sum(reaction.Reactants);
+
+  var right = Sum(reaction.Products);
+
+  bool Close(double a, double b) =>
+
+  Math.Abs(a - b) <= tolerance * Math.Max(1.0, Math.Max(Math.Abs(a),
+  Math.Abs(b)));
+
+  if (!Close(left.C, right.C) || !Close(left.H, right.H) ||
+
+  !Close(left.O, right.O) || !Close(left.N, right.N) ||
+
+  !Close(left.P, right.P))
+
+  throw new InvalidOperationException($"Reaction {reaction.Id} is not
+  element-balanced.");
+
+  }
+
+  }
+
+La reacción fotoautótrofa simplificada CO₂ + H₂O → CH₂O + O₂ sirve como
+ejemplo balanceado para C/H/O. La incorporación de N y P a biomasa debe
+estar representada mediante términos y cuotas estequiométricas
+adicionales; no se considerará que la biomasa es carbono puro en el
+validador final.
+
+21.4.3. Velocidad, asignación y competencia
+
+La velocidad potencial de una reacción se calcula antes de modificar
+reservas. Una forma inicial es vⱼ = Vmaxⱼ·B·fT·fUV·fW·∏fS. Las funciones
+de Monod fS = S/(KS+S) describen limitación por sustrato. En reacciones
+con varios sustratos, el consumo real se limita en una fase de
+asignación compartida.
+
+  public readonly record struct ResourceDemand(
+
+  double Co2MolPerM2,
+
+  double WaterMolPerM2,
+
+  double NitrateNMolPerM2,
+
+  double PhosphatePMolPerM2);
+
+using Martis.Domain;
+
+  public static class ResourceAllocator
+
+  {
+
+  public static double LimitingScale(
+
+  ResourceDemand demand,
+
+  CellResources available)
+
+  {
+
+  var scale = 1.0;
+
+  if (demand.Co2MolPerM2 > 0)
+
+  scale = Math.Min(scale,
+
+  available.Co2MolPerM2 / demand.Co2MolPerM2);
+
+  if (demand.WaterMolPerM2 > 0)
+
+  scale = Math.Min(scale,
+
+  available.WaterMolPerM2 / demand.WaterMolPerM2);
+
+  if (demand.NitrateNMolPerM2 > 0)
+
+  scale = Math.Min(scale,
+
+  available.NitrateNMolPerM2 / demand.NitrateNMolPerM2);
+
+  if (demand.PhosphatePMolPerM2 > 0)
+
+  scale = Math.Min(scale,
+
+  available.PhosphatePMolPerM2 / demand.PhosphatePMolPerM2);
+
+  return Math.Clamp(scale, 0.0, 1.0);
+
+  }
+
+  }
+
+42. Primera pasada: calcular demanda potencial por reacción y población
+    usando el estado de recursos al comienzo del tick.
+
+43. Agrupar la demanda por celda y recurso; no modificar todavía los
+    depósitos.
+
+44. Calcular un factor de limitación por celda a partir de
+    disponibilidad/demanda de cada sustrato.
+
+45. Segunda pasada: aplicar el mismo factor limitante a las demandas que
+    compiten por esos sustratos.
+
+46. Acumular los deltas por celda y confirmar una sola vez. Los
+    productos generados en el tick quedan disponibles para el siguiente
+    tick, salvo que una reacción interna esté representada
+    explícitamente como intermediario del mismo sistema.
+
+Este esquema es conservador y evita que el resultado dependa del orden
+de recorrido. La primera versión puede usar una asignación proporcional
+global por sustrato; si aparece una pérdida excesiva de rendimiento
+metabólico por limitación conjunta, sustituirla por una asignación
+max-min iterativa, manteniendo las mismas pruebas de no sobreconsumo.
+
+21.4.4. Biomasa, mortalidad y reciclaje
+
+No usar la ecuación logística como fuente primaria de crecimiento. Puede
+emplearse como aproximación visual o límite de diseño, pero no crea ni
+conserva materia. La biomasa nueva debe proceder de extensiones de
+reacción que aporten C, N y P. El crecimiento real queda limitado por
+carbono, agua, nutrientes, energía y capacidad metabólica.
+
+  BiomassC_next = BiomassC + C_assimilated - C_maintenance - C_mortality
+
+  BiomassN_next = BiomassN + N_assimilated - N_mortality
+
+  BiomassP_next = BiomassP + P_assimilated - P_mortality
+
+  hazardTotal = hazardThermal + hazardRadiation + hazardDesiccation
+
+  + hazardStarvation + hazardOther
+
+  mortalityFraction = 1 - exp(-hazardTotal * deltaTimeSol)
+
+La mortalidad transfiere biomasa muerta a detrito C/N/P. El
+descomponedor convierte una fracción del detrito en CO₂ y nutrientes
+minerales según eficiencias explícitas; la fracción restante puede
+permanecer como detrito o perderse en productos gaseosos definidos. La
+suma de entradas, reservas, biomasa, detrito y salidas debe cerrar.
+
+21.4.5. Energía
+
+Mantener un ledger de energía por celda y por población. Como mínimo:
+energía solar incidente/capturada, energía química almacenada,
+mantenimiento, reparación, reproducción y disipación térmica. La regla
+de auditoría es:
+
+  E_initial + E_solar_input + E_chemical_input
+
+  = E_final + E_maintenance + E_repair + E_reproduction + E_dissipated
+
+Los rendimientos energéticos de reacciones son parámetros versionados.
+No inferir energía libre de reacción a partir de una ecuación narrativa
+sin datos termodinámicos. Si el MVP no dispone de datos fiables para una
+ruta, usar un parámetro GAME_BALANCE identificado y no etiquetarlo como
+medido.
+
+21.5. Ciclo de tick normativo
+
+El motor ejecuta sistemas en un orden fijo. Cada sistema recibe el mismo
+Δt en sols y accede a streams aleatorios independientes. Las órdenes de
+usuario se aplican en frontera de tick, ordenadas por número de
+secuencia.
+
+  flowchart TD
+
+  A[Drain command queue] --> B[Environment forcing]
+
+  B --> C[Phase changes and resource inputs]
+
+  C --> D[Potential reaction fluxes]
+
+  D --> E[Shared resource allocation]
+
+  E --> F[Commit matter and energy deltas]
+
+  F --> G[Maintenance and repair]
+
+  G --> H[Mortality to detritus]
+
+  H --> I[Reproduction]
+
+  I --> J[Mutation of offspring]
+
+  J --> K[Selection]
+
+  K --> L[Genetic drift]
+
+  L --> M[Ecology and nutrient recycling]
+
+  M --> N[Spatial diffusion]
+
+  N --> O[Validation and metrics]
+
+  O --> P[Tick increment and snapshot trigger]
+
+Los productos de una reacción no se consumen accidentalmente antes de
+terminar la fase de asignación. Si se implementan redes metabólicas con
+intermediarios, su orden de reacción se declara dentro de la red y se
+valida como una unidad, no como efecto colateral del orden de la lista
+de poblaciones.
+
+21.6. Aleatoriedad, evolución y reproducibilidad
+
+Usar PCG32 versionado y streams separados para ambiente, reproducción,
+mutación y deriva. Guardar el estado e incremento de cada stream en cada
+snapshot. Las llamadas aleatorias se hacen en orden estable y nunca
+desde una reducción paralela no determinista.
+
+  public interface IRandomSource
+
+  {
+
+  uint NextUInt32();
+
+  double NextDouble();
+
+  int NextInt(int minInclusive, int maxExclusive);
+
+  bool NextBool(double probability);
+
+  double NextGaussian();
+
+  }
+
+  public readonly record struct RandomState(ulong State, ulong
+  Increment);
+
+  public sealed class Pcg32 : IRandomSource
+
+  {
+
+  private ulong _state;
+
+  private readonly ulong _increment;
+
+  public Pcg32(ulong seed, ulong stream)
+
+  {
+
+  _state = 0;
+
+  _increment = (stream << 1) | 1UL;
+
+  NextUInt32();
+
+  _state = unchecked(_state + seed);
+
+  NextUInt32();
+
+  }
+
+  public uint NextUInt32()
+
+  {
+
+  unchecked
+
+  {
+
+  ulong oldState = _state;
+
+  _state = oldState * 6364136223846793005UL + _increment;
+
+  uint xorshifted = (uint)(((oldState >> 18) ^ oldState) >> 27);
+
+  int rotation = (int)(oldState >> 59);
+
+  return (xorshifted >> rotation) |
+
+  (xorshifted << ((-rotation) & 31));
+
+  }
+
+  }
+
+  public double NextDouble() =>
+
+  (NextUInt32() + 0.5) / 4294967296.0;
+
+  public int NextInt(int minInclusive, int maxExclusive)
+
+  {
+
+  if (maxExclusive <= minInclusive)
+
+  throw new ArgumentOutOfRangeException(nameof(maxExclusive));
+
+  uint range = (uint)(maxExclusive - minInclusive);
+
+  uint threshold = unchecked(0u - range) % range;
+
+  uint value;
+
+  do { value = NextUInt32(); } while (value < threshold);
+
+  return minInclusive + (int)(value % range);
+
+  }
+
+  public bool NextBool(double probability)
+
+  {
+
+  if (probability < 0 || probability > 1)
+
+  throw new ArgumentOutOfRangeException(nameof(probability));
+
+  return NextDouble() < probability;
+
+  }
+
+  public double NextGaussian()
+
+  {
+
+  double u1 = Math.Max(NextDouble(), 1.0 / 4294967296.0);
+
+  double u2 = NextDouble();
+
+  return Math.Sqrt(-2.0 * Math.Log(u1)) *
+
+  Math.Cos(2.0 * Math.PI * u2);
+
+  }
+
+  public RandomState Capture() => new(_state, _increment);
+
+  public void Restore(RandomState state)
+
+  {
+
+  if ((state.Increment & 1UL) == 0)
+
+  throw new ArgumentException("PCG increment must be odd.");
+
+  _state = state.State;
+
+  if (state.Increment != _increment)
+
+  throw new ArgumentException("PCG stream does not match this
+  instance.");
+
+  }
+
+  }
+
+21.6.3. Contenedor de streams y checkpoint RNG
+
+La clase contenedora fija los identificadores de stream. En producción,
+estos identificadores son constantes versionadas; el estado de los
+cuatro generadores se serializa junto con el snapshot.
+
+  namespace Martis.Simulation.Random;
+
+  public sealed record RandomStreamsState(
+
+  RandomState Environment,
+
+  RandomState Reproduction,
+
+  RandomState Mutation,
+
+  RandomState Drift);
+
+  public sealed class RandomStreams
+
+  {
+
+  public Pcg32 Environment { get; }
+
+  public Pcg32 Reproduction { get; }
+
+  public Pcg32 Mutation { get; }
+
+  public Pcg32 Drift { get; }
+
+  public RandomStreams(ulong masterSeed)
+
+  {
+
+  Environment = new Pcg32(masterSeed, 0x454E565F4D415254UL);
+
+  Reproduction = new Pcg32(masterSeed, 0x5245505F4D415254UL);
+
+  Mutation = new Pcg32(masterSeed, 0x4D55545F4D415254UL);
+
+  Drift = new Pcg32(masterSeed, 0x4452465F4D415254UL);
+
+  }
+
+  public RandomStreamsState Capture() => new(
+
+  Environment.Capture(),
+
+  Reproduction.Capture(),
+
+  Mutation.Capture(),
+
+  Drift.Capture());
+
+  public void Restore(RandomStreamsState state)
+
+  {
+
+  Environment.Restore(state.Environment);
+
+  Reproduction.Restore(state.Reproduction);
+
+  Mutation.Restore(state.Mutation);
+
+  Drift.Restore(state.Drift);
+
+  }
+
+  }
+
+La inicialización de streams debe usar un hash estable (por ejemplo,
+SplitMix64 sobre semilla maestra + identificador constante de
+subsistema). No utilizar string.GetHashCode(), cuyo resultado no es un
+contrato persistente.
+
+21.6.1. Mutación por división
+
+La mutación se evalúa al generar descendencia, no como una modificación
+periódica de toda la población. μ es probabilidad por locus y por evento
+de división. σ es amplitud de perturbación del rasgo; ambos son
+parámetros de juego/modelo, no tasas moleculares medidas.
+
+using Martis.Domain;
+
+using Martis.Simulation.Random;
+
+  public static class GenomeMutator
+
+  {
+
+  public static Genome Mutate(
+
+  Genome parent,
+
+  IRandomSource random,
+
+  double probabilityPerTraitPerDivision,
+
+  double sigma)
+
+  {
+
+  if (probabilityPerTraitPerDivision < 0 ||
+
+  probabilityPerTraitPerDivision > 1 || sigma < 0)
+
+  throw new ArgumentOutOfRangeException();
+
+  double M(double value) =>
+
+  random.NextBool(probabilityPerTraitPerDivision)
+
+  ? Math.Clamp(value + sigma * random.NextGaussian(), 0.0, 1.0)
+
+  : value;
+
+  var child = new Genome(
+
+  M(parent.UvProtection),
+
+  M(parent.ThermalTolerance),
+
+  M(parent.DesiccationTolerance),
+
+  M(parent.Photosynthesis),
+
+  M(parent.RepairCapacity),
+
+  M(parent.DivisionRate));
+
+  child.Validate();
+
+  return child;
+
+  }
+
+  }
+
+En el modelo agregado, una mutación crea una variante hija con una
+fracción de los nacimientos del genotipo parental. La fracción se
+calcula mediante muestreo binomial usando un Ne entero configurable o
+mediante expectativa determinista si el escenario está en modo de
+prueba. El Ne no se identifica automáticamente con la biomasa total.
+
+21.6.2. Selección y deriva
+
+  p_i_selected = (p_i * exp(s_i * deltaTimeSol))
+
+  / sum_j(p_j * exp(s_j * deltaTimeSol))
+
+  counts_next ~ Multinomial(Ne, p_selected)
+
+  p_i_next = counts_i_next / Ne
+
+La selección usa fitness relativo derivado de supervivencia y
+reproducción neta bajo recursos reales. La deriva se aplica mediante
+muestreo multinomial con Ne separado. Si Ne es muy pequeño o hay pocas
+variantes, usar un algoritmo de muestreo estable y probado; documentar
+el orden de categorías para que el resultado sea reproducible.
+
+21.7. Contratos del motor y comunicación
+
+  namespace Martis.Simulation.Engine;
+
+  public interface ISimulationSystem
+
+  {
+
+  void Execute(SimulationContext context);
+
+  }
+
+  public sealed record SimulationConfiguration(
+
+  double DeltaTimeSol,
+
+  bool ValidateEveryTick)
+
+  {
+
+  public void Validate()
+
+  {
+
+  if (!double.IsFinite(DeltaTimeSol) || DeltaTimeSol <= 0)
+
+  throw new ArgumentOutOfRangeException(nameof(DeltaTimeSol));
+
+  }
+
+  }
+
+  public sealed class SimulationContext
+
+  {
+
+  public RegionState State { get; }
+
+  public RandomStreams Random { get; }
+
+  public double DeltaTimeSol { get; }
+
+  public SimulationContext(
+
+  RegionState state,
+
+  RandomStreams random,
+
+  double deltaTimeSol)
+
+  {
+
+  State = state;
+
+  Random = random;
+
+  DeltaTimeSol = deltaTimeSol;
+
+  }
+
+  }
+
+  public sealed class SimulationEngine
+
+  {
+
+  private readonly IReadOnlyList<ISimulationSystem> _systems;
+
+  private readonly SimulationConfiguration _configuration;
+
+  private readonly RandomStreams _random;
+
+  public RegionState State { get; }
+
+  public SimulationEngine(
+
+  RegionState state,
+
+  SimulationConfiguration configuration,
+
+  RandomStreams random,
+
+  IReadOnlyList<ISimulationSystem> systems)
+
+  {
+
+  configuration.Validate();
+
+  State = state;
+
+  _configuration = configuration;
+
+  _random = random;
+
+  _systems = systems;
+
+  }
+
+  public void Advance(int steps)
+
+  {
+
+  if (steps < 0) throw new ArgumentOutOfRangeException(nameof(steps));
+
+  for (var i = 0; i < steps; i++)
+
+  {
+
+  var context = new SimulationContext(
+
+  State, _random, _configuration.DeltaTimeSol);
+
+  foreach (var system in _systems)
+
+  system.Execute(context);
+
+  State.Tick++;
+
+  }
+
+  }
+
+  }
+
+El código anterior define el contrato mínimo del pipeline; el
+constructor de producción debe recibir además una cola de comandos
+determinista y un validador. La cola se drena al inicio del tick,
+ordenada por secuencia monotónica. La interfaz Godot no debe llamar
+directamente a PopulationState ni a CellResources.
+
+  flowchart LR
+
+  UI[Godot UI and map] --> F[SimulationFacade]
+
+  F --> C[Commands and read-only snapshots]
+
+  C --> E[SimulationEngine]
+
+  E --> D[Martis.Domain]
+
+  E --> R[Random streams]
+
+  E --> V[Validation]
+
+  CLI[Martis.Cli] --> E
+
+  E --> P[Snapshot DTO]
+
+  P --> DB[(SQLite)]
+
+  DB --> P
+
+  P --> F
+
+SimulationFacade es el único punto de entrada de la aplicación:
+QueueCommand, AdvanceTicks, GetMapSnapshot, GetCellDetail y Save. Godot
+puede mantener una textura 64 × 64 actualizada desde un array de
+valores; los detalles de población se consultan bajo demanda. La
+velocidad visual determina cuántos ticks ejecutar por frame, no el Δt
+físico de un tick.
+
+21.8. Snapshots y persistencia SQLite
+
+El snapshot debe ser suficiente para continuar exactamente la simulación
+dentro de la misma versión de motor/modelo. Debe incluir: tick,
+configuración, escenario y hash del paquete de datos, semilla maestra,
+estado de todos los streams RNG, arrays ambientales y de recursos,
+poblaciones/genomas, métricas acumuladas y versión de esquema.
+
+  PRAGMA foreign_keys = ON;
+
+  PRAGMA journal_mode = WAL;
+
+  PRAGMA synchronous = FULL;
+
+  CREATE TABLE IF NOT EXISTS SaveGame (
+
+  Id TEXT PRIMARY KEY,
+
+  CreatedUtc TEXT NOT NULL,
+
+  EngineVersion TEXT NOT NULL,
+
+  ModelVersion TEXT NOT NULL,
+
+  ScenarioId TEXT NOT NULL,
+
+  ScenarioHash TEXT NOT NULL,
+
+  MasterSeed TEXT NOT NULL,
+
+  LastTick INTEGER NOT NULL
+
+  );
+
+  CREATE TABLE IF NOT EXISTS Snapshot (
+
+  Id INTEGER PRIMARY KEY,
+
+  SaveGameId TEXT NOT NULL REFERENCES SaveGame(Id) ON DELETE CASCADE,
+
+  Tick INTEGER NOT NULL,
+
+  SchemaVersion INTEGER NOT NULL,
+
+  Payload BLOB NOT NULL,
+
+  Sha256 TEXT NOT NULL,
+
+  UNIQUE (SaveGameId, Tick)
+
+  );
+
+  CREATE TABLE IF NOT EXISTS SimulationEvent (
+
+  Id INTEGER PRIMARY KEY,
+
+  SaveGameId TEXT NOT NULL REFERENCES SaveGame(Id) ON DELETE CASCADE,
+
+  Tick INTEGER NOT NULL,
+
+  Sequence INTEGER NOT NULL,
+
+  EventType TEXT NOT NULL,
+
+  PayloadJson TEXT NOT NULL,
+
+  UNIQUE (SaveGameId, Tick, Sequence)
+
+  );
+
+  CREATE TABLE IF NOT EXISTS Metric (
+
+  SaveGameId TEXT NOT NULL REFERENCES SaveGame(Id) ON DELETE CASCADE,
+
+  Tick INTEGER NOT NULL,
+
+  MetricKey TEXT NOT NULL,
+
+  Value REAL NOT NULL,
+
+  PRIMARY KEY (SaveGameId, Tick, MetricKey)
+
+  );
+
+  CREATE INDEX IF NOT EXISTS IX_Snapshot_SaveGame_Tick
+
+  ON Snapshot(SaveGameId, Tick);
+
+  CREATE INDEX IF NOT EXISTS IX_Event_SaveGame_Tick
+
+  ON SimulationEvent(SaveGameId, Tick);
+
+-   Crear un snapshot completo cada 50 ticks como valor inicial
+    configurable; guardar métricas y eventos entre snapshots.
+
+-   Serializar el DTO versionado con System.Text.Json y comprimir el
+    payload antes de insertarlo como BLOB. JSON sin comprimir se
+    conserva en tests para inspección.
+
+-   Insertar snapshot, métricas y actualización de LastTick dentro de
+    una transacción SQLite.
+
+-   Calcular SHA-256 del payload para detectar corrupción.
+
+-   Al cargar: validar versión, hash y dimensiones; restaurar estado y
+    RNG; reproducir eventos posteriores al snapshot solo si su semántica
+    es determinista.
+
+-   No prometer compatibilidad entre versiones mayores del modelo sin
+    una migración explícita.
+
+21.9. Validación, pruebas y criterios de calidad
+
+  -----------------------------------------------------------------------
+  Nivel                   Pruebas mínimas         Criterio de aceptación
+  ----------------------- ----------------------- -----------------------
+  Unitarias               Curvas térmicas, Monod, Casos límite y rangos
+                          limitación de recursos, cubiertos; resultados
+                          PCG32, mutación,        analíticos conocidos.
+                          estequiometría.         
+
+  Propiedades             No negatividad,         Miles de estados
+                          finitud, conservación   aleatorios válidos sin
+                          C/N/P, consumo ≤        violaciones.
+                          disponibilidad.         
+
+  Integración             Escenario 64×64, tres   Sin NaN/Infinity,
+                          arquetipos,             recursos negativos ni
+                          1.000–10.000 ticks.     población inválida.
+
+  Determinismo            Dos ejecuciones con     Snapshots equivalentes
+                          semilla y comandos      dentro de tolerancia y
+                          idénticos;              mismos eventos
+                          guardar/cargar y        discretos.
+                          continuar.              
+
+  Persistencia            Guardar, cerrar,        El estado recuperado
+                          recuperar, continuar,   coincide con el estado
+                          checksum y migración.   de referencia.
+
+  Rendimiento             4.096 celdas, 1.000     Medición reproducible;
+                          poblaciones y escenario objetivo inicial <16 ms
+                          de estrés con 32        por tick en hardware de
+                          variantes/celda.        referencia, sujeto a
+                                                  benchmark.
+  -----------------------------------------------------------------------
+
+Las comparaciones de punto flotante usarán tolerancia absoluta +
+relativa. Para eventos discretos (nacimiento de variante, extinción,
+comandos, selección por muestreo) se compararán IDs, orden y conteos
+exactos. Las pruebas de difusión deben comprobar conservación de masa
+con frontera sin flujo y estabilidad numérica bajo el criterio D·Δt/Δx²
+≤ 1/4 para el esquema explícito 2D de cuatro vecinos.
+
+El objetivo de 16 ms es una meta de ingeniería para orientar el
+perfilado, no una medición existente ni un requisito científico.
+Registrar CPU, RAM, SO, runtime, commit, configuración y distribución de
+tiempos en cada benchmark.
+
+21.10. Datos marcianos: evidencia, supuestos y calibración pendiente
+
+El motor no debe cargar una constante universal de Marte para variables
+que dependen de latitud, estación, profundidad, hora local, tipo de
+suelo o instrumento. Cada parámetro del escenario tendrá provenance,
+unidad, rango, incertidumbre y etiqueta epistémica.
+
+  --------------------------------------------------------------------------
+  Variable                  Evidencia disponible    Tratamiento en MARTIS
+  ------------------------- ----------------------- ------------------------
+  Temperatura y presión     Datos de aterrizadores, Usar series/mapas del
+                            orbitadores y           sitio elegido; no
+                            climatologías           inventar una temperatura
+                            regionales.             única para toda la
+                                                    región.
+
+  Radiación ionizante       RAD de Curiosity midió  Separar dosis ionizante
+                            radiación superficial;  de UV; calibrar por
+                            el resultado depende de localización/tiempo. No
+                            lugar, blindaje         convertir una campaña en
+                            atmosférico y ciclo     constante global.
+                            solar.                  
+
+  Hielo de agua             Mapas SWIM combinan     Distinguir hielo, agua
+                            observaciones orbitales adsorbida y agua líquida
+                            y evidencias de hielo   metabólicamente
+                            subsuperficial.         disponible; incluir
+                                                    profundidad y
+                                                    accesibilidad.
+
+  Oxychlorine/percloratos   Phoenix detectó         Usar mapas/rangos
+                            aproximadamente 0,5 %   locales cuando existan;
+                            en peso en suelos de    en otros casos, variable
+                            las llanuras            de escenario con
+                            septentrionales; la     incertidumbre.
+                            distribución global no  
+                            queda fijada por ese    
+                            dato.                   
+
+  N y P disponibles         Requieren mineralogía y Modelar fracción
+                            química de suelo        accesible separada de
+                            regional; no inferir    inventario mineral
+                            biodisponibilidad solo  total.
+                            desde abundancia total. 
+
+  Terraformación            Jakosky y Edwards       Mantener terraformación
+                            (2018) concluyen que el global como capa
+                            CO₂ accesible conocido  especulativa; MVP solo
+                            no permite terraformar  permite cambios
+                            Marte con tecnología    biológicos/regionales.
+                            actual.                 
+  --------------------------------------------------------------------------
+
+Etiquetas obligatorias para cada parámetro: SCIENTIFIC_MEASURED,
+SCIENTIFIC_DERIVED, SCIENTIFIC_ESTIMATED, MODEL_ASSUMPTION, GAME_BALANCE
+o SPECULATIVE. Un dato medido debe guardar instrumento, misión, fecha,
+ubicación, producto, DOI/URL y unidad. Un valor de juego nunca se
+presentará como medición.
+
+21.11. Referencias verificadas para el arranque
+
+Godot 4.7.2 — archivo oficial de versiones estables:
+https://godotengine.org/download/archive/
+
+Godot — C# basics, requisitos y plataformas:
+https://docs.godotengine.org/en/4.7/tutorials/scripting/c_sharp/c_sharp_basics.html
+
+Godot — política de versiones y ramas soportadas:
+https://docs.godotengine.org/en/stable/about/release_policy.html
+
+Godot — paquetes C# y compatibilidad con versiones recientes de .NET:
+https://godotengine.org/article/godotsharp-packages-net8/
+
+NASA/JPL — Radiation Measurements on Mars (Curiosity RAD):
+https://science.nasa.gov/resource/radiation-measurements-on-mars/
+
+NASA/JPL — SWIM Map Shows Subsurface Water Ice on Mars (26-10-2023):
+https://www.jpl.nasa.gov/images/pia26045-swim-map-shows-subsurface-water-ice-on-mars/
+
+Archer et al. — Perchlorate on Mars: Overview and Implications, NASA
+NTRS (2019): https://ntrs.nasa.gov/citations/20190028297
+
+NASA/JPL — Planetary Protection, Mission Implementation:
+https://planetaryprotection.jpl.nasa.gov/mission-implementation
+
+Jakosky, B. M. & Edwards, C. S. (2018). Inventory of CO₂ available for
+terraforming Mars. Nature Astronomy 2, 634–639. DOI:
+10.1038/s41550-018-0529-6: https://doi.org/10.1038/s41550-018-0529-6
+
+21.12. Hitos de implementación actualizados
+
+  --------------------------------------------------------------------------
+  Hito                    Resultado ejecutable    Criterio de aceptación
+  ----------------------- ----------------------- --------------------------
+  M0 — Toolchain          Godot 4.7.2 .NET + SDK  Build limpio en Windows y
+                          fijado + solución       Linux; versiones
+                          compilable.             registradas.
+
+  M1 — Dominio            Región 64×64, estado    Crear escenario baseline y
+                          ambiental, recursos,    validar
+                          genomas y poblaciones   dimensiones/unidades.
+                          agregadas.              
+
+  M2 — Motor determinista Pipeline de tick,       1.000 ticks repetibles con
+                          comandos ordenados y    la misma semilla.
+                          PCG32 con streams       
+                          separados.              
+
+  M3 — Ambiente           Temperatura, radiación, No NaN/Infinity; límites
+                          agua accesible y        físicos y etiquetas de
+                          reservas iniciales.     parámetros.
+
+  M4 — Metabolismo        Una ruta fotoautótrofa  Cierre de balances y no
+                          y asignación compartida sobreconsumo.
+                          de sustratos.           
+
+  M5 — Población          Mantenimiento,          No crecimiento sin fuente
+                          crecimiento limitado    de materia/energía.
+                          por recursos y          
+                          mortalidad.             
+
+  M6 — Evolución          Herencia clonal,        Variantes reproducibles;
+                          mutación por división,  rasgos dentro de [0,1].
+                          selección y deriva.     
+
+  M7 — Ecología           Descomposición y        Conservación de elementos
+                          reciclaje de C/N/P.     en ciclos cerrados.
+
+  M8 — Persistencia       SQLite, snapshots,      Guardar/cargar/continuar
+                          eventos, RNG y          equivale a ejecución
+                          recuperación.           continua.
+
+  M9 — Godot              Mapa 2D, reloj,         La UI solo lee snapshots y
+                          selección de celda,     emite comandos.
+                          población y gráficos.   
+
+  M10 — FIRST COLONY      Misión completa con     Se puede desplegar,
+                          tres arquetipos y       mantener población y
+                          experimentación.        observar evolución.
+  --------------------------------------------------------------------------
+
+21.13. Primer sprint — orden de ejecución
+
+Duración objetivo: cinco jornadas. La meta no es implementar todos los
+microorganismos, sino terminar un núcleo que compile, avance ticks, sea
+reproducible y pueda validarse desde CLI. No comenzar la interfaz final
+antes de completar el flujo de consola.
+
+P0 — Día 1: repositorio y toolchain
+
+Crear repositorio MARTIS; instalar Godot 4.7.2 .NET y SDK .NET 10; fijar
+global.json; crear MARTIS.sln, Directory.Build.props y
+Directory.Packages.props; crear Domain, Contracts, Simulation,
+Persistence, CLI, Game, Tests y Benchmarks; dejar build verde.
+
+P0 — Día 2: dominio y unidades
+
+Implementar IDs tipados, CellEnvironment, CellResources, Genome,
+PopulationState y RegionState; inicializar exactamente 4.096 celdas;
+validar dimensiones, finitud, unidades y no negatividad; crear escenario
+MarsBaseline con todos los valores marcados por provenance.
+
+P0 — Día 3: motor y aleatoriedad
+
+Implementar ISimulationSystem, SimulationContext, SimulationEngine, cola
+de comandos ordenada y PCG32; separar streams; ejecutar 1.000 ticks
+vacíos; demostrar que dos ejecuciones con misma semilla producen
+snapshots equivalentes.
+
+P1 — Día 4: metabolismo mínimo
+
+Implementar una ruta fotoautótrofa parametrizada, cálculo de flujo
+potencial, asignación por celda en dos pasadas y validador de
+recursos/elementos; añadir tests de CO₂, agua, N y P limitantes; no
+incorporar todavía simbiosis ni biopelículas.
+
+P1 — Día 5: persistencia y CI
+
+Crear snapshot versionado con RNG; persistir en SQLite dentro de
+transacción; guardar/cargar/continuar; añadir pruebas de integración y
+benchmark inicial; documentar hardware y resultados.
+
+21.14. Definition of Done del primer sprint
+
+-   dotnet build MARTIS.sln termina sin errores ni warnings no
+    justificados.
+
+-   dotnet test MARTIS.sln ejecuta tests de dominio, motor y
+    persistencia.
+
+-   El escenario MarsBaseline crea 64×64 celdas y sus 4.096 índices son
+    válidos.
+
+-   PCG32 devuelve la misma secuencia desde la misma semilla/stream y
+    restaura su estado.
+
+-   El motor ejecuta 1.000 ticks sin valores NaN, infinitos o reservas
+    negativas.
+
+-   Dos ejecuciones con misma semilla, configuración y comandos producen
+    snapshots equivalentes.
+
+-   El snapshot guarda y restaura tick, poblaciones, recursos y todos
+    los estados RNG.
+
+-   La CLI puede ejecutar el escenario, validar y guardar un checkpoint
+    sin abrir Godot.
+
+-   Los parámetros del escenario tienen unidad, etiqueta epistemológica
+    y fuente o justificación explícita.
+
+No se considera terminado el sprint si solo existe una escena Godot que
+muestra una cuadrícula. El entregable es un motor de consola verificable
+al que Godot se conectará después.
+
+Fin de la revisión v1.1. Los valores científicos aún no calibrados
+permanecen explícitamente como pendientes; el documento define
+arquitectura y contratos de implementación, no constituye una validación
+científica del modelo biológico.

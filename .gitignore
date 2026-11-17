@@ -43,3 +43,11 @@ results/
 
 # BenchmarkDotNet output
 BenchmarkDotNet.Artifacts/
+
+# Plugins y demos locales del editor de Godot (cada colaborador instala los suyos; ver CONTRIBUTING.md)
+src/Martis.Game/addons/
+src/Martis.Game/demo/
+
+# Python
+__pycache__/
+*.pyc

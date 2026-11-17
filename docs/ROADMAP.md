@@ -1,5 +1,7 @@
 # ROADMAP técnico de MARTIS (T01–T10)
 
+> **Histórico.** T01–T10 y el Sprint 1 están completados y fusionados en `main`. El plan vigente son las fases A–I del [Documento Maestro v2.0](maestro/MARTIS_Documento_Maestro_v2.0.docx) (§34); el estado y los siguientes pasos están en [ESTADO.md](ESTADO.md).
+
 Fuente: TDD v1.0 §16 (hitos), §18–19 (primer sprint y prototipo), Anexo B.7 (estimación). Estado de todo el documento: **propuesta pendiente de visto bueno de Dani**. Huecos referenciados como H-nn están en [`TDD_HUECOS.md`](TDD_HUECOS.md); decisiones en [`ADR/`](ADR/README.md).
 
 ## Primer objetivo: prototipo CLI (TDD §19)

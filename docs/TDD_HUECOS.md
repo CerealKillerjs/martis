@@ -1,5 +1,7 @@
 # Contradicciones y huecos del TDD v1.0 que requieren decisión de Dani
 
+> Desde el 2026-11-17 el diseño vigente es el [Documento Maestro v2.0](maestro/MARTIS_Documento_Maestro_v2.0.docx). Esta tabla sigue siendo el registro de huecos y deudas abiertas (H-nn); el resumen de lo pendiente está en [ESTADO.md](ESTADO.md).
+
 Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/tdd/image1.png](tdd/image1.png) hecha al preparar ADR, ROADMAP y Sprint 1. Fecha: 2026-11-16. Cada fila lleva una propuesta. Prioridad: **A** = bloquea o afecta al prototipo CLI/Sprint 1; **M** = afecta a hitos posteriores; **B** = menor. Los huecos cerrados enlazan el ADR que los decide.
 
 | ID | Prio | Ref. TDD | Problema | Propuesta | Decide |
@@ -38,6 +40,9 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 | H-32 | B | B.6 | Los umbrales de las misiones de campaña 1.1 (5 soles) y 1.3 (3 mutaciones, 3 genomas, 0,1 kg durante 100 soles) son propuestas de juego ([ADR-019](ADR/ADR-019-modo-historia.md)). | Ajustarlos jugando, junto a H-19. | Dani |
 | H-33 | B | — | Los valores de la economía (recompensas, costes, rangos de edición y biorreactor) son propuestas de juego ([ADR-020](ADR/ADR-020-economia.md)). | Ajustarlos jugando el capítulo 1. | Dani |
 | H-34 | B | §7.4 | En 256×256 el tick va a 74 ms; la copia del punto de control y la validación del entorno siguen siendo proporcionales a las casillas ([ADR-021](ADR/ADR-021-mapas-grandes.md)). | Copiar solo lo que cambia y validar el entorno por muestreo o en paralelo determinista. | Dani |
+| H-35 | M | — | Con el mundo por secciones (M4/M5), los objetivos de misión solo se cuentan en la simulación de la sección inicial; lo que pasa en las secciones vecinas no cuenta ([ADR-039](ADR/ADR-039-modo-historia-una-partida.md)). | Seguimiento de misión agregado sobre todas las secciones abiertas. | Dani |
+| H-36 | M | §3 | Sobre el relieve real, los capítulos 2–5 usan el gradiente sintético `EnvironmentGradient` (GAME_BALANCE, más frío a un lado del mapa) y no la altitud ni la latitud reales ([ADR-039](ADR/ADR-039-modo-historia-una-partida.md), Documento Maestro §19.1). | Derivar temperatura, presión y radiación de cada celda de la altitud y la latitud de su sección (ARC-003). | Dani/Ciencia |
+| H-37 | B | — | El test `GlobalJsonPinsTheNet10Sdk` falla donde no está el SDK 10.0.404 (por ejemplo, en el entorno en la nube del asistente, que solo tiene 10.0.1xx y edita `global.json` en local para compilar). En la CI pasa. | Mantener el test. No subir nunca un `global.json` editado. | — |
 
 ## Notas sobre cifras y datos
 

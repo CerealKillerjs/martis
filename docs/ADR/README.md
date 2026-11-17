@@ -1,5 +1,7 @@
 # Registro de ADR de MARTIS
 
+Cada decisión de diseño o arquitectura tiene su ADR. Para una nueva, usa el siguiente número libre (ADR-040), con estado *Propuesto*, y añádela a esta lista. El marco general está en el [Documento Maestro v2.0](../maestro/MARTIS_Documento_Maestro_v2.0.docx).
+
 - [ADR-000 — Reglas de arquitectura de MARTIS](ADR-000-reglas-de-arquitectura.md) (Aceptado, decisión de MARTIS Lead, 2026-11-16)
 - [ADR-001 — DT-001: Versión concreta de Godot 4 (.NET)](ADR-001-version-godot.md) (Aceptado)
 - [ADR-002 — DT-002: Versión de .NET (SDK y TFM)](ADR-002-version-dotnet.md) (Aceptado)
