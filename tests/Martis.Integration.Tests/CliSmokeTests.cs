@@ -233,7 +233,9 @@ public sealed class CliSmokeTests
         var stdoutTask = process.StandardOutput.ReadToEndAsync();
         var stderrTask = process.StandardError.ReadToEndAsync();
 
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        // The 1000-tick run takes about 15 s alone; on a CI runner that also runs the heavier
+        // 256-map campaign tests in parallel it has needed more than 30 s (H6).
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(120));
         try
         {
             await process.WaitForExitAsync(timeout.Token);
@@ -241,7 +243,7 @@ public sealed class CliSmokeTests
         catch (OperationCanceledException)
         {
             process.Kill(entireProcessTree: true);
-            throw new TimeoutException("Martis.Cli did not exit within 30 seconds.");
+            throw new TimeoutException("Martis.Cli did not exit within 120 seconds.");
         }
 
         return (process.ExitCode, await stdoutTask, await stderrTask);
