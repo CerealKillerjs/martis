@@ -147,6 +147,17 @@ public sealed class GuidanceTests
     }
 
     [Fact]
+    public void TheStationsMissionTeachesTheAutopilotAndTheFixedStations()
+    {
+        var stations = MissionDefinition.LoadPublished(Repo.Root(), "stations.v1.json");
+
+        Assert.True(stations.Sequential);
+        Assert.Equal(["send-rover", "rover-arrived", "build-station"], stations.Objectives.Select(objective => objective.Action));
+        Assert.Equal(MissionKind.Reconnaissance, Campaign.Mission("stations").Kind);
+        Assert.Equal(["red_de_medida"], Campaign.Mission("stations").Concepts);
+    }
+
+    [Fact]
     public void TheCodexFillsAsMissionsAreFinished()
     {
         var progress = new CampaignProgress(Campaign);
@@ -154,9 +165,10 @@ public sealed class GuidanceTests
 
         progress.Complete("awakening");
         progress.Complete("sampling");
+        progress.Complete("stations");
         progress.Complete("first_colony");
 
-        Assert.Equal(["leer_marte", "rover", "cartografia", "muestreo", "fotosintesis", "diseno_genetico"], progress.Learned.Select(concept => concept.Id));
+        Assert.Equal(["leer_marte", "rover", "cartografia", "muestreo", "red_de_medida", "fotosintesis", "diseno_genetico"], progress.Learned.Select(concept => concept.Id));
         var reloaded = CampaignProgress.FromJson(Campaign, progress.ToJson());
         Assert.Equal(progress.Learned, reloaded.Learned);
     }

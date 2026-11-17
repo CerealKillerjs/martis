@@ -26,7 +26,7 @@ public sealed class ChapterTwoTests
         var progress = new CampaignProgress(Campaign);
         Assert.False(progress.IsUnlocked("gradients"));
 
-        foreach (var id in new[] { "awakening", "sampling", "first_colony", "selection" })
+        foreach (var id in new[] { "awakening", "sampling", "stations", "first_colony", "selection" })
         {
             Assert.True(progress.Complete(id));
         }

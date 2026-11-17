@@ -31,6 +31,11 @@ public partial class GameRoot
     {
         var (x, y) = _rover.Cell;
         var order = _orders.Issue("sample", FormattableString.Invariant($"({x}, {y})"), "rover", _session.Tick, _samples.Definition.BatteryCost);
+        if (InstrumentFails(order))
+        {
+            return;
+        }
+
         var level = _knowledge.Level(x, y);
         if (level == KnowledgeLevel.Measured && !_samples.Full && !_rover.Spend(_samples.Definition.BatteryCost))
         {

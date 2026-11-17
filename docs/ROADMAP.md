@@ -148,7 +148,7 @@ Cada hito va en una rama y un PR propios, apilados.
 - **V1, modos sobre un mismo estado ([ADR-027](ADR/ADR-027-modos-sobre-un-estado.md)):** Exploración, Estratégico, Laboratorio y Planetario (F1–F4), control de tiempo con tope por modo y libro de órdenes.
 - **V2, conocimiento y escaneo ([ADR-029](ADR/ADR-029-conocimiento-y-escaneo.md)):** niebla de conocimiento por celda, sonda orbital por franjas, cámaras y escáner del rover (C); no se siembra a ciegas.
 - **V3, muestras y laboratorio ([ADR-030](ADR/ADR-030-muestras-y-laboratorio.md)):** muestreo de terreno medido (M), entrega en el módulo, análisis en cola con puntos de investigación y diseño desde el genoma de una muestra.
-- **V4:** robots e instalaciones (energía, desgaste, órdenes con retraso y fallo).
+- **V4, robots e instalaciones ([ADR-031](ADR/ADR-031-robots-e-instalaciones.md)):** desgaste y fallos deterministas del rover, estaciones fijas con presupuesto de energía que se averían y se reparan, órdenes de desplazamiento pendientes hasta llegar o fallar.
 - **V5:** valle parametrizado con puntos de interés, FIRST COLONY como misión del corte y guardado/carga repetible.
 - **Después:** fase E (terraformación regional) y `PlanetDefinition` (ARC-003).
 

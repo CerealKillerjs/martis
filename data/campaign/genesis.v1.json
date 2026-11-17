@@ -39,6 +39,14 @@
           "kind": "sampling"
         },
         {
+          "id": "stations",
+          "file": "stations.v1.json",
+          "teaches": [
+            "red_de_medida"
+          ],
+          "kind": "reconnaissance"
+        },
+        {
           "id": "first_colony",
           "file": "first_colony.v1.json",
           "teaches": [
@@ -309,6 +317,12 @@
       "id": "muestreo",
       "title": "Muestreo y análisis",
       "text": "Una muestra del suelo, recogida en terreno medido y analizada en el laboratorio, dice qué condiciones aguanta la vida en ese sitio. Diseñar a partir de una muestra es partir de datos, no de suposiciones.",
+      "epistemic": "model"
+    },
+    {
+      "id": "red_de_medida",
+      "title": "Red de medida",
+      "text": "El rover explora lejos con piloto automático y las estaciones fijas miden su entorno cada sol. Ambos se desgastan: una red de medida solo sirve si se mantiene.",
       "epistemic": "model"
     },
     {

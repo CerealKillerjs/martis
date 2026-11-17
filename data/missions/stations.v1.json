@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "stations",
+    "name": "OJOS EN EL TERRENO — 1.3",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (campaña H8)",
+    "review": "Misión de reconocimiento de la Era I (documento maestro v2.0, §11; ADR-028 y ADR-031). Sin umbrales numéricos.",
+    "sequential": true,
+    "briefing": "Un solo rover no puede medirlo todo. Mándalo lejos con el piloto automático y deja estaciones fijas que midan el terreno por ti cada sol.",
+    "debrief": "Ya tienes una red de medida: el rover explora y las estaciones vigilan. Recuerda que el rover se desgasta y que las estaciones se averían; mantenerlas es parte del trabajo.",
+    "objectives": [
+      {
+        "id": "send_rover",
+        "type": "action",
+        "action": "send-rover",
+        "title": "Envía el rover",
+        "hint": "Fuera de Exploración, selecciona una celda y pulsa G o «Enviar el rover (G)» en el inspector."
+      },
+      {
+        "id": "rover_arrived",
+        "type": "action",
+        "action": "rover-arrived",
+        "title": "Espera a que llegue",
+        "hint": "Deja correr el tiempo: el piloto automático conduce solo hasta la celda."
+      },
+      {
+        "id": "build_station",
+        "type": "action",
+        "action": "build-station",
+        "title": "Monta una estación",
+        "hint": "En Exploración (F1), sobre terreno medido, pulsa B. Mide un radio de 3 celdas cada sol."
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": []
+}

@@ -75,6 +75,9 @@ public partial class Hud : Control
     /// <summary>The player pressed «Pista» (H8): the host asks the mission guidance and refreshes.</summary>
     public event Action? HintRequested;
 
+    /// <summary>«Enviar el rover»: an order for the rover to drive to the selected cell (V4).</summary>
+    public event Action? RoverRequested;
+
     public event Action? ExperimentRequested;
 
     public event Action<bool>? DeployToggled;
@@ -614,7 +617,15 @@ public partial class Hud : Control
         _inspector.AddThemeFontSizeOverride("normal_font_size", 13);
         _inspector.AddThemeFontSizeOverride("bold_font_size", 15);
         box.AddChild(_inspector);
-        box.AddChild(Action("Analizar región", () => AnalyzeRequested?.Invoke(), "Estudia la celda y sus vecinas (objetivo de misión)"));
+        var actions = new HBoxContainer();
+        actions.AddThemeConstantOverride("separation", 6);
+        var analyze = Action("Analizar región", () => AnalyzeRequested?.Invoke(), "Estudia la celda y sus vecinas (objetivo de misión)");
+        analyze.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        var send = Action("Enviar el rover (G)", () => RoverRequested?.Invoke(), "Orden al rover: conducir hasta esta celda");
+        send.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        actions.AddChild(analyze);
+        actions.AddChild(send);
+        box.AddChild(actions);
         ShowCell(null);
         AddChild(panel);
     }

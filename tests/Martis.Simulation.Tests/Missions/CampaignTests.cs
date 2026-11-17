@@ -23,7 +23,7 @@ public sealed class CampaignTests
         var campaign = CampaignDefinition.LoadPublished(Repo.Root());
 
         Assert.True(campaign.Chapters[0].Playable);
-        Assert.Equal(["awakening", "sampling", "first_colony", "selection"], campaign.Chapters[0].Missions.Select(mission => mission.Id));
+        Assert.Equal(["awakening", "sampling", "stations", "first_colony", "selection"], campaign.Chapters[0].Missions.Select(mission => mission.Id));
         Assert.Equal("ch1", campaign.ChapterOf("selection").Id);
     }
 
@@ -56,6 +56,7 @@ public sealed class CampaignTests
         Assert.False(progress.IsUnlocked("first_colony"));
         Assert.Equal("sampling", progress.Next!.Id);
         Assert.True(progress.Complete("sampling"));
+        Assert.True(progress.Complete("stations"));
         Assert.True(progress.IsUnlocked("first_colony"));
         Assert.False(progress.IsUnlocked("selection"));
         Assert.Equal("first_colony", progress.Next!.Id);
@@ -69,13 +70,14 @@ public sealed class CampaignTests
         var progress = new CampaignProgress(campaign);
         progress.Complete("awakening");
         progress.Complete("sampling");
+        progress.Complete("stations");
         progress.Complete("first_colony");
 
         var json = progress.ToJson();
         var loaded = CampaignProgress.FromJson(campaign, json);
         var old = CampaignProgress.FromJson(campaign, """{"CampaignId":"genesis","Completed":["awakening","removed_mission"]}""");
 
-        Assert.Equal(["awakening", "first_colony", "sampling"], loaded.Completed.Order(StringComparer.Ordinal));
+        Assert.Equal(["awakening", "first_colony", "sampling", "stations"], loaded.Completed.Order(StringComparer.Ordinal));
         Assert.Equal("selection", loaded.Next!.Id);
         Assert.Equal(["awakening"], old.Completed);
     }

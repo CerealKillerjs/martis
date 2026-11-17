@@ -39,7 +39,7 @@ La misión 1.1 añade seis pasos con las acciones de J1 ([ADR-026](ADR-026-exped
 
 ### Primeras muestras (1.2)
 
-Con V3 entra una misión de tipo `sampling` entre 1.1 y FIRST COLONY, secuencial y sin umbrales numéricos: recoger una muestra (M sobre terreno medido), entregarla en el módulo, esperar el análisis del laboratorio y diseñar a partir de ella (`collect-sample`, `deliver-sample`, `analyze-sample`, `design-from-sample`). Enseña el concepto «Muestreo y análisis» (modelo). FIRST COLONY no cambia: sigue siendo la misión de referencia de la porción vertical (§32).
+Con V3 entra una misión de tipo `sampling` entre 1.1 y FIRST COLONY, secuencial y sin umbrales numéricos: recoger una muestra (M sobre terreno medido), entregarla en el módulo, esperar el análisis del laboratorio y diseñar a partir de ella (`collect-sample`, `deliver-sample`, `analyze-sample`, `design-from-sample`). Enseña el concepto «Muestreo y análisis» (modelo). Con V4 ([ADR-031](ADR-031-robots-e-instalaciones.md)) entra «Ojos en el terreno — 1.3», de reconocimiento: enviar el rover con piloto automático (G), esperar a que llegue y montar una estación fija (B), con el concepto «Red de medida». La reparación (`repair-station`) queda para cuando el jugador vea una avería, sin paso obligatorio. FIRST COLONY no cambia: sigue siendo la misión de referencia de la porción vertical (§32).
 
 ## Fuera de alcance
 

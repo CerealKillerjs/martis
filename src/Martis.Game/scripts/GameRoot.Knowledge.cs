@@ -84,6 +84,11 @@ public partial class GameRoot
         var (x, y) = _rover.Cell;
         var cost = _knowledge.Definition.ScanBatteryCost;
         var order = _orders.Issue("scan", FormattableString.Invariant($"({x}, {y})"), "rover", _session.Tick, cost);
+        if (InstrumentFails(order))
+        {
+            return;
+        }
+
         if (!_rover.Spend(cost))
         {
             Resolve(_orders.Fail(order.Id, _session.Tick, "batería insuficiente"));

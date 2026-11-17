@@ -90,6 +90,45 @@ public sealed class Rover
     /// <summary>Charge from 0 (empty, crawling) to 1 (full).</summary>
     public double Battery { get; private set; } = 1.0;
 
+    /// <summary>Mechanical wear from 0 (new) to 1 (worn out); past one half it slows the rover (V4).</summary>
+    public double Wear { get; private set; }
+
+    /// <summary>Fraction of top speed the wear leaves: 1 up to half wear, 0.5 when worn out.</summary>
+    public double SpeedFactor => 1.0 - Math.Max(0.0, Wear - 0.5);
+
+    /// <summary>Adds wear (for example per cell driven).</summary>
+    public void AddWear(double amount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(amount);
+        Wear = Math.Min(1.0, Wear + amount);
+    }
+
+    /// <summary>Removes wear (repairs at the lander).</summary>
+    public void Repair(double amount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(amount);
+        Wear = Math.Max(0.0, Wear - amount);
+    }
+
+    /// <summary>
+    /// Autopilot for orders (V4): throttle and steering that take the rover towards the centre of
+    /// cell (<paramref name="x"/>, <paramref name="y"/>); both zero once within <paramref name="arrival"/> cells.
+    /// </summary>
+    public (double Throttle, double Steer) SteerTowards(int x, int y, double arrival = 0.6)
+    {
+        var dx = x + 0.5 - X;
+        var dy = y + 0.5 - Y;
+        if (Math.Sqrt((dx * dx) + (dy * dy)) <= arrival)
+        {
+            return (0, 0);
+        }
+
+        var error = Math.IEEERemainder(Math.Atan2(dy, dx) - Heading, 2 * Math.PI);
+        var steer = Math.Clamp(error * 2.0, -1.0, 1.0);
+        var throttle = Math.Abs(error) > 1.2 ? 0.25 : 1.0;
+        return (throttle, steer);
+    }
+
     /// <summary>The lander's cell once it is down, else <c>null</c>.</summary>
     public (int X, int Y)? Lander => _lander;
 
@@ -119,7 +158,7 @@ public sealed class Rover
         steer = Math.Clamp(steer, -1.0, 1.0);
         Heading += steer * Definition.TurnRadiansPerSecond * seconds;
 
-        var speed = Definition.SpeedCellsPerSecond * Math.Abs(throttle) * (throttle < 0 ? Definition.ReverseFactor : 1.0);
+        var speed = Definition.SpeedCellsPerSecond * SpeedFactor * Math.Abs(throttle) * (throttle < 0 ? Definition.ReverseFactor : 1.0);
         var wanted = MovableDistance(speed, seconds);
         var sign = throttle < 0 ? -1.0 : 1.0;
         var x = Math.Clamp(X + (Math.Cos(Heading) * wanted * sign), Margin, Width - Margin);

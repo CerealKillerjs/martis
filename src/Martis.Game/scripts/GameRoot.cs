@@ -267,6 +267,7 @@ public partial class GameRoot : Node
         {
             _session.Advance(1);
             OrbitalPass();
+            StationsTick();
             AnalyzeSamples();
             Refresh();
         }
@@ -302,6 +303,15 @@ public partial class GameRoot : Node
                     break;
                 case Key.M when Exploring:
                     CollectHere();
+                    break;
+                case Key.B when Exploring:
+                    BuildStation();
+                    break;
+                case Key.X when Exploring:
+                    RepairStation();
+                    break;
+                case Key.G when !Exploring:
+                    SendRover();
                     break;
                 case Key.F5:
                     Save();
@@ -396,6 +406,7 @@ public partial class GameRoot : Node
                 }
             };
             _hud.GenomeRequested += DesignFromSample;
+            _hud.RoverRequested += SendRover;
             _hud.ExperimentRequested += Experiment;
             _hud.DeployToggled += on => _hud.Toast(on ? "Elige una celda para la colonia." : "Despliegue cancelado.");
             _hud.SetOrganisms(session.Organisms);
@@ -410,6 +421,7 @@ public partial class GameRoot : Node
 
         ResetKnowledge();
         ResetSamples();
+        ResetFacilities();
         Select(session.Width / 2, session.Height / 2);
         Refresh();
         var colony = Array.FindIndex(_view!.BiomassKg, kg => kg > 0f);
@@ -761,6 +773,11 @@ public partial class GameRoot : Node
             ShowcaseSamples(o);
         }
 
+        if (_options.ContainsKey("stations"))
+        {
+            ShowcaseStations(o);
+        }
+
         Select(32 + o, 32 + o);
         Refresh();
         _hud.ShowForecast(_session.Experiment("phototroph_a01", 32 + o, 32 + o, 0.5, design, 40));
@@ -853,6 +870,22 @@ public partial class GameRoot : Node
         var samplesOk = collected && _samples.All[0].State == Martis.Simulation.Expedition.SampleState.Analyzed;
         GD.Print($"MARTIS smoke samples={samplesOk} kind={_samples.All.FirstOrDefault()?.Kind}");
         roverOk &= samplesOk;
+        // V4: a station measures every sol; an order sends the rover somewhere and resolves on arrival.
+        BuildStation();
+        StationsTick();
+        SwitchMode(Martis.Application.GameMode.Strategic);
+        var (sx, sy) = _rover.Cell;
+        Select(Math.Max(0, sx - 6), sy);
+        SendRover();
+        var move = _moveOrder;
+        for (var i = 0; i < 2000 && _moveOrder is not null; i++)
+        {
+            UpdateRover(0.05);
+        }
+
+        var robotsOk = _network.Stations.Count == 1 && move is not null && _orders.All.Single(order => order.Id == move.Id).Status == Martis.Application.OrderStatus.Done && _rover.Wear > 0;
+        GD.Print($"MARTIS smoke robots={robotsOk} wear={_rover.Wear:0.###}");
+        roverOk &= robotsOk;
         ok &= roverOk;
         GD.Print($"MARTIS smoke rover={roverOk} battery={_rover.Battery:0.##}");
         GD.Print($"MARTIS smoke ok={ok} save={id} tick={_session.Tick} biomass={biomass:0.######} {message} {error}");
