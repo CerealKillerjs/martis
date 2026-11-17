@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "sampling",
+    "name": "PRIMERAS MUESTRAS — 1.2",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (campaña H8)",
+    "review": "Misión de muestreo de la Era I (documento maestro v2.0, §4 y §11; ADR-028). Sin umbrales numéricos.",
+    "sequential": true,
+    "briefing": "Antes de diseñar vida para Marte hay que saber qué hay en su suelo. Lleva el rover a terreno medido, recoge una muestra, tráela al módulo y analízala en el laboratorio. De ese análisis saldrá tu primer diseño.",
+    "debrief": "Has cerrado el primer ciclo del método: medir, muestrear, analizar y diseñar. Cada muestra que traigas al laboratorio te dirá algo nuevo sobre dónde puede vivir tu organismo.",
+    "objectives": [
+      {
+        "id": "collect_sample",
+        "type": "action",
+        "action": "collect-sample",
+        "title": "Recoge una muestra",
+        "hint": "En Exploración (F1), escanea con C y pulsa M sobre terreno medido. El rover tiene 4 huecos para muestras."
+      },
+      {
+        "id": "deliver_sample",
+        "type": "action",
+        "action": "deliver-sample",
+        "title": "Llévala al módulo",
+        "hint": "Conduce el rover hasta 4 celdas del módulo: la muestra se entrega sola."
+      },
+      {
+        "id": "analyze_sample",
+        "type": "action",
+        "action": "analyze-sample",
+        "title": "Analízala en el laboratorio",
+        "hint": "El laboratorio termina una muestra cada 2 soles. Deja correr el tiempo y míralo en el panel Muestras (F3)."
+      },
+      {
+        "id": "design_from_sample",
+        "type": "action",
+        "action": "design-from-sample",
+        "title": "Diseña a partir de la muestra",
+        "hint": "En el modo Laboratorio (F3), pulsa «Diseñar desde esta muestra» en el panel Muestras."
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": []
+}

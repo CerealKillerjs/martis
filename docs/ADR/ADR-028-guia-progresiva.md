@@ -35,7 +35,11 @@
 
 ### El capítulo 1 enseña el rover
 
-La misión 1.1 añade seis pasos con las acciones de J1 ([ADR-026](ADR-026-expedicion-rover.md)), V1 ([ADR-027](ADR-027-modos-sobre-un-estado.md)) y V2 ([ADR-029](ADR-029-conocimiento-y-escaneo.md)): modo Exploración (F1 o Tab), conducir el rover (WASD), escanear con C, modo Estratégico (F2), Laboratorio (F3) y Planetario (F4). La pista de despliegue de 1.2 pide sembrar en terreno cartografiado, con F donde está el rover. El códice suma el concepto «Conocimiento del terreno». La acción `collect-sample` de V3 entrará cuando exista.
+La misión 1.1 añade seis pasos con las acciones de J1 ([ADR-026](ADR-026-expedicion-rover.md)), V1 ([ADR-027](ADR-027-modos-sobre-un-estado.md)) y V2 ([ADR-029](ADR-029-conocimiento-y-escaneo.md)): modo Exploración (F1 o Tab), conducir el rover (WASD), escanear con C, modo Estratégico (F2), Laboratorio (F3) y Planetario (F4). La pista de despliegue de FIRST COLONY pide sembrar en terreno cartografiado, con F donde está el rover. El códice suma el concepto «Conocimiento del terreno».
+
+### Primeras muestras (1.2)
+
+Con V3 entra una misión de tipo `sampling` entre 1.1 y FIRST COLONY, secuencial y sin umbrales numéricos: recoger una muestra (M sobre terreno medido), entregarla en el módulo, esperar el análisis del laboratorio y diseñar a partir de ella (`collect-sample`, `deliver-sample`, `analyze-sample`, `design-from-sample`). Enseña el concepto «Muestreo y análisis» (modelo). FIRST COLONY no cambia: sigue siendo la misión de referencia de la porción vertical (§32).
 
 ## Fuera de alcance
 

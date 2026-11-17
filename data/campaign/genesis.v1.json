@@ -31,6 +31,14 @@
           "kind": "reconnaissance"
         },
         {
+          "id": "sampling",
+          "file": "sampling.v1.json",
+          "teaches": [
+            "muestreo"
+          ],
+          "kind": "sampling"
+        },
+        {
           "id": "first_colony",
           "file": "first_colony.v1.json",
           "teaches": [
@@ -295,6 +303,12 @@
       "id": "cartografia",
       "title": "Conocimiento del terreno",
       "text": "Al llegar no sabes cómo es Marte: la sonda orbital solo estima franjas del mapa y el escáner del rover convierte esas estimaciones en medidas. Solo puedes analizar y sembrar donde ya hay datos. Medir antes de actuar es la base del método científico.",
+      "epistemic": "model"
+    },
+    {
+      "id": "muestreo",
+      "title": "Muestreo y análisis",
+      "text": "Una muestra del suelo, recogida en terreno medido y analizada en el laboratorio, dice qué condiciones aguanta la vida en ese sitio. Diseñar a partir de una muestra es partir de datos, no de suposiciones.",
       "epistemic": "model"
     },
     {

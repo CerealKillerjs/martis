@@ -136,15 +136,27 @@ public sealed class GuidanceTests
     }
 
     [Fact]
+    public void TheSamplingMissionWalksTheWholeSampleCycleInOrder()
+    {
+        var sampling = MissionDefinition.LoadPublished(Repo.Root(), "sampling.v1.json");
+
+        Assert.True(sampling.Sequential);
+        Assert.Equal(["collect-sample", "deliver-sample", "analyze-sample", "design-from-sample"], sampling.Objectives.Select(objective => objective.Action));
+        Assert.Equal(["muestreo"], Campaign.Mission("sampling").Concepts);
+        Assert.False(string.IsNullOrWhiteSpace(sampling.Debrief));
+    }
+
+    [Fact]
     public void TheCodexFillsAsMissionsAreFinished()
     {
         var progress = new CampaignProgress(Campaign);
         Assert.Empty(progress.Learned);
 
         progress.Complete("awakening");
+        progress.Complete("sampling");
         progress.Complete("first_colony");
 
-        Assert.Equal(["leer_marte", "rover", "cartografia", "fotosintesis", "diseno_genetico"], progress.Learned.Select(concept => concept.Id));
+        Assert.Equal(["leer_marte", "rover", "cartografia", "muestreo", "fotosintesis", "diseno_genetico"], progress.Learned.Select(concept => concept.Id));
         var reloaded = CampaignProgress.FromJson(Campaign, progress.ToJson());
         Assert.Equal(progress.Learned, reloaded.Learned);
     }
@@ -167,6 +179,7 @@ public sealed class GuidanceTests
         Assert.Equal([1, 1, 2, 2, 3], Campaign.Chapters.Select(chapter => chapter.Era));
         Assert.Equal("Génesis", Eras.Name(Campaign.Chapters[0].Era));
         Assert.Equal(MissionKind.Reconnaissance, Campaign.Mission("awakening").Kind);
+        Assert.Equal(MissionKind.Sampling, Campaign.Mission("sampling").Kind);
         Assert.Equal(MissionKind.Colonization, Campaign.Mission("first_colony").Kind);
         Assert.Equal(MissionKind.Terraforming, Campaign.Mission("oxygen").Kind);
     }

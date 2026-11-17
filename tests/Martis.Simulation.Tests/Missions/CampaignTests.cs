@@ -23,7 +23,7 @@ public sealed class CampaignTests
         var campaign = CampaignDefinition.LoadPublished(Repo.Root());
 
         Assert.True(campaign.Chapters[0].Playable);
-        Assert.Equal(["awakening", "first_colony", "selection"], campaign.Chapters[0].Missions.Select(mission => mission.Id));
+        Assert.Equal(["awakening", "sampling", "first_colony", "selection"], campaign.Chapters[0].Missions.Select(mission => mission.Id));
         Assert.Equal("ch1", campaign.ChapterOf("selection").Id);
     }
 
@@ -47,11 +47,15 @@ public sealed class CampaignTests
         var progress = new CampaignProgress(CampaignDefinition.LoadPublished(Repo.Root()));
 
         Assert.True(progress.IsUnlocked("awakening"));
-        Assert.False(progress.IsUnlocked("first_colony"));
+        Assert.False(progress.IsUnlocked("sampling"));
         Assert.False(progress.Complete("selection"));
         Assert.Equal("awakening", progress.Next!.Id);
 
         Assert.True(progress.Complete("awakening"));
+        Assert.True(progress.IsUnlocked("sampling"));
+        Assert.False(progress.IsUnlocked("first_colony"));
+        Assert.Equal("sampling", progress.Next!.Id);
+        Assert.True(progress.Complete("sampling"));
         Assert.True(progress.IsUnlocked("first_colony"));
         Assert.False(progress.IsUnlocked("selection"));
         Assert.Equal("first_colony", progress.Next!.Id);
@@ -64,13 +68,14 @@ public sealed class CampaignTests
         var campaign = CampaignDefinition.LoadPublished(Repo.Root());
         var progress = new CampaignProgress(campaign);
         progress.Complete("awakening");
+        progress.Complete("sampling");
         progress.Complete("first_colony");
 
         var json = progress.ToJson();
         var loaded = CampaignProgress.FromJson(campaign, json);
         var old = CampaignProgress.FromJson(campaign, """{"CampaignId":"genesis","Completed":["awakening","removed_mission"]}""");
 
-        Assert.Equal(["awakening", "first_colony"], loaded.Completed.Order(StringComparer.Ordinal));
+        Assert.Equal(["awakening", "first_colony", "sampling"], loaded.Completed.Order(StringComparer.Ordinal));
         Assert.Equal("selection", loaded.Next!.Id);
         Assert.Equal(["awakening"], old.Completed);
     }

@@ -247,6 +247,7 @@ public partial class CampaignMenu : Control
     private static string Title(CampaignMission mission) => mission.Id switch
     {
         "awakening" => "Despertar",
+        "sampling" => "Primeras muestras",
         "first_colony" => "Primera colonia",
         "selection" => "Presión selectiva",
         "gradients" => "Gradientes",
