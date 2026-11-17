@@ -18,7 +18,7 @@ public partial class RoverGauge : PanelContainer
         // Centred above the deploy hint: the log owns the bottom-left corner.
         SetAnchorsPreset(LayoutPreset.CenterBottom);
         OffsetLeft = -150;
-        OffsetTop = -166;
+        OffsetTop = -182;
         OffsetRight = 150;
         OffsetBottom = -54;
         GrowVertical = GrowDirection.Begin;
@@ -57,6 +57,11 @@ public partial class RoverGauge : PanelContainer
                 : rover.Battery <= 0
                     ? "Batería agotada: avance lento · vuelve al módulo"
                     : $"Batería {percent} %";
+        if (rover.Wear > 0.005)
+        {
+            _state.Text += System.FormattableString.Invariant($" · desgaste {rover.Wear * 100:0} %{(rover.Wear > 0.5 ? " (lento, fallos)" : string.Empty)}");
+        }
+
         _state.AddThemeColorOverride("font_color", landed && rover.Battery <= 0 ? new Color(1f, 0.55f, 0.4f) : new Color(1, 1, 1, 0.85f));
         var mapped = knowledge is null
             ? string.Empty
@@ -68,7 +73,7 @@ public partial class RoverGauge : PanelContainer
 
         mapped += "\n";
         _keys.Text = mapped + (driving
-            ? "WASD conducir · C escanear · M muestrear · F sembrar · Tab estratégico"
-            : "Tab o F1 conducir el rover · siembra dentro del anillo");
+            ? "WASD conducir · C escanear · M muestrear · F sembrar\nB estación · X reparar · Tab estratégico"
+            : "Tab o F1 conducir · G enviar el rover a la celda elegida");
     }
 }

@@ -1,0 +1,228 @@
+{
+  "metadata": {
+    "schema": "martis.facilities",
+    "id": "robots_valle",
+    "name": "Robots e instalaciones: estaciones fijas, energía y desgaste",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (V4)",
+    "review": "Documento Maestro v2.0 §6.2 y §7. Valores GAME_BALANCE pendientes de ajuste.",
+    "facilities": {
+      "power_budget_w": "facilities.power_budget",
+      "station_power_w": "facilities.station_power",
+      "station_radius_cells": "facilities.station_radius",
+      "station_confidence": "facilities.station_confidence",
+      "station_wear_per_sol": "facilities.station_wear",
+      "station_battery_cost": "facilities.station_battery",
+      "rover_wear_per_cell": "facilities.rover_wear",
+      "rover_repair_per_s": "facilities.rover_repair",
+      "fault_threshold": "facilities.fault_threshold",
+      "fault_max_probability": "facilities.fault_max",
+      "repair_radius_cells": "facilities.repair_radius"
+    }
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "facilities.power_budget",
+      "field": "power_budget_w",
+      "value": 300.0,
+      "unit": "W",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para robots e instalaciones (V4); Daniel debe ajustarlo jugando.",
+      "rationale": "Potencia que el módulo puede repartir entre las estaciones fijas.",
+      "range": [
+        0.0,
+        5000.0
+      ]
+    },
+    {
+      "id": "facilities.station_power",
+      "field": "station_power_w",
+      "value": 100.0,
+      "unit": "W",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para robots e instalaciones (V4); Daniel debe ajustarlo jugando.",
+      "rationale": "Consumo de una estación fija de sensores.",
+      "range": [
+        1.0,
+        1000.0
+      ]
+    },
+    {
+      "id": "facilities.station_radius",
+      "field": "station_radius_cells",
+      "value": 3.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para robots e instalaciones (V4); Daniel debe ajustarlo jugando.",
+      "rationale": "Radio que mide una estación fija cada sol.",
+      "range": [
+        0.5,
+        12.0
+      ]
+    },
+    {
+      "id": "facilities.station_confidence",
+      "field": "station_confidence",
+      "value": 0.9,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para robots e instalaciones (V4); Daniel debe ajustarlo jugando.",
+      "rationale": "Confianza de las medidas de una estación.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "facilities.station_wear",
+      "field": "station_wear_per_sol",
+      "value": 0.02,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para robots e instalaciones (V4); Daniel debe ajustarlo jugando.",
+      "rationale": "Desgaste diario de una estación activa (polvo, ciclos térmicos); a 1 deja de funcionar.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "facilities.station_battery",
+      "field": "station_battery_cost",
+      "value": 0.15,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para robots e instalaciones (V4); Daniel debe ajustarlo jugando.",
+      "rationale": "Batería del rover que cuesta montar una estación.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "facilities.rover_wear",
+      "field": "rover_wear_per_cell",
+      "value": 0.002,
+      "unit": "1/casilla",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para robots e instalaciones (V4); Daniel debe ajustarlo jugando.",
+      "rationale": "Desgaste del rover por casilla recorrida.",
+      "range": [
+        0.0,
+        0.1
+      ]
+    },
+    {
+      "id": "facilities.rover_repair",
+      "field": "rover_repair_per_s",
+      "value": 0.02,
+      "unit": "1/s",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para robots e instalaciones (V4); Daniel debe ajustarlo jugando.",
+      "rationale": "Reparación del rover aparcado junto al módulo.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "facilities.fault_threshold",
+      "field": "fault_threshold",
+      "value": 0.5,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para robots e instalaciones (V4); Daniel debe ajustarlo jugando.",
+      "rationale": "Desgaste a partir del cual los instrumentos pueden fallar.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "facilities.fault_max",
+      "field": "fault_max_probability",
+      "value": 0.6,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para robots e instalaciones (V4); Daniel debe ajustarlo jugando.",
+      "rationale": "Probabilidad de fallo de un instrumento con desgaste total.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "facilities.repair_radius",
+      "field": "repair_radius_cells",
+      "value": 2.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para robots e instalaciones (V4); Daniel debe ajustarlo jugando.",
+      "rationale": "Distancia a la que el rover repara una estación.",
+      "range": [
+        0.5,
+        8.0
+      ]
+    }
+  ]
+}

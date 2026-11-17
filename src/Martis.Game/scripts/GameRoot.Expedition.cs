@@ -78,7 +78,9 @@ public partial class GameRoot
             if (Input.IsKeyPressed(Key.A) || Input.IsKeyPressed(Key.Left)) steer -= 1;
         }
 
+        (throttle, steer) = Autopilot(throttle, steer, delta);
         var driven = _rover.Drive(throttle, steer, delta);
+        AfterDrive(driven);
         if (driven > 0 && !_droveOnce)
         {
             _droveOnce = true;

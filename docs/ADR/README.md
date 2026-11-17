@@ -29,5 +29,6 @@
 - [ADR-027 — Modos de juego sobre un mismo estado (V1)](ADR-027-modos-sobre-un-estado.md) (Propuesto)
 - [ADR-029 — Conocimiento del terreno: sonda orbital y escáner (V2)](ADR-029-conocimiento-y-escaneo.md) (Propuesto)
 - [ADR-030 — Muestras y análisis de laboratorio (V3)](ADR-030-muestras-y-laboratorio.md) (Propuesto)
+- [ADR-031 — Robots e instalaciones: desgaste, estaciones y órdenes (V4)](ADR-031-robots-e-instalaciones.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).

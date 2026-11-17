@@ -187,6 +187,9 @@ public partial class GameRoot
             "analyze" => "Análisis",
             "scan" => "Escaneo",
             "sample" => "Muestreo",
+            "move" => "Desplazamiento",
+            "build" => "Montaje",
+            "repair" => "Reparación",
             _ => order.Kind,
         };
         var state = order.Status == OrderStatus.Done ? "✓" : "✗";
@@ -225,6 +228,9 @@ public partial class GameRoot
             _orders.All.Count(order => order.Status == OrderStatus.Failed),
             _session.Intelligence,
             _knowledge.Coverage(Martis.Simulation.Expedition.KnowledgeLevel.Estimated),
-            _knowledge.Coverage(Martis.Simulation.Expedition.KnowledgeLevel.Measured)));
+            _knowledge.Coverage(Martis.Simulation.Expedition.KnowledgeLevel.Measured),
+            _network.Stations.Count,
+            _network.Stations.Count(station => !station.Broken),
+            _rover.Wear));
     }
 }
