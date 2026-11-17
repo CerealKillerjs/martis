@@ -33,6 +33,12 @@ public sealed class SaveService
     /// <summary>Event type of the section map (M4, ADR-038): which save holds each open section.</summary>
     public const string WorldEventType = "section-world";
 
+    /// <summary>
+    /// The world of a saved campaign mission at a map size (M5: the story mode plays every
+    /// chapter on the same real map); when null or it answers null, the map size decides.
+    /// </summary>
+    public Func<string, int, WorldOptions?>? MissionWorld { get; set; }
+
     /// <summary>The section map stored with the snapshot the last load read, or null.</summary>
     public string? LastWorld { get; private set; }
 
@@ -138,7 +144,7 @@ public sealed class SaveService
             {
                 var record = MissionSaveRecord.FromJson(saved.Payload);
                 mission = record;
-                return GameSession.Resume(_dataRoot, snapshot, record.MissionFile, record.Progress, world);
+                return GameSession.Resume(_dataRoot, snapshot, record.MissionFile, record.Progress, MissionWorld?.Invoke(record.MissionFile, snapshot.Configuration.MapWidth) ?? world);
             }
             catch (System.IO.InvalidDataException exception)
             {

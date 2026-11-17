@@ -187,13 +187,27 @@ public partial class GameRoot : Node
         _mission = mission;
         _saves.CurrentId = null;
         _hud.ClearEvents();
-        var session = GameSession.NewGame(_dataRoot, seed ?? _session.Seed, mission.File, _campaign.Campaign.ChapterOf(mission.Id).World);
+        if (Relief() is not null && _planet is not null && _section != _planet.StartSection)
+        {
+            UseSection(_planet.StartSection); // a new story starts where the AI lands, in Isidis west
+        }
+
+        _sectionSaves.Clear();
+        var session = GameSession.NewGame(_dataRoot, seed ?? _session.Seed, mission.File, StoryWorld(_campaign.Campaign.ChapterOf(mission.Id)));
         session.AttachEconomy(_campaign.Research!);
         StartSession(session);
         _playing = true;
         CloseMenu();
         SetSpeed(0);
         ChapterChanged?.Invoke(ChapterId);
+        _era = 1; // a new story
+        ReachEra(_campaign.Campaign.ChapterOf(mission.Id).Era, announce: false);
+        Brief(mission);
+    }
+
+    /// <summary>The mission's briefing banner: era, chapter, type, help and what it teaches.</summary>
+    private void Brief(CampaignMission mission)
+    {
         var chapter = _campaign.Campaign.ChapterOf(mission.Id);
         var definition = _session.Mission!.Definition;
         var concepts = string.Join(" · ", mission.Concepts.Select(id => _campaign.Campaign.Concept(id).Title));
@@ -569,7 +583,7 @@ public partial class GameRoot : Node
         var teaser = chapter.Id == _mission.ChapterId
             ? $"Siguiente: misión {chapter.Number}.{next.Number}."
             : $"Se abre el capítulo {chapter.Number}: {chapter.Title}.";
-        _hud.Banner(title, $"{done} {teaser}", ("Siguiente misión", () => StartMission(next)), ("Seguir explorando", () => SetSpeed(1)));
+        _hud.Banner(title, $"{done} {teaser}", ("Siguiente misión", () => NextMission(next)), ("Seguir explorando", () => SetSpeed(1)));
     }
 
     private void Research(string technologyId)
@@ -705,6 +719,7 @@ public partial class GameRoot : Node
     {
         try
         {
+            _saves.MissionWorld = MissionWorld;
             var loaded = _saves.LoadLatest(out var message, out var record, _campaign.Campaign.WorldFor, out var expedition);
             if (loaded is not null)
             {
@@ -718,6 +733,10 @@ public partial class GameRoot : Node
                 RestoreWorld(_saves.LastWorld, _saves.CurrentId);
                 StartSession(loaded);
                 RestoreExpedition(expedition);
+                if (_mission is not null)
+                {
+                    ReachEra(_campaign.Campaign.ChapterOf(_mission.Id).Era, announce: false);
+                }
                 _playing = true;
                 CloseMenu();
                 SetSpeed(0);
@@ -1002,6 +1021,18 @@ public partial class GameRoot : Node
             GD.Print($"MARTIS smoke sections={crossed && back} crossed={crossed} back={back}");
             ok &= crossed && back;
             _era = 1;
+        }
+
+        // M5: in the story the next mission continues the same world, with its chapter's rules.
+        if (Story)
+        {
+            var chapter3 = _campaign.Campaign.Chapters[2].Missions[0];
+            var (sol, storyBiomass, rx2, ry2) = (_session.Tick, _session.View().TotalBiomassKg, _rover.X, _rover.Y);
+            ContinueStory(chapter3);
+            var storyOk = _session.Tick == sol && Math.Abs(_session.View().TotalBiomassKg - storyBiomass) < 1e-6 && _rover.X == rx2 && _rover.Y == ry2
+                && _session.Mission?.Definition.Id == chapter3.Id && _era == 2 && _session.Width == Relief()!.Definition.Cells;
+            GD.Print($"MARTIS smoke story={storyOk} era={_era} mission={_session.Mission?.Definition.Id}");
+            ok &= storyOk;
         }
         GD.Print($"MARTIS smoke ok={ok} save={id} tick={_session.Tick} biomass={biomass:0.######} {message} {error}");
         GetTree().Quit(ok ? 0 : 1);
