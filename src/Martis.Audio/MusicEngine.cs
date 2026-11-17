@@ -1,51 +1,54 @@
 namespace Martis.Audio;
 
 /// <summary>
-/// Generative ambient soundtrack (ADR-018). Streams stereo samples: slow detuned pads that
-/// follow a modal chord progression, a sub drone, FM bells with a ping-pong delay, an optional
-/// arpeggio or heartbeat, all into a stereo reverb. Every decision happens on the sample clock,
-/// so the output depends only on the seed and on when moods change, never on the buffer size.
+/// Generative soundtrack (ADR-018): calm solo piano in the spirit of quiet sandbox-game
+/// scores. The piano plays short phrases of a few bars (a wandering melody over a sparse or
+/// broken-chord left hand) separated by rests, over a soft pad and a low drone, all in a warm
+/// reverb. Every decision happens on the sample clock, so the output depends only on the seed
+/// and on when moods change, never on the buffer size.
 /// </summary>
 public sealed class MusicEngine
 {
     public const int SampleRate = 44100;
-    private const int PadVoices = 16;
-    private const int BellVoices = 12;
-    private const float PadAttack = 2.6f;
-    private const float PadRelease = 4.5f;
+    private const int PadVoices = 12;
+    private const int PianoVoices = 28;
+    private const int Partials = 8;
+    private const int MaxNotesPerPhrase = 96;
+    private const float PadAttack = 3.5f;
+    private const float PadRelease = 5f;
+
+    private static readonly double[] Detune = [0.9975, 1.0, 1.0028];
 
     private readonly AudioRandom _random;
     private readonly PadVoice[] _pads = new PadVoice[PadVoices];
-    private readonly BellVoice[] _bells = new BellVoice[BellVoices];
-    private readonly Reverb _reverb = new(SampleRate, room: 0.86f, damping: 0.3f);
-    private readonly PingPong _delay;
+    private readonly PianoVoice[] _piano = new PianoVoice[PianoVoices];
+    private readonly Reverb _reverb = new(SampleRate, room: 0.88f, damping: 0.45f);
     private readonly float _smooth = Dsp.Smoothing(2.5f, SampleRate);
+    private readonly Note[] _phrase = new Note[MaxNotesPerPhrase];
     private MusicStyle _style;
     private MusicStyle _next;
     private long _clock;
-    private long _nextChord;
-    private long _nextStep;
-    private int _step;
+    private long _nextPhrase;
+    private int _phraseLength;
+    private int _phraseCursor;
+    private long _phraseEnd;
     private int _chordIndex;
-    private int _chordRoot;
-    private int _nextBell;
+    private int _melody = 4;
+    private int _nextVoice;
     private Svf _padLeft;
     private Svf _padRight;
     private float _cutoff;
     private float _padLevel;
-    private float _bellDensity;
     private float _droneLevel;
-    private float _pulseLevel;
-    private float _arpLevel;
     private float _beatLevel;
     private double _dronePhase;
     private double _fifthPhase;
     private double _droneHz;
     private float _droneTarget;
-    private double _arpPhase;
-    private float _arpHz;
-    private float _arpAge = 10f;
     private float _beatAge = 10f;
+    private long _nextBeat;
+    private float _toneLeft;
+    private float _toneRight;
     private float _master;
 
     public MusicEngine(ulong seed, MusicMood mood, string? chapter = null)
@@ -57,19 +60,25 @@ public sealed class MusicEngine
         _next = _style;
         _cutoff = _style.PadCutoffHz;
         _padLevel = _style.PadLevel;
-        _bellDensity = _style.BellDensity;
         _droneLevel = _style.DroneLevel;
-        _pulseLevel = _style.PulseLevel;
-        _arpLevel = _style.Pulse == PulseKind.Arpeggio ? 1f : 0f;
-        _beatLevel = _style.Pulse == PulseKind.Heartbeat ? 1f : 0f;
+        _beatLevel = _style.HeartbeatLevel;
         _droneHz = Pitch.Hertz(_style.Root - 12);
         _droneTarget = (float)_droneHz;
-        _delay = new PingPong((int)(SampleRate * 0.75 * 60.0 / _style.Bpm));
+        for (var v = 0; v < _piano.Length; v++)
+        {
+            _piano[v] = new PianoVoice();
+        }
+
+        // The first phrase enters after the pad has faded in.
+        _nextPhrase = (long)(1.2 * SampleRate);
     }
 
     public MusicMood Mood { get; private set; }
 
     public string? Chapter { get; private set; }
+
+    /// <summary>Piano notes struck so far.</summary>
+    public int NotesPlayed { get; private set; }
 
     public void SetMood(MusicMood mood)
     {
@@ -108,39 +117,68 @@ public sealed class MusicEngine
     {
         _next = MusicStyle.For(Mood, Chapter);
 
-        // The new harmony arrives at the next chord change, at most a second and a half away.
-        _nextChord = Math.Min(_nextChord, _clock + (long)(1.5 * SampleRate));
+        // During a rest the new mood starts soon; a phrase in progress is allowed to finish.
+        if (_clock >= _phraseEnd)
+        {
+            _nextPhrase = Math.Min(_nextPhrase, _clock + (long)(1.5 * SampleRate));
+        }
     }
 
-    private long Samples(double beats) => (long)(beats * 60.0 / _style.Bpm * SampleRate);
+    private long Beats(double beats) => (long)(beats * 60.0 / _style.Bpm * SampleRate);
 
     private void Tick(out float left, out float right)
     {
-        if (_clock >= _nextChord)
+        if (_clock >= _nextPhrase)
         {
-            ChangeChord();
+            ComposePhrase();
         }
 
-        if (_clock >= _nextStep)
+        while (_phraseCursor < _phraseLength && _phrase[_phraseCursor].At <= _clock)
         {
-            Step();
+            var note = _phrase[_phraseCursor++];
+            if (note.Midi < 0)
+            {
+                ChangeChord(note.Degree);
+            }
+            else
+            {
+                Strike(note.Midi, note.Velocity);
+            }
         }
 
-        // Layer levels glide toward the target style: this is the crossfade between moods.
         var target = _next;
         _cutoff += _smooth * (target.PadCutoffHz - _cutoff);
         _padLevel += _smooth * (target.PadLevel - _padLevel);
-        _bellDensity += _smooth * (target.BellDensity - _bellDensity);
         _droneLevel += _smooth * (target.DroneLevel - _droneLevel);
-        _pulseLevel += _smooth * (target.PulseLevel - _pulseLevel);
-        _arpLevel += _smooth * ((target.Pulse == PulseKind.Arpeggio ? 1f : 0f) - _arpLevel);
-        _beatLevel += _smooth * ((target.Pulse == PulseKind.Heartbeat ? 1f : 0f) - _beatLevel);
+        _beatLevel += _smooth * (target.HeartbeatLevel - _beatLevel);
         _droneHz += _smooth * 0.2 * (_droneTarget - _droneHz);
 
         var dt = 1f / SampleRate;
         var time = _clock / (float)SampleRate;
 
-        // Pads: three detuned saws per note, summed per side, then a breathing low-pass.
+        // Piano.
+        var pianoL = 0f;
+        var pianoR = 0f;
+        for (var v = 0; v < _piano.Length; v++)
+        {
+            var voice = _piano[v];
+            if (!voice.Active)
+            {
+                continue;
+            }
+
+            var sample = voice.Next();
+            pianoL += sample * (1f - voice.Pan);
+            pianoR += sample * voice.Pan;
+        }
+
+        // Felt: a gentle one-pole low-pass takes the edge off the hammer.
+        _toneLeft += 0.55f * (pianoL - _toneLeft);
+        _toneRight += 0.55f * (pianoR - _toneRight);
+        pianoL = _toneLeft;
+        pianoR = _toneRight;
+
+        // Pad: soft detuned saws through a breathing low-pass.
         var padL = 0f;
         var padR = 0f;
         for (var v = 0; v < _pads.Length; v++)
@@ -168,110 +206,162 @@ public sealed class MusicEngine
                 tone += (float)((2.0 * pad.Phase[o]) - 1.0);
             }
 
-            var gain = pad.Level * pad.Level * 0.06f;
+            var gain = pad.Level * pad.Level * 0.035f;
             padL += tone * gain * (1f - pad.Pan);
             padR += tone * gain * pad.Pan;
         }
 
-        var lfo = 0.75f + (0.25f * MathF.Sin(Dsp.Tau * 0.05f * time));
-        _padLeft.Process(padL, _cutoff * lfo, 0.9f, SampleRate);
-        _padRight.Process(padR, _cutoff * lfo * 1.03f, 0.9f, SampleRate);
+        var lfo = 0.8f + (0.2f * MathF.Sin(Dsp.Tau * 0.04f * time));
+        _padLeft.Process(padL, _cutoff * lfo, 0.8f, SampleRate);
+        _padRight.Process(padR, _cutoff * lfo * 1.03f, 0.8f, SampleRate);
         padL = _padLeft.Low * _padLevel;
         padR = _padRight.Low * _padLevel;
 
-        // Drone: root an octave down plus a quiet fifth, breathing slowly.
+        // Drone.
         _dronePhase = Wrap(_dronePhase + (_droneHz / SampleRate));
         _fifthPhase = Wrap(_fifthPhase + (_droneHz * 1.5 / SampleRate));
-        var breath = 0.7f + (0.3f * MathF.Sin(Dsp.Tau * 0.07f * time));
-        var drone = ((float)Math.Sin(Dsp.Tau * _dronePhase) + (0.3f * (float)Math.Sin(Dsp.Tau * _fifthPhase))) * 0.09f * _droneLevel * breath;
+        var breath = 0.7f + (0.3f * MathF.Sin(Dsp.Tau * 0.06f * time));
+        var drone = ((float)Math.Sin(Dsp.Tau * _dronePhase) + (0.3f * (float)Math.Sin(Dsp.Tau * _fifthPhase))) * 0.07f * _droneLevel * breath;
 
-        // Bells.
-        var bellL = 0f;
-        var bellR = 0f;
-        for (var b = 0; b < _bells.Length; b++)
+        // Heartbeat for the crisis theme: "lub" then "dub", once per bar.
+        if (_beatLevel > 0.01f && _clock >= _nextBeat)
         {
-            ref var bell = ref _bells[b];
-            if (!bell.Active)
-            {
-                continue;
-            }
-
-            bell.Age += dt;
-            var envelope = Dsp.Percussive(bell.Age, 0.004f, bell.Decay);
-            if (bell.Age > 0.01f && envelope < 1e-4f)
-            {
-                bell.Active = false;
-                continue;
-            }
-
-            bell.ModPhase = Wrap(bell.ModPhase + (bell.Hz * 3.5 / SampleRate));
-            bell.Phase = Wrap(bell.Phase + (bell.Hz / SampleRate));
-            var modulation = 1.3f * envelope * (float)Math.Sin(Dsp.Tau * bell.ModPhase);
-            var sample = envelope * (float)Math.Sin((Dsp.Tau * bell.Phase) + modulation) * bell.Gain;
-            bellL += sample * (1f - bell.Pan);
-            bellR += sample * bell.Pan;
+            _beatAge = 0f;
+            _nextBeat = _clock + (_secondBeat ? Beats(3.5) : Beats(0.5));
+            _secondBeat = !_secondBeat;
         }
 
-        _delay.Process(bellL * 0.6f, bellR * 0.6f, out var echoL, out var echoR);
-        bellL += echoL;
-        bellR += echoR;
-
-        // Pulse layer: soft plucked arpeggio or a low heartbeat.
-        _arpAge += dt;
-        _arpPhase = Wrap(_arpPhase + (_arpHz / SampleRate));
-        var arp = (float)Math.Sin(Dsp.Tau * _arpPhase) * Dsp.Percussive(_arpAge, 0.003f, 0.18f) * 0.12f * _arpLevel * _pulseLevel;
         _beatAge += dt;
         var beatHz = 52f * MathF.Exp(-_beatAge * 9f);
-        var beat = MathF.Sin(Dsp.Tau * (38f + beatHz) * _beatAge) * Dsp.Percussive(_beatAge, 0.012f, 0.16f) * 0.3f * _beatLevel * _pulseLevel;
+        var beat = MathF.Sin(Dsp.Tau * (38f + beatHz) * _beatAge) * Dsp.Percussive(_beatAge, 0.012f, 0.16f) * 0.28f * _beatLevel;
 
-        var dryL = padL + drone + bellL + (arp * 0.8f) + beat;
-        var dryR = padR + drone + bellR + (arp * 1.2f) + beat;
-        _reverb.Process(padL + bellL + arp, padR + bellR + arp, out var wetL, out var wetR);
+        var dryL = (pianoL * 0.9f) + padL + drone + beat;
+        var dryR = (pianoR * 0.9f) + padR + drone + beat;
+        _reverb.Process(pianoL + (padL * 0.7f), pianoR + (padR * 0.7f), out var wetL, out var wetR);
 
-        // Master fade-in over the first two seconds and a soft limiter.
         _master = MathF.Min(1f, _master + (dt / 2f));
         var fade = _master * _master;
-        left = Dsp.SoftClip((dryL + (wetL * 0.9f)) * 1.6f * fade);
-        right = Dsp.SoftClip((dryR + (wetR * 0.9f)) * 1.6f * fade);
+        left = Dsp.SoftClip((dryL + (wetL * 1.1f)) * 1.5f * fade);
+        right = Dsp.SoftClip((dryR + (wetR * 1.1f)) * 1.5f * fade);
         _clock++;
     }
 
-    private static readonly double[] Detune = [0.9965, 1.0, 1.0042];
+    private bool _secondBeat;
 
-    private void ChangeChord()
+    /// <summary>
+    /// Writes the next phrase: two to four bars of melody over the left hand, with chord
+    /// changes on each bar, then schedules a rest before the following phrase.
+    /// </summary>
+    private void ComposePhrase()
     {
-        var styleChanged = !ReferenceEquals(_style, _next);
         _style = _next;
-        if (styleChanged)
+        _droneTarget = (float)Pitch.Hertz(_style.Root - 12);
+        var style = _style;
+        _phraseLength = 0;
+        _phraseCursor = 0;
+        var bars = 2 + _random.Next(3);
+        var start = _clock;
+        for (var bar = 0; bar < bars; bar++)
         {
-            _chordIndex = 0;
-            _droneTarget = (float)Pitch.Hertz(_style.Root - 12);
-        }
-        else
-        {
-            _chordIndex = (_chordIndex + 1) % _style.Progression.Length;
+            var barStart = start + Beats(4 * bar);
+            var degree = style.Progression[_chordIndex % style.Progression.Length];
+            _chordIndex++;
+            Add(barStart, -1, 0f, degree);
+
+            // Left hand.
+            var bass = Pitch.Degree(style.Root, style.Mode, degree) - 12;
+            switch (style.LeftHand)
+            {
+                case LeftHand.Sparse:
+                    Add(barStart, bass, 0.45f);
+                    if (_random.Chance(0.5f))
+                    {
+                        Add(barStart + Beats(2), Pitch.Degree(style.Root, style.Mode, degree + 4) - 12, 0.32f);
+                    }
+
+                    break;
+                case LeftHand.Broken:
+                    Add(barStart, bass, 0.48f);
+                    Add(barStart + Beats(1), Pitch.Degree(style.Root, style.Mode, degree + 4) - 12, 0.34f);
+                    Add(barStart + Beats(2), Pitch.Degree(style.Root, style.Mode, degree + 9) - 12, 0.32f);
+                    break;
+                default:
+                    int[] pattern = [0, 4, 7, 9, 11, 9, 7, 4];
+                    for (var step = 0; step < pattern.Length; step++)
+                    {
+                        Add(barStart + Beats(step * 0.5), Pitch.Degree(style.Root, style.Mode, degree + pattern[step]) - 12, step == 0 ? 0.45f : 0.28f);
+                    }
+
+                    break;
+            }
+
+            // Right hand: a melody that walks the scale and leans on chord tones on strong beats.
+            var beat = 0.0;
+            while (beat < 4.0)
+            {
+                double[] lengths = [1, 1, 2, 1.5, 0.5, 1, 3];
+                var length = Math.Min(lengths[_random.Next(lengths.Length)], 4.0 - beat);
+                if (_random.Chance(style.MelodyDensity))
+                {
+                    if (beat == 0.0)
+                    {
+                        int[] chordTones = [0, 2, 4, 7];
+                        var tone = degree + chordTones[_random.Next(chordTones.Length)];
+                        _melody = tone - (7 * (int)Math.Floor((tone - _melody + 3.5) / 7.0));
+                    }
+                    else
+                    {
+                        int[] steps = [-2, -1, -1, 1, 1, 2, -3, 3, 0];
+                        _melody += steps[_random.Next(steps.Length)];
+                    }
+
+                    _melody = Math.Clamp(_melody, 0, 11);
+                    var midi = Pitch.Degree(style.Root, style.Mode, _melody) + (12 * style.MelodyOctave);
+                    var humanise = (long)(_random.Range(-0.012f, 0.012f) * SampleRate);
+                    Add(barStart + Beats(beat) + Math.Max(0, humanise), midi, _random.Range(0.42f, 0.66f));
+                }
+
+                beat += length;
+            }
         }
 
-        // An occasional substitution keeps long sessions from looping audibly.
-        var degree = _random.Chance(0.2f)
-            ? _style.Progression[_random.Next(_style.Progression.Length)] + 2
-            : _style.Progression[_chordIndex];
-        _chordRoot = degree;
+        // A final, longer chord tone closes the phrase.
+        var end = start + Beats(4 * bars);
+        Add(end, Pitch.Degree(style.Root, style.Mode, style.Progression[0]) + (12 * style.MelodyOctave), 0.4f);
+        Array.Sort(_phrase, 0, _phraseLength, NoteOrder.Instance);
+        _phraseEnd = end + Beats(2);
+        _nextPhrase = _phraseEnd + (long)(style.RestSeconds * _random.Range(0.7f, 1.4f) * SampleRate);
+    }
 
+    private void Add(long at, int midi, float velocity, int degree = 0)
+    {
+        if (_phraseLength < _phrase.Length)
+        {
+            _phrase[_phraseLength++] = new Note(at, midi, velocity, degree);
+        }
+    }
+
+    private void ChangeChord(int degree)
+    {
         for (var v = 0; v < _pads.Length; v++)
         {
             _pads[v].Releasing = true;
         }
 
-        // Root, third, fifth and a colour tone (seventh or ninth), spread across two octaves.
-        int[] tones = [0, 2, 4, _random.Chance(0.5f) ? 6 : 8];
+        int[] tones = [0, 2, 4];
         for (var t = 0; t < tones.Length; t++)
         {
             var midi = Pitch.Degree(_style.Root, _style.Mode, degree + tones[t]) + (t == 0 ? 0 : 12);
-            StartPad(Pitch.Hertz(midi), 0.25f + (0.5f * t / (tones.Length - 1)));
+            StartPad(Pitch.Hertz(midi), 0.3f + (0.4f * t / (tones.Length - 1)));
         }
+    }
 
-        _nextChord = _clock + Samples(8);
+    private void Strike(int midi, float velocity)
+    {
+        var voice = _piano[_nextVoice];
+        _nextVoice = (_nextVoice + 1) % _piano.Length;
+        voice.Start(midi, velocity);
+        NotesPlayed++;
     }
 
     private void StartPad(double hertz, float pan)
@@ -294,12 +384,7 @@ public sealed class MusicEngine
         }
 
         ref var pad = ref _pads[slot];
-        if (pad.Active)
-        {
-            // Stealing: keep the old level so the voice fades instead of jumping.
-            pad.Releasing = false;
-        }
-        else
+        if (!pad.Active)
         {
             pad.Level = 0f;
         }
@@ -315,43 +400,16 @@ public sealed class MusicEngine
         }
     }
 
-    private void Step()
-    {
-        // Eighth-note grid.
-        _nextStep = _clock + Samples(0.5);
-        _step++;
-        if (_random.Chance(_bellDensity))
-        {
-            var octave = 12 * _next.BellOctave;
-            var degree = _chordRoot + (2 * _random.Next(4)) + (_random.Chance(0.3f) ? 1 : 0);
-            ref var bell = ref _bells[_nextBell];
-            _nextBell = (_nextBell + 1) % _bells.Length;
-            bell.Active = true;
-            bell.Age = 0f;
-            bell.Phase = 0;
-            bell.ModPhase = 0;
-            bell.Hz = Pitch.Hertz(Pitch.Degree(_style.Root, _style.Mode, degree) + octave);
-            bell.Decay = _random.Range(0.6f, 1.6f);
-            bell.Gain = _random.Range(0.05f, 0.11f);
-            bell.Pan = _random.Range(0.15f, 0.85f);
-        }
-
-        if (_arpLevel > 0.01f)
-        {
-            int[] pattern = [0, 2, 4, 7, 4, 2];
-            _arpHz = (float)Pitch.Hertz(Pitch.Degree(_style.Root, _style.Mode, _chordRoot + pattern[_step % pattern.Length]) + 12);
-            _arpAge = 0f;
-            _arpPhase = 0;
-        }
-
-        // Heartbeat: "lub" on beat one, "dub" an eighth later.
-        if (_beatLevel > 0.01f && (_step % 8 == 0 || _step % 8 == 1))
-        {
-            _beatAge = 0f;
-        }
-    }
-
     private static double Wrap(double phase) => phase - Math.Floor(phase);
+
+    private readonly record struct Note(long At, int Midi, float Velocity, int Degree);
+
+    private sealed class NoteOrder : IComparer<Note>
+    {
+        public static readonly NoteOrder Instance = new();
+
+        public int Compare(Note x, Note y) => x.At.CompareTo(y.At);
+    }
 
     private struct PadVoice
     {
@@ -363,15 +421,127 @@ public sealed class MusicEngine
         public double[] Phase;
     }
 
-    private struct BellVoice
+    /// <summary>
+    /// Additive piano: eight slightly stretched partials (string inharmonicity), each with its
+    /// own decay, a quick hammer "punch" that fades into the long tail, and two strings per
+    /// note for the gentle beating of a real instrument. Oscillators are rotating phasors.
+    /// </summary>
+    private sealed class PianoVoice
     {
-        public bool Active;
-        public float Age;
-        public double Phase;
-        public double ModPhase;
-        public double Hz;
-        public float Decay;
-        public float Gain;
-        public float Pan;
+        private const double Inharmonicity = 0.00035;
+        private readonly float[] _re = new float[Partials * 2];
+        private readonly float[] _im = new float[Partials * 2];
+        private readonly float[] _cos = new float[Partials * 2];
+        private readonly float[] _sin = new float[Partials * 2];
+        private readonly float[] _amp = new float[Partials * 2];
+        private readonly float[] _decay = new float[Partials * 2];
+        private float _attack;
+        private float _punch;
+        private float _punchDecay;
+        private float _fadeOut = 1f;
+        private bool _stealing;
+        private int _pendingMidi;
+        private float _pendingVelocity;
+        private int _count;
+
+        public bool Active { get; private set; }
+
+        public float Pan { get; private set; }
+
+        public void Start(int midi, float velocity)
+        {
+            if (Active)
+            {
+                // Steal gracefully: a 5 ms fade, then the new note.
+                _stealing = true;
+                _pendingMidi = midi;
+                _pendingVelocity = velocity;
+                return;
+            }
+
+            Begin(midi, velocity);
+        }
+
+        public float Next()
+        {
+            var sum = 0f;
+            var alive = 0f;
+            for (var p = 0; p < _count; p++)
+            {
+                var re = _re[p];
+                var im = _im[p];
+                _re[p] = (re * _cos[p]) - (im * _sin[p]);
+                _im[p] = (re * _sin[p]) + (im * _cos[p]);
+                sum += _im[p] * _amp[p];
+                _amp[p] *= _decay[p];
+                alive += _amp[p];
+            }
+
+            // Silent partials leave the loop: the last one takes their slot.
+            if (_count > 0 && _amp[_count - 1] < 1e-5f)
+            {
+                _count--;
+            }
+
+            _attack = MathF.Min(1f, _attack + (1f / (0.003f * SampleRate)));
+            _punch *= _punchDecay;
+            var sample = sum * _attack * (1f + _punch);
+            if (_stealing)
+            {
+                _fadeOut -= 1f / (0.005f * SampleRate);
+                sample *= MathF.Max(0f, _fadeOut);
+                if (_fadeOut <= 0f)
+                {
+                    Begin(_pendingMidi, _pendingVelocity);
+                }
+            }
+            else if (alive < 4e-4f)
+            {
+                Active = false;
+            }
+
+            return sample;
+        }
+
+        private void Begin(int midi, float velocity)
+        {
+            _stealing = false;
+            _fadeOut = 1f;
+            var hertz = Pitch.Hertz(midi);
+            var register = Math.Clamp((midi - 36) / 60f, 0f, 1f);
+            var sustain = 1.6f + (5f * (1f - register));
+            var brightness = 0.35f + (0.45f * velocity);
+            _count = 0;
+            for (var n = 1; n <= Partials; n++)
+            {
+                var stretch = Math.Sqrt(1.0 + (Inharmonicity * n * n));
+                // Two detuned strings for the low partials (beating), one above.
+                for (var s = 0; s < (n <= 3 ? 2 : 1); s++)
+                {
+                    var f = n * hertz * stretch * (n > 3 ? 1.0 : s == 0 ? 0.9996 : 1.0004);
+                    if (f > 9000)
+                    {
+                        continue;
+                    }
+
+                    var amp = (n <= 3 ? 1f : 2f) * velocity * 0.075f * MathF.Pow(brightness, n - 1) / MathF.Pow(n, 0.6f);
+                    var seconds = sustain / (1f + (0.7f * (n - 1)));
+                    var w = 2.0 * Math.PI * f / SampleRate;
+                    _re[_count] = 1f;
+                    _im[_count] = 0f;
+                    _cos[_count] = (float)Math.Cos(w);
+                    _sin[_count] = (float)Math.Sin(w);
+                    _amp[_count] = amp;
+                    _decay[_count] = MathF.Exp(-1f / (seconds * SampleRate));
+                    _count++;
+                }
+            }
+
+            _attack = 0f;
+            _punch = 1.2f;
+            _punchDecay = MathF.Exp(-1f / (0.09f * SampleRate));
+            Pan = 0.3f + (0.4f * register);
+            Active = true;
+        }
     }
 }

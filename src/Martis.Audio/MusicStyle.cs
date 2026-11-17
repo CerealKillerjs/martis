@@ -11,46 +11,53 @@ public enum MusicMood
     Victory,
 }
 
-/// <summary>Accompaniment layer under the pads and bells.</summary>
-public enum PulseKind
+/// <summary>How the piano's left hand accompanies the melody.</summary>
+public enum LeftHand
 {
-    None,
-    Arpeggio,
-    Heartbeat,
+    /// <summary>One low note or open fifth per bar.</summary>
+    Sparse,
+
+    /// <summary>Slow broken chord: root, fifth, tenth.</summary>
+    Broken,
+
+    /// <summary>Flowing eighth-note arpeggio.</summary>
+    Flowing,
 }
 
 /// <summary>
 /// Everything the generative composer needs to play a mood: key, tempo, chord progression
-/// (scale degrees) and the level of each layer. Values are art direction, not science.
+/// (scale degrees), how busy the piano is, the rests between phrases and the level of the
+/// soft pad and drone underneath. Values are art direction, not science.
 /// </summary>
 public sealed record MusicStyle(
     int Root,
     Mode Mode,
     float Bpm,
     int[] Progression,
+    float MelodyDensity,
+    int MelodyOctave,
+    LeftHand LeftHand,
+    float RestSeconds,
     float PadCutoffHz,
     float PadLevel,
-    float BellDensity,
-    int BellOctave,
     float DroneLevel,
-    PulseKind Pulse,
-    float PulseLevel)
+    float HeartbeatLevel)
 {
-    private static readonly int[] TitleProgression = [0, 4, 5, 3];
+    private static readonly int[] TitleProgression = [0, 3, 5, 4];
     private static readonly int[] DayProgression = [0, 5, 3, 4];
-    private static readonly int[] NightProgression = [0, 5, 2, 6];
-    private static readonly int[] ThrivingProgression = [0, 4, 1, 5];
+    private static readonly int[] NightProgression = [0, 5, 3, 6];
+    private static readonly int[] ThrivingProgression = [0, 4, 5, 3];
     private static readonly int[] CrisisProgression = [0, 1, 0, 6];
     private static readonly int[] VictoryProgression = [0, 4, 5, 3];
 
     private static readonly MusicStyle[] Base =
     [
-        new(50, Mode.Lydian, 64f, TitleProgression, 2600f, 1f, 0.32f, 2, 0.45f, PulseKind.None, 0f),
-        new(52, Mode.Dorian, 72f, DayProgression, 2000f, 0.9f, 0.24f, 2, 0.35f, PulseKind.None, 0f),
-        new(45, Mode.Aeolian, 56f, NightProgression, 900f, 0.85f, 0.14f, 3, 0.5f, PulseKind.None, 0f),
-        new(55, Mode.Mixolydian, 84f, ThrivingProgression, 2800f, 0.85f, 0.4f, 2, 0.3f, PulseKind.Arpeggio, 0.35f),
-        new(48, Mode.Phrygian, 60f, CrisisProgression, 520f, 0.9f, 0.04f, 1, 0.85f, PulseKind.Heartbeat, 0.7f),
-        new(53, Mode.Lydian, 76f, VictoryProgression, 3200f, 1f, 0.55f, 2, 0.35f, PulseKind.Arpeggio, 0.3f),
+        new(53, Mode.Lydian, 66f, TitleProgression, 0.5f, 1, LeftHand.Broken, 4.5f, 1300f, 0.45f, 0.15f, 0f),
+        new(55, Mode.Ionian, 72f, DayProgression, 0.55f, 1, LeftHand.Broken, 5f, 1200f, 0.4f, 0.1f, 0f),
+        new(50, Mode.Aeolian, 58f, NightProgression, 0.3f, 1, LeftHand.Sparse, 7f, 800f, 0.45f, 0.3f, 0f),
+        new(57, Mode.Lydian, 80f, ThrivingProgression, 0.75f, 1, LeftHand.Flowing, 3f, 1600f, 0.35f, 0.1f, 0f),
+        new(48, Mode.Phrygian, 56f, CrisisProgression, 0.25f, 0, LeftHand.Sparse, 4f, 520f, 0.6f, 0.8f, 0.6f),
+        new(53, Mode.Ionian, 76f, VictoryProgression, 0.8f, 1, LeftHand.Flowing, 2.5f, 1800f, 0.45f, 0.1f, 0f),
     ];
 
     /// <summary>
@@ -63,9 +70,9 @@ public sealed record MusicStyle(
         var (shift, mode) = chapter switch
         {
             "ch2" => (2, (Mode?)Mode.Dorian),
-            "ch3" => (5, Mode.Lydian),
+            "ch3" => (-3, Mode.Lydian),
             "ch4" => (-2, Mode.Aeolian),
-            "ch5" => (7, Mode.Lydian),
+            "ch5" => (5, Mode.Mixolydian),
             _ => (0, null),
         };
 

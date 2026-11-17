@@ -55,11 +55,11 @@ public sealed class MusicEngineTests
     [MemberData(nameof(Moods))]
     public void EveryMoodIsAudibleStereoAndBounded(MusicMood mood)
     {
-        var output = Render(new MusicEngine(5, mood), 6);
+        var output = Render(new MusicEngine(5, mood), 20);
         Assert.True(Signal.AllFinite(output));
         Assert.True(Signal.Peak(output) <= 0.98f, $"{mood} peaks at {Signal.Peak(output)}.");
-        var settled = output.AsSpan(output.Length / 2);
-        Assert.True(Signal.Rms(settled) > 0.02, $"{mood} is almost silent ({Signal.Rms(settled)}).");
+        var settled = output.AsSpan(output.Length * 3 / 10);
+        Assert.True(Signal.Rms(settled) > 0.015, $"{mood} is almost silent ({Signal.Rms(settled)}).");
         var left = Signal.Channel(output, 0);
         var right = Signal.Channel(output, 1);
         Assert.False(left.AsSpan().SequenceEqual(right), $"{mood} is mono.");
@@ -118,5 +118,41 @@ public sealed class MusicEngineTests
         Render(b, 1);
         a.SetMood(MusicMood.Night);
         Assert.Equal(Render(a, 1), Render(b, 1));
+    }
+
+    [Fact]
+    public void ThePianoPlaysPhrasesWithRestsBetweenThem()
+    {
+        // Calm piano music breathes: phrases of a few bars, then silence (Daniel, 2026-11-17).
+        var left = Signal.Channel(Render(new MusicEngine(12, MusicMood.Day), 60), 0);
+        var window = MusicEngine.SampleRate / 2;
+        var levels = new List<double>();
+        for (var start = MusicEngine.SampleRate * 4; start + window <= left.Length; start += window)
+        {
+            levels.Add(Signal.Rms(left.AsSpan(start, window)));
+        }
+
+        levels.Sort();
+        var quiet = levels[levels.Count / 10];
+        var loud = levels[levels.Count * 9 / 10];
+        Assert.True(quiet < loud * 0.35, $"quiet {quiet:0.0000} loud {loud:0.0000}");
+    }
+
+    [Fact]
+    public void MelodiesAreSparseAndTheirDensityFollowsTheMood()
+    {
+        int Notes(MusicMood mood)
+        {
+            var engine = new MusicEngine(21, mood);
+            Render(engine, 60);
+            return engine.NotesPlayed;
+        }
+
+        var night = Notes(MusicMood.Night);
+        var day = Notes(MusicMood.Day);
+        var thriving = Notes(MusicMood.Thriving);
+        Assert.InRange(day, 15, 160);
+        Assert.True(night < day, $"night {night} day {day}");
+        Assert.True(day < thriving, $"day {day} thriving {thriving}");
     }
 }
