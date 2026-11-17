@@ -68,7 +68,7 @@ public partial class GameRoot
         }
 
         _shownKnowledge = _knowledge.Version;
-        _world.ShowKnowledge(_knowledge);
+        _world.ShowKnowledge(_knowledge, _climate);
         if (_pois is not null)
         {
             UpdatePois();

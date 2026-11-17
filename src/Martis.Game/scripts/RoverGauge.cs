@@ -73,7 +73,7 @@ public partial class RoverGauge : PanelContainer
 
         mapped += "\n";
         _keys.Text = mapped + (driving
-            ? "WASD conducir · C escanear · M muestrear · F sembrar\nB estación · X reparar · Tab estratégico"
+            ? "WASD conducir · C escanear · M muestrear · F sembrar\nB estación · H calefactor · X reparar · Tab estratégico"
             : "Tab o F1 conducir · G enviar el rover a la celda elegida");
     }
 }

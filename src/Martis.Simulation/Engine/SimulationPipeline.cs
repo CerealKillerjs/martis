@@ -111,7 +111,7 @@ public static class BiologyPipeline
     }
 
     public static IReadOnlyList<Commands.ICommandHandler> Handlers(Biology.MetabolismWorkspace workspace)
-        => [new Biology.IntroducePopulationHandler(workspace)];
+        => [new Biology.IntroducePopulationHandler(workspace), new Terraforming.SetCellTemperatureHandler()];
 }
 
 /// <summary>Ordinal ids for <see cref="SimulationPipeline"/>. The Spanish names live in the data dictionary.</summary>

@@ -98,8 +98,9 @@ public partial class World3D : Node3D
     /// The fog of knowledge (V2, ADR-029): unknown ground is veiled, estimated ground keeps a light
     /// hatch, measured ground is clear. Layers only show data where something is known.
     /// </summary>
-    public void ShowKnowledge(Martis.Simulation.Expedition.KnowledgeMap knowledge)
+    public void ShowKnowledge(Martis.Simulation.Expedition.KnowledgeMap knowledge, Martis.Simulation.Terraforming.RegionalClimate? climate = null)
     {
+        var peak = climate is null ? 1f : (float)climate.Definition.PeakDeltaK;
         var estimated = (float)knowledge.Definition.EstimatedThreshold;
         var measured = (float)knowledge.Definition.MeasuredThreshold;
         for (var y = 0; y < knowledge.Height; y++)
@@ -109,7 +110,8 @@ public partial class World3D : Node3D
                 var c = (float)knowledge.Confidence(x, y);
                 // 0 unknown, 0.5 estimated, 1 measured: what the shader needs, not the raw confidence.
                 var level = c >= measured ? 1f : c >= estimated ? 0.5f : 0f;
-                _knowledgeImage.SetPixel(x, y, new Color(level, c, 0, 1));
+                var heat = climate is null ? 0f : Mathf.Clamp((float)climate.Anomaly(x, y) / peak, 0f, 1f);
+                _knowledgeImage.SetPixel(x, y, new Color(level, c, heat, 1));
             }
         }
 

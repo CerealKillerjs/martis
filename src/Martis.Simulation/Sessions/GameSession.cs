@@ -7,6 +7,7 @@ using Martis.Simulation.Engine;
 using Martis.Simulation.Missions;
 using Martis.Simulation.Scenarios;
 using Martis.Simulation.Snapshots;
+using Martis.Simulation.Terraforming;
 
 namespace Martis.Simulation.Sessions;
 
@@ -194,6 +195,23 @@ public sealed class GameSession
         _mutationPoints = state?.MutationPoints ?? 0.0;
     }
 
+    /// <summary>The regional climate under intervention (E1, ADR-033); null until attached.</summary>
+    public RegionalClimate? Climate { get; private set; }
+
+    /// <summary>
+    /// Lets the player heat the ground (E1, ADR-033). Without <paramref name="record"/> today's
+    /// temperatures become the baseline; with one, its anomaly and heaters are resumed.
+    /// </summary>
+    public RegionalClimate AttachClimate(HeatingDefinition definition, ClimateRecord? record = null)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        var temperatures = Engine.State.Environment.Select(cell => cell.TemperatureKelvin.Value).ToArray();
+        Climate = record is null
+            ? RegionalClimate.Start(definition, Width, Height, temperatures)
+            : RegionalClimate.Resume(definition, temperatures, record);
+        return Climate;
+    }
+
     public SessionEconomyState? CaptureEconomy() => Research is null ? null : new SessionEconomyState(InoculumKg, _mutationPoints);
 
     /// <summary>Spends research points on a technology. Counts as the <c>research-technology</c> action.</summary>
@@ -325,6 +343,20 @@ public sealed class GameSession
         {
             try
             {
+                if (Climate is not null)
+                {
+                    var (commands, broke) = Climate.Step();
+                    foreach (var command in commands)
+                    {
+                        Engine.ApplyCommand(command);
+                    }
+
+                    foreach (var heater in broke)
+                    {
+                        Add("heater", $"El calefactor {heater.Id} se averió y deja de calentar.", CellIndex(heater.X, heater.Y));
+                    }
+                }
+
                 Engine.Advance(1);
             }
             catch (Exception exception) when (exception is SimulationInvariantException or ArithmeticException or ArgumentException or InvalidOperationException or KeyNotFoundException)

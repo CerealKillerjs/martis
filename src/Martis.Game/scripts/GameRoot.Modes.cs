@@ -233,6 +233,10 @@ public partial class GameRoot
             _network.Stations.Count(station => !station.Broken),
             _rover.Wear,
             _pois.Pois.Count(poi => poi.State == Martis.Simulation.Expedition.PoiState.Discovered),
-            _pois.Pois.Count));
+            _pois.Pois.Count,
+            _climate.Heaters.Count,
+            _climate.Heaters.Count(heater => !heater.Broken),
+            _climate.MeanWarmingK,
+            _climate.WarmedCells));
     }
 }
