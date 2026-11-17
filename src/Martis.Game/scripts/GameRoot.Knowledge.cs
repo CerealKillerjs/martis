@@ -69,6 +69,10 @@ public partial class GameRoot
 
         _shownKnowledge = _knowledge.Version;
         _world.ShowKnowledge(_knowledge);
+        if (_pois is not null)
+        {
+            UpdatePois();
+        }
         if (_selected.X >= 0)
         {
             ShowSelected();
@@ -142,6 +146,12 @@ public partial class GameRoot
         else
         {
             _knowledge.Scan(32.5 + o, 32.5 + o);
+            if (_options.ContainsKey("places") && _pois is not null)
+            {
+                // V5: two places of the valley already visited by the rover.
+                _knowledge.Scan(_pois.Pois[0].X + 0.5, _pois.Pois[0].Y + 0.5);
+                _knowledge.Scan(_pois.Pois[1].X + 0.5, _pois.Pois[1].Y + 0.5);
+            }
         }
 
         _shownKnowledge = -1;

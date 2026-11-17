@@ -34,7 +34,7 @@ public sealed class SaveService
     /// Stores a snapshot and, for a campaign mission, its progress as a
     /// <see cref="MissionSaveRecord.EventType"/> event at the same tick (H-31).
     /// </summary>
-    public string Save(GameSession session, string? missionFile = null)
+    public string Save(GameSession session, string? missionFile = null, string? expeditionJson = null)
     {
         using var store = SaveGameStore.Open(_path);
         if (CurrentId is null || store.GetSaveGame(CurrentId) is null)
@@ -61,6 +61,12 @@ public sealed class SaveService
             store.RecordEvent(CurrentId, session.Tick, MissionSaveRecord.EventType, new MissionSaveRecord(missionFile, progress, session.CaptureEconomy()).ToJson());
         }
 
+        if (expeditionJson is not null)
+        {
+            // V5 (ADR-032): rover, knowledge, samples, stations and places, next to the snapshot.
+            store.RecordEvent(CurrentId, session.Tick, Martis.Simulation.Expedition.ExpeditionState.EventType, expeditionJson);
+        }
+
         return CurrentId;
     }
 
@@ -70,8 +76,13 @@ public sealed class SaveService
     /// and economy, or null for an older save or free play, which load as before.
     /// </summary>
     public GameSession? LoadLatest(out string message, out MissionSaveRecord? mission, Func<int, WorldOptions?>? worldFor = null)
+        => LoadLatest(out message, out mission, worldFor, out _);
+
+    /// <summary>As above, plus the expedition saved at the snapshot's tick (V5), or null for an older save.</summary>
+    public GameSession? LoadLatest(out string message, out MissionSaveRecord? mission, Func<int, WorldOptions?>? worldFor, out string? expedition)
     {
         mission = null;
+        expedition = null;
         using var store = SaveGameStore.Open(_path);
         var save = store.ListSaveGames().OrderByDescending(item => item.UpdatedAt).FirstOrDefault();
         if (save is null)
@@ -92,8 +103,9 @@ public sealed class SaveService
         var skipped = recovery.RejectedTicks.Count == 0 ? string.Empty : $" ({recovery.RejectedTicks.Count} instantáneas dañadas descartadas)";
         message = $"Cargada «{save.Name}», sol {snapshot.Tick}{skipped}.";
         var world = worldFor?.Invoke(snapshot.Configuration.MapWidth);
-        var saved = store.Events(save.Id, snapshot.Tick - 1)
-            .LastOrDefault(item => item.Tick == snapshot.Tick && item.EventType == MissionSaveRecord.EventType);
+        var events = store.Events(save.Id, snapshot.Tick - 1).Where(item => item.Tick == snapshot.Tick).ToArray();
+        expedition = events.LastOrDefault(item => item.EventType == Martis.Simulation.Expedition.ExpeditionState.EventType)?.Payload;
+        var saved = events.LastOrDefault(item => item.EventType == MissionSaveRecord.EventType);
         if (saved is not null)
         {
             try

@@ -22,7 +22,9 @@ public sealed record PlanetaryData(
     double MeasuredFraction,
     int Stations,
     int WorkingStations,
-    double RoverWear);
+    double RoverWear,
+    int DiscoveredPlaces,
+    int Places);
 
 /// <summary>
 /// The planetary view (V1, Documento Maestro v2.0 §3.1): a turning globe of Mars with the
@@ -153,6 +155,7 @@ public partial class PlanetaryPanel : Control
             string.Create(c, $"Dosis media  {data.MeanDoseMSvPerSol:0.00} mSv/sol"),
             string.Create(c, $"Conocimiento  {data.EstimatedFraction * 100:0} % estimado · {data.MeasuredFraction * 100:0.#} % medido"),
             string.Create(c, $"Estaciones  {data.WorkingStations}/{data.Stations} activas · desgaste del rover {data.RoverWear * 100:0} %"),
+            string.Create(c, $"Lugares del valle  {data.DiscoveredPlaces}/{data.Places} descubiertos"),
             string.Create(c, $"Órdenes  {data.Orders} ({data.FailedOrders} fallidas)"),
         };
         if (data.ResearchPoints is { } points)

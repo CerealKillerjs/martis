@@ -148,7 +148,7 @@ Cada hito va en una rama y un PR propios, apilados.
 - **V2, conocimiento y escaneo ([ADR-029](ADR/ADR-029-conocimiento-y-escaneo.md)):** niebla de conocimiento por celda, sonda orbital por franjas, cámaras y escáner del rover (C); no se siembra a ciegas.
 - **V3, muestras y laboratorio ([ADR-030](ADR/ADR-030-muestras-y-laboratorio.md)):** muestreo de terreno medido (M), entrega en el módulo, análisis en cola con puntos de investigación y diseño desde el genoma de una muestra.
 - **V4, robots e instalaciones ([ADR-031](ADR/ADR-031-robots-e-instalaciones.md)):** desgaste y fallos deterministas del rover, estaciones fijas con presupuesto de energía que se averían y se reparan, órdenes de desplazamiento pendientes hasta llegar o fallar.
-- **V5:** valle parametrizado con puntos de interés, FIRST COLONY como misión del corte y guardado/carga repetible.
+- **V5, Valle Aurora y guardado completo ([ADR-032](ADR/ADR-032-valle-y-guardado-completo.md)):** cinco lugares de interés que pasan de anomalía a descubrimiento con el conocimiento, y guardado de toda la expedición junto a la instantánea.
 - **Después:** fase E (terraformación regional) y `PlanetDefinition` (ARC-003).
 
 ## Fuera de alcance del MVP (TDD §0, B.5)
