@@ -144,6 +144,22 @@ public sealed class Rover
         Heading = heading;
     }
 
+    /// <summary>Puts a saved rover back exactly as it was (V5).</summary>
+    public void Restore(double x, double y, double heading, double battery, double wear, (int X, int Y)? lander)
+    {
+        if (!double.IsFinite(x) || !double.IsFinite(y) || !double.IsFinite(heading))
+        {
+            throw new ArgumentOutOfRangeException(nameof(x), "A saved rover needs a finite position and heading.");
+        }
+
+        X = Math.Clamp(x, Margin, Width - Margin);
+        Y = Math.Clamp(y, Margin, Height - Margin);
+        Heading = heading;
+        Battery = Math.Clamp(battery, 0.0, 1.0);
+        Wear = Math.Clamp(wear, 0.0, 1.0);
+        _lander = lander;
+    }
+
     /// <summary>The lander is down at <paramref name="x"/>, <paramref name="y"/>: from now on driving costs battery.</summary>
     public void Landed(int x, int y) => _lander = (x, y);
 

@@ -231,6 +231,8 @@ public partial class GameRoot
             _knowledge.Coverage(Martis.Simulation.Expedition.KnowledgeLevel.Measured),
             _network.Stations.Count,
             _network.Stations.Count(station => !station.Broken),
-            _rover.Wear));
+            _rover.Wear,
+            _pois.Pois.Count(poi => poi.State == Martis.Simulation.Expedition.PoiState.Discovered),
+            _pois.Pois.Count));
     }
 }

@@ -1,0 +1,175 @@
+{
+  "metadata": {
+    "schema": "martis.valley",
+    "id": "valle_aurora",
+    "name": "Valle Aurora (valle ficticio parametrizado del corte vertical)",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (V5)",
+    "review": "Documento Maestro v2.0 §32: un valle marciano ficticio pero parametrizado, con zonas de interés. Posiciones como fracción del mapa.",
+    "valley": {
+      "discovery_radius_cells": "valley.discovery_radius",
+      "research_ice": "valley.research_ice",
+      "research_brine": "valley.research_brine",
+      "research_shelter": "valley.research_shelter",
+      "research_meteorite": "valley.research_meteorite",
+      "research_delta": "valley.research_delta"
+    },
+    "pois": [
+      {
+        "id": "delta",
+        "kind": "Delta",
+        "name": "Delta fluvial antiguo",
+        "x": 0.5,
+        "y": 0.14,
+        "finding": "Sedimentos en abanico de un río extinto: arcillas que conservan bien las moléculas orgánicas. El mejor lugar del valle para buscar biofirmas."
+      },
+      {
+        "id": "hielo_norte",
+        "kind": "Ice",
+        "name": "Depósito de hielo subsuperficial",
+        "x": 0.28,
+        "y": 0.26,
+        "finding": "Hielo de agua a menos de un metro bajo el regolito. Reserva de agua para colonias futuras."
+      },
+      {
+        "id": "salmuera",
+        "kind": "Brine",
+        "name": "Rastros de salmuera estacional",
+        "x": 0.74,
+        "y": 0.34,
+        "finding": "Líneas oscuras en las laderas que crecen en verano: percloratos que retienen humedad. Agua líquida efímera, muy salina."
+      },
+      {
+        "id": "abrigo",
+        "kind": "Shelter",
+        "name": "Abrigo rocoso del cañón",
+        "x": 0.2,
+        "y": 0.72,
+        "finding": "Paredes y salientes que bloquean parte del cielo: la dosis de radiación es menor al pie del escarpe."
+      },
+      {
+        "id": "meteorito",
+        "kind": "Meteorite",
+        "name": "Meteorito metálico",
+        "x": 0.8,
+        "y": 0.7,
+        "finding": "Un bloque de hierro y níquel caído hace millones de años. Fuente de metales y de nutrientes minerales."
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "valley.discovery_radius",
+      "field": "discovery_radius_cells",
+      "value": 1.5,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el valle del corte vertical (V5); Daniel debe ajustarlo jugando.",
+      "rationale": "Distancia a la que la medida de una celda revela el punto de interés.",
+      "range": [
+        0.0,
+        6.0
+      ]
+    },
+    {
+      "id": "valley.research_ice",
+      "field": "research_ice",
+      "value": 6.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el valle del corte vertical (V5); Daniel debe ajustarlo jugando.",
+      "rationale": "Investigación por descubrir un depósito de hielo.",
+      "range": [
+        0.0,
+        50.0
+      ]
+    },
+    {
+      "id": "valley.research_brine",
+      "field": "research_brine",
+      "value": 5.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el valle del corte vertical (V5); Daniel debe ajustarlo jugando.",
+      "rationale": "Investigación por descubrir rastros de salmuera.",
+      "range": [
+        0.0,
+        50.0
+      ]
+    },
+    {
+      "id": "valley.research_shelter",
+      "field": "research_shelter",
+      "value": 4.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el valle del corte vertical (V5); Daniel debe ajustarlo jugando.",
+      "rationale": "Investigación por descubrir un abrigo frente a la radiación.",
+      "range": [
+        0.0,
+        50.0
+      ]
+    },
+    {
+      "id": "valley.research_meteorite",
+      "field": "research_meteorite",
+      "value": 4.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el valle del corte vertical (V5); Daniel debe ajustarlo jugando.",
+      "rationale": "Investigación por descubrir un meteorito metálico.",
+      "range": [
+        0.0,
+        50.0
+      ]
+    },
+    {
+      "id": "valley.research_delta",
+      "field": "research_delta",
+      "value": 8.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el valle del corte vertical (V5); Daniel debe ajustarlo jugando.",
+      "rationale": "Investigación por descubrir el delta fluvial antiguo.",
+      "range": [
+        0.0,
+        50.0
+      ]
+    }
+  ]
+}

@@ -180,6 +180,17 @@ public sealed class FacilityNetwork
             .Select(item => item.Station)
             .FirstOrDefault();
 
+    /// <summary>Puts saved stations back (V5), in their original order.</summary>
+    public void Restore(IEnumerable<(int X, int Y, long BuiltSol, double Wear)> stations)
+    {
+        ArgumentNullException.ThrowIfNull(stations);
+        _stations.Clear();
+        foreach (var (x, y, builtSol, wear) in stations)
+        {
+            _stations.Add(new Station(_stations.Count + 1, x, y, builtSol) { Wear = Math.Clamp(wear, 0.0, 1.0) });
+        }
+    }
+
     /// <summary>Restores a station to new; returns false when it did not need it.</summary>
     public bool Repair(Station station)
     {

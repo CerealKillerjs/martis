@@ -422,6 +422,7 @@ public partial class GameRoot : Node
         ResetKnowledge();
         ResetSamples();
         ResetFacilities();
+        ResetValley();
         Select(session.Width / 2, session.Height / 2);
         Refresh();
         var colony = Array.FindIndex(_view!.BiomassKg, kg => kg > 0f);
@@ -636,7 +637,7 @@ public partial class GameRoot : Node
     {
         try
         {
-            var id = _saves.Save(_session, _mission?.File);
+            var id = _saves.Save(_session, _mission?.File, CaptureExpedition());
             SaveCampaign();
             _hud.Toast($"Partida guardada ({id}, sol {_session.Tick}).");
         }
@@ -650,7 +651,7 @@ public partial class GameRoot : Node
     {
         try
         {
-            var loaded = _saves.LoadLatest(out var message, out var record, _campaign.Campaign.WorldFor);
+            var loaded = _saves.LoadLatest(out var message, out var record, _campaign.Campaign.WorldFor, out var expedition);
             if (loaded is not null)
             {
                 _mission = _campaign.Campaign.Missions.FirstOrDefault(item => item.File == record?.MissionFile);
@@ -661,6 +662,7 @@ public partial class GameRoot : Node
 
                 _hud.ClearEvents();
                 StartSession(loaded);
+                RestoreExpedition(expedition);
                 _playing = true;
                 CloseMenu();
                 SetSpeed(0);
@@ -886,6 +888,20 @@ public partial class GameRoot : Node
         var robotsOk = _network.Stations.Count == 1 && move is not null && _orders.All.Single(order => order.Id == move.Id).Status == Martis.Application.OrderStatus.Done && _rover.Wear > 0;
         GD.Print($"MARTIS smoke robots={robotsOk} wear={_rover.Wear:0.###}");
         roverOk &= robotsOk;
+        // V5: measuring a place of the valley reveals it; the whole expedition survives save and load.
+        var delta = _pois.Pois[0];
+        _knowledge.Scan(delta.X + 0.5, delta.Y + 0.5);
+        ShowKnowledge();
+        var expedition = CaptureExpedition();
+        _saves.Save(_session, MissionDefinition.FirstColonyFile, expedition);
+        var reloaded = _saves.LoadLatest(out _, out _, null, out var savedExpedition);
+        var (roverX, roverY) = (_rover.X, _rover.Y);
+        _rover.Place(0, 0, 0);
+        RestoreExpedition(savedExpedition);
+        var valleyOk = delta.State == Martis.Simulation.Expedition.PoiState.Discovered && reloaded is not null && savedExpedition == expedition
+            && _rover.X == roverX && _rover.Y == roverY && _network.Stations.Count == 1 && _samples.All.Count == 1;
+        GD.Print($"MARTIS smoke valley={valleyOk} places={_pois.Pois.Count(poi => poi.State != Martis.Simulation.Expedition.PoiState.Hidden)} bytes={expedition.Length}");
+        roverOk &= valleyOk;
         ok &= roverOk;
         GD.Print($"MARTIS smoke rover={roverOk} battery={_rover.Battery:0.##}");
         GD.Print($"MARTIS smoke ok={ok} save={id} tick={_session.Tick} biomass={biomass:0.######} {message} {error}");

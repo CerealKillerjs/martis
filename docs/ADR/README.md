@@ -31,5 +31,6 @@
 - [ADR-029 — Conocimiento del terreno: sonda orbital y escáner (V2)](ADR-029-conocimiento-y-escaneo.md) (Propuesto)
 - [ADR-030 — Muestras y análisis de laboratorio (V3)](ADR-030-muestras-y-laboratorio.md) (Propuesto)
 - [ADR-031 — Robots e instalaciones: desgaste, estaciones y órdenes (V4)](ADR-031-robots-e-instalaciones.md) (Propuesto)
+- [ADR-032 — Valle Aurora, lugares de interés y guardado completo (V5)](ADR-032-valle-y-guardado-completo.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).

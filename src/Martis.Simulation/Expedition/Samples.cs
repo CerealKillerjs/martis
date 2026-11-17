@@ -194,6 +194,22 @@ public sealed class SampleStore
         return done;
     }
 
+    /// <summary>The sol the laboratory is busy until (saved with the samples).</summary>
+    public long LabFreeSol => _labFreeSol;
+
+    /// <summary>Puts saved samples back (V5): same ids, states and queue.</summary>
+    public void Restore(IEnumerable<(CellReport Source, long TakenSol, SampleState State, long? ReadySol)> samples, long labFreeSol)
+    {
+        ArgumentNullException.ThrowIfNull(samples);
+        _samples.Clear();
+        foreach (var (source, takenSol, state, readySol) in samples)
+        {
+            _samples.Add(new Sample(_samples.Count + 1, source, takenSol) { State = state, ReadySol = readySol });
+        }
+
+        _labFreeSol = labFreeSol;
+    }
+
     /// <summary>Research points an analysed sample of this kind earns.</summary>
     public double ResearchFor(Sample sample)
     {
