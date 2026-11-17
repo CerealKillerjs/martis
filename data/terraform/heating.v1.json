@@ -1,0 +1,152 @@
+{
+  "metadata": {
+    "schema": "martis.heating",
+    "id": "calentamiento_local",
+    "name": "Calentamiento local: calentadores y anomalía térmica regional",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (E1)",
+    "review": "Documento Maestro v2.0 §10 (nivel regional tecnológico: calentamiento local, con energía y mantenimiento). Valores pendientes de ajuste.",
+    "heating": {
+      "peak_delta_k": "heating.delta",
+      "radius_cells": "heating.radius",
+      "relaxation_sols": "heating.relaxation",
+      "power_w": "heating.power",
+      "wear_per_sol": "heating.wear",
+      "battery_cost": "heating.battery",
+      "max_temperature_k": "heating.max_k"
+    }
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "heating.delta",
+      "field": "peak_delta_k",
+      "value": 30.0,
+      "unit": "K",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor propuesto para la terraformación regional (E1); Daniel debe ajustarlo jugando.",
+      "rationale": "Calentamiento máximo que sostiene un calentador en su celda, con la potencia y el aislamiento del juego.",
+      "range": [
+        1.0,
+        120.0
+      ]
+    },
+    {
+      "id": "heating.radius",
+      "field": "radius_cells",
+      "value": 3.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor propuesto para la terraformación regional (E1); Daniel debe ajustarlo jugando.",
+      "rationale": "Radio en el que el calor de un calentador se nota; cae linealmente hasta el borde.",
+      "range": [
+        0.5,
+        12.0
+      ]
+    },
+    {
+      "id": "heating.relaxation",
+      "field": "relaxation_sols",
+      "value": 4.0,
+      "unit": "soles",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Supuesto de modelo simplificado (E1): relajación exponencial de la anomalía térmica; sin fuente primaria, pendiente de revisión científica.",
+      "rationale": "Tiempo característico con que la anomalía térmica se acerca a su forzamiento (y se disipa al apagarse).",
+      "range": [
+        0.5,
+        60.0
+      ]
+    },
+    {
+      "id": "heating.power",
+      "field": "power_w",
+      "value": 150.0,
+      "unit": "W",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor propuesto para la terraformación regional (E1); Daniel debe ajustarlo jugando.",
+      "rationale": "Potencia eléctrica de un calentador, del presupuesto del módulo.",
+      "range": [
+        1.0,
+        2000.0
+      ]
+    },
+    {
+      "id": "heating.wear",
+      "field": "wear_per_sol",
+      "value": 0.025,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor propuesto para la terraformación regional (E1); Daniel debe ajustarlo jugando.",
+      "rationale": "Desgaste diario de un calentador encendido; a 1 se apaga hasta repararlo.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "heating.battery",
+      "field": "battery_cost",
+      "value": 0.2,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor propuesto para la terraformación regional (E1); Daniel debe ajustarlo jugando.",
+      "rationale": "Batería del rover que cuesta montar un calentador.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "heating.max_k",
+      "field": "max_temperature_k",
+      "value": 320.0,
+      "unit": "K",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Supuesto de modelo simplificado (E1): relajación exponencial de la anomalía térmica; sin fuente primaria, pendiente de revisión científica.",
+      "rationale": "Tope de temperatura que permite el modelo simplificado.",
+      "range": [
+        250.0,
+        400.0
+      ]
+    }
+  ]
+}

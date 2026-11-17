@@ -76,7 +76,7 @@ public partial class GameRoot
         }
     }
 
-    private string CaptureExpedition() => ExpeditionState.Capture(_rover, _knowledge, _samples, _network, _pois).ToJson();
+    private string CaptureExpedition() => ExpeditionState.Capture(_rover, _knowledge, _samples, _network, _pois, _climate).ToJson();
 
     /// <summary>After a load: the saved expedition replaces the reconstructed one.</summary>
     private void RestoreExpedition(string? json)
@@ -88,7 +88,12 @@ public partial class GameRoot
 
         try
         {
-            ExpeditionState.FromJson(json).Apply(_rover, _knowledge, _samples, _network, _pois);
+            var state = ExpeditionState.FromJson(json);
+            state.Apply(_rover, _knowledge, _samples, _network, _pois);
+            if (state.Climate is { } climate)
+            {
+                ResetClimate(climate);
+            }
         }
         catch (System.IO.InvalidDataException exception)
         {

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Martis.Simulation.Sessions;
+using Martis.Simulation.Terraforming;
 
 namespace Martis.Simulation.Expedition;
 
@@ -17,6 +18,7 @@ public sealed record StationRecord(int X, int Y, long BuiltSol, double Wear);
 /// the rover, the fog of knowledge, samples, stations and points of interest. It is stored as
 /// a JSON event at the snapshot's tick, next to the mission progress, so a load restores the
 /// whole game and not only the biology. Knowledge is packed as 16-bit confidences in base64.
+/// Since E1 (ADR-033) it also carries the regional climate, absent in older saves.
 /// </summary>
 public sealed record ExpeditionState(
     int Version,
@@ -27,7 +29,8 @@ public sealed record ExpeditionState(
     IReadOnlyList<SampleRecord> Samples,
     long LabFreeSol,
     IReadOnlyList<StationRecord> Stations,
-    IReadOnlyDictionary<string, PoiState> Pois)
+    IReadOnlyDictionary<string, PoiState> Pois,
+    ClimateRecord? Climate = null)
 {
     public const int CurrentVersion = 1;
 
@@ -36,7 +39,7 @@ public sealed record ExpeditionState(
 
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = false };
 
-    public static ExpeditionState Capture(Rover rover, KnowledgeMap knowledge, SampleStore samples, FacilityNetwork network, PoiField pois)
+    public static ExpeditionState Capture(Rover rover, KnowledgeMap knowledge, SampleStore samples, FacilityNetwork network, PoiField pois, RegionalClimate? climate = null)
     {
         ArgumentNullException.ThrowIfNull(rover);
         ArgumentNullException.ThrowIfNull(knowledge);
@@ -52,7 +55,8 @@ public sealed record ExpeditionState(
             samples.All.Select(sample => new SampleRecord(sample.Source, sample.TakenSol, sample.State, sample.ReadySol)).ToArray(),
             samples.LabFreeSol,
             network.Stations.Select(station => new StationRecord(station.X, station.Y, station.BuiltSol, station.Wear)).ToArray(),
-            pois.Pois.ToDictionary(poi => poi.Definition.Id, poi => poi.State, StringComparer.Ordinal));
+            pois.Pois.ToDictionary(poi => poi.Definition.Id, poi => poi.State, StringComparer.Ordinal),
+            climate?.Capture());
     }
 
     /// <summary>Writes this state into freshly built expedition objects of the same map size.</summary>

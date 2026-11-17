@@ -129,10 +129,16 @@ public sealed class FacilityNetwork
 
     public double PowerUsedW => _stations.Count * Definition.StationPowerW;
 
+    /// <summary>Power other machines draw from the same lander, such as heaters (E1, ADR-033).</summary>
+    public double ExtraLoadW { get; set; }
+
+    /// <summary>Power the lander still has free.</summary>
+    public double FreePowerW => Math.Max(0.0, Definition.PowerBudgetW - PowerUsedW - ExtraLoadW);
+
     public BuildResult CanBuild(int x, int y, KnowledgeLevel level)
         => level != KnowledgeLevel.Measured ? BuildResult.NotMeasured
             : _stations.Any(station => station.X == x && station.Y == y) ? BuildResult.Occupied
-            : PowerUsedW + Definition.StationPowerW > Definition.PowerBudgetW + 1e-9 ? BuildResult.NoPower
+            : PowerUsedW + ExtraLoadW + Definition.StationPowerW > Definition.PowerBudgetW + 1e-9 ? BuildResult.NoPower
             : BuildResult.Built;
 
     public BuildResult Build(int x, int y, KnowledgeLevel level, long sol, out Station? station)

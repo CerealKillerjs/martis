@@ -16,6 +16,7 @@ uniform float cells = 64.0;
 uniform vec2 reach_center = vec2(-1.0);  // rover position in cell units (J1); x < 0 hides the ring
 uniform float reach_radius = 3.0;        // cells the rover can seed
 // Fog of knowledge (V2, ADR-029): R = 0 unknown, 0.5 estimated, 1 measured; G = raw confidence.
+// B = heating anomaly (E1, ADR-033), 0 … 1 of the heater's peak warming.
 uniform sampler2D knowledge_data : filter_linear, repeat_disable;
 uniform vec2 scan_center = vec2(-1.0);   // last rover scan, cell units
 uniform float scan_radius = 4.0;
@@ -145,6 +146,14 @@ void fragment() {
         // Border between known and unknown ground: a thin cold line.
         float edge = 1.0 - smoothstep(0.0, 0.08, abs(know.r - 0.25));
         emission += vec3(0.35, 0.65, 1.0) * edge * 0.18;
+    }
+
+    // Heated ground (E1): thawed, darker soil with a warm infrared glow and a slow shimmer.
+    if (know.b > 0.004) {
+        float heat = smoothstep(0.0, 1.0, know.b);
+        float shimmer = 0.75 + 0.25 * sin(TIME * 2.2 + fbm(world_pos.xz * 1.3 + TIME * 0.15) * 9.0);
+        albedo = mix(albedo, albedo * vec3(0.72, 0.6, 0.55), heat * 0.6);
+        emission += mix(vec3(1.0, 0.32, 0.06), vec3(1.0, 0.72, 0.3), heat) * heat * shimmer * (0.6 + 0.5 * night) * known;
     }
 
     // Rover scan (V2): a bright ring expanding to the scanner radius.

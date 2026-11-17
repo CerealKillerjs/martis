@@ -240,6 +240,7 @@ public partial class GameRoot : Node
             _session.Advance(1);
             OrbitalPass();
             StationsTick();
+            ClimateTick();
             AnalyzeSamples();
             Refresh();
         }
@@ -279,8 +280,11 @@ public partial class GameRoot : Node
                 case Key.B when Exploring:
                     BuildStation();
                     break;
+                case Key.H when Exploring:
+                    BuildHeater();
+                    break;
                 case Key.X when Exploring:
-                    RepairStation();
+                    RepairHere();
                     break;
                 case Key.G when !Exploring:
                     SendRover();
@@ -384,6 +388,7 @@ public partial class GameRoot : Node
         ResetKnowledge();
         ResetSamples();
         ResetFacilities();
+        ResetClimate();
         ResetValley();
         Select(session.Width / 2, session.Height / 2);
         Refresh();
@@ -721,6 +726,11 @@ public partial class GameRoot : Node
             ShowcaseStations(o);
         }
 
+        if (_options.ContainsKey("heaters"))
+        {
+            ShowcaseHeaters(o);
+        }
+
         Select(32 + o, 32 + o);
         Refresh();
         _hud.ShowForecast(_session.Experiment("phototroph_a01", 32 + o, 32 + o, 0.5, design, 40));
@@ -829,6 +839,19 @@ public partial class GameRoot : Node
         var robotsOk = _network.Stations.Count == 1 && move is not null && _orders.All.Single(order => order.Id == move.Id).Status == Martis.Application.OrderStatus.Done && _rover.Wear > 0;
         GD.Print($"MARTIS smoke robots={robotsOk} wear={_rover.Wear:0.###}");
         roverOk &= robotsOk;
+        // E1: a heater on measured ground warms the cells around it in the engine, sol by sol.
+        SwitchMode(Martis.Application.GameMode.Exploration);
+        var (hx, hy) = _rover.Cell;
+        _knowledge.Scan(hx + 0.5, hy + 0.5);
+        var cold = (double)_session.View().TemperatureKelvin[_session.CellIndex(hx, hy)];
+        _rover.Restore(_rover.X, _rover.Y, _rover.Heading, 1.0, _rover.Wear, _rover.Lander);
+        BuildHeater();
+        _session.Advance(8);
+        ClimateTick();
+        var warm = (double)_session.View().TemperatureKelvin[_session.CellIndex(hx, hy)];
+        var heatOk = _climate.Heaters.Count == 1 && warm > cold + 1.0 && _network.ExtraLoadW > 0;
+        GD.Print($"MARTIS smoke heat={heatOk} cold={cold:0.0} warm={warm:0.0} cells={_climate.WarmedCells}");
+        roverOk &= heatOk;
         // V5: measuring a place of the valley reveals it; the whole expedition survives save and load.
         var delta = _pois.Pois[0];
         _knowledge.Scan(delta.X + 0.5, delta.Y + 0.5);
@@ -840,7 +863,8 @@ public partial class GameRoot : Node
         _rover.Place(0, 0, 0);
         RestoreExpedition(savedExpedition);
         var valleyOk = delta.State == Martis.Simulation.Expedition.PoiState.Discovered && reloaded is not null && savedExpedition == expedition
-            && _rover.X == roverX && _rover.Y == roverY && _network.Stations.Count == 1 && _samples.All.Count == 1;
+            && _rover.X == roverX && _rover.Y == roverY && _network.Stations.Count == 1 && _samples.All.Count == 1
+            && _climate.Heaters.Count == 1 && System.Math.Abs(_climate.Anomaly(hx, hy) - (warm - cold)) < 1e-3;
         GD.Print($"MARTIS smoke valley={valleyOk} places={_pois.Pois.Count(poi => poi.State != Martis.Simulation.Expedition.PoiState.Hidden)} bytes={expedition.Length}");
         roverOk &= valleyOk;
         ok &= roverOk;
