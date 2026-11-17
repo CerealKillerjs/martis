@@ -61,9 +61,23 @@
       "title": "Cooperación",
       "summary": "Endosimbiosis y los primeros organismos multicelulares.",
       "grid": 128,
-      "missions": [],
+      "missions": [
+        {
+          "id": "symbiosis",
+          "file": "symbiosis.v1.json"
+        },
+        {
+          "id": "complex_cells",
+          "file": "complex_cells.v1.json"
+        },
+        {
+          "id": "multicellular",
+          "file": "multicellular.v1.json"
+        }
+      ],
       "population_budget": "campaign.population_budget.grid_128",
-      "gradient": "gradients.v1.json"
+      "gradient": "gradients.v1.json",
+      "transitions": "transitions.v1.json"
     },
     {
       "id": "ch4",
@@ -72,7 +86,8 @@
       "grid": 256,
       "missions": [],
       "population_budget": "campaign.population_budget.grid_256",
-      "gradient": "gradients.v1.json"
+      "gradient": "gradients.v1.json",
+      "transitions": "transitions.v1.json"
     },
     {
       "id": "ch5",
@@ -81,7 +96,8 @@
       "grid": 256,
       "missions": [],
       "population_budget": "campaign.population_budget.grid_256",
-      "gradient": "gradients.v1.json"
+      "gradient": "gradients.v1.json",
+      "transitions": "transitions.v1.json"
     }
   ],
   "location": {

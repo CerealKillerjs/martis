@@ -132,6 +132,36 @@
             "organism": "extremophile_e01"
           }
         ]
+      },
+      {
+        "id": "eukaryote_culture",
+        "title": "Cultivo de eucariotas",
+        "description": "Permite desplegar el Eucariota K01 desde el biorreactor.",
+        "cost": "eco.tech.eukaryote_culture.cost",
+        "requires": [
+          "extremophiles"
+        ],
+        "effects": [
+          {
+            "type": "organism",
+            "organism": "eukaryote_k01"
+          }
+        ]
+      },
+      {
+        "id": "multicellular_culture",
+        "title": "Cultivo multicelular",
+        "description": "Permite desplegar el Multicelular M01 desde el biorreactor.",
+        "cost": "eco.tech.multicellular_culture.cost",
+        "requires": [
+          "eukaryote_culture"
+        ],
+        "effects": [
+          {
+            "type": "organism",
+            "organism": "multicellular_m01"
+          }
+        ]
       }
     ]
   },
@@ -566,6 +596,42 @@
       "source": null,
       "note": "Valor de juego propuesto para la economía (H2); Dani debe ajustarlo jugando (H-33).",
       "rationale": "Coste de Cepas extremófilas.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.tech.eukaryote_culture.cost",
+      "field": "cost",
+      "value": 40.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el capítulo 3 (H5); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Coste de Cultivo de eucariotas.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.tech.multicellular_culture.cost",
+      "field": "cost",
+      "value": 70.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el capítulo 3 (H5); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Coste de Cultivo multicelular.",
       "range": [
         0,
         100000.0

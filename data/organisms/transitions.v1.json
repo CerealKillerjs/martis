@@ -1,0 +1,170 @@
+{
+  "metadata": {
+    "schema": "martis.transitions",
+    "id": "genesis_transitions",
+    "name": "Grandes transiciones evolutivas",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (H5)",
+    "review": "Endosimbiosis y multicelularidad como reglas GAME_BALANCE (ADR-023). Conservan la masa: la población fundadora sale de la biomasa de sus socios.",
+    "transitions": [
+      {
+        "id": "endosymbiosis",
+        "title": "Endosimbiosis",
+        "partners": [
+          "decomposer_d01",
+          "phototroph_a01"
+        ],
+        "product": "eukaryote_k01",
+        "min_biomass": "transition.endosymbiosis.min_biomass_kg",
+        "probability": "transition.endosymbiosis.probability",
+        "founder_fraction": "transition.endosymbiosis.founder_fraction"
+      },
+      {
+        "id": "multicellularity",
+        "title": "Multicelularidad",
+        "partners": [
+          "eukaryote_k01"
+        ],
+        "product": "multicellular_m01",
+        "gene": "BIOFILM_PRODUCTION",
+        "min_gene": "transition.multicellularity.min_biofilm",
+        "min_biomass": "transition.multicellularity.min_biomass_kg",
+        "probability": "transition.multicellularity.probability",
+        "founder_fraction": "transition.multicellularity.founder_fraction"
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "transition.endosymbiosis.min_biomass_kg",
+      "field": "min_biomass",
+      "value": 0.2,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Transición evolutiva de juego propuesta para el capítulo 3 (H5); Ciencia debe revisarla.",
+      "rationale": "Biomasa mínima de cada socio en la casilla.",
+      "range": [
+        0,
+        1000
+      ]
+    },
+    {
+      "id": "transition.endosymbiosis.probability",
+      "field": "probability",
+      "value": 0.03,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Transición evolutiva de juego propuesta para el capítulo 3 (H5); Ciencia debe revisarla.",
+      "rationale": "Probabilidad por sol de que la convivencia acabe en fusión.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "transition.endosymbiosis.founder_fraction",
+      "field": "founder_fraction",
+      "value": 0.1,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Transición evolutiva de juego propuesta para el capítulo 3 (H5); Ciencia debe revisarla.",
+      "rationale": "Fracción de cada socio que forma el primer eucariota.",
+      "range": [
+        1e-06,
+        0.99
+      ]
+    },
+    {
+      "id": "transition.multicellularity.min_biofilm",
+      "field": "min_gene",
+      "value": 0.8,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Transición evolutiva de juego propuesta para el capítulo 3 (H5); Ciencia debe revisarla.",
+      "rationale": "Producción de biopelícula mínima para que las células se queden unidas.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "transition.multicellularity.min_biomass_kg",
+      "field": "min_biomass",
+      "value": 1.0,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Transición evolutiva de juego propuesta para el capítulo 3 (H5); Ciencia debe revisarla.",
+      "rationale": "Biomasa eucariota mínima en la casilla.",
+      "range": [
+        0,
+        1000
+      ]
+    },
+    {
+      "id": "transition.multicellularity.probability",
+      "field": "probability",
+      "value": 0.03,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Transición evolutiva de juego propuesta para el capítulo 3 (H5); Ciencia debe revisarla.",
+      "rationale": "Probabilidad por sol del salto a multicelular.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "transition.multicellularity.founder_fraction",
+      "field": "founder_fraction",
+      "value": 0.2,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Transición evolutiva de juego propuesta para el capítulo 3 (H5); Ciencia debe revisarla.",
+      "rationale": "Fracción de la población que forma el primer organismo multicelular.",
+      "range": [
+        1e-06,
+        0.99
+      ]
+    }
+  ]
+}

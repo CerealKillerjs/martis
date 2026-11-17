@@ -100,6 +100,7 @@ public static class BiologyPipeline
                 SimulationSteps.GenerateReproduction => new Biology.ReproductionSystem(workspace),
                 SimulationSteps.ApplyMutations => new Biology.MutationSystem(workspace),
                 SimulationSteps.ApplySelectionAndDrift => new Biology.SelectionDriftSystem(workspace),
+                SimulationSteps.UpdateEcology => new Biology.TransitionSystem(workspace),
                 SimulationSteps.RecycleDeadBiomass => new Biology.RecycleSystem(workspace),
                 SimulationSteps.ValidateConservation => new Biology.ConservationSystem(workspace),
                 _ => new StubSimulationSystem(name),

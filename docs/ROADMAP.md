@@ -132,7 +132,7 @@ Cada hito va en una rama y un PR propios, apilados.
 - **H2, economía ([ADR-020](ADR/ADR-020-economia.md)):** puntos de investigación para el árbol tecnológico y el inóculo del biorreactor, que limita los despliegues.
 - **H3, mapas grandes ([ADR-021](ADR/ADR-021-mapas-grandes.md)):** tamaño de rejilla por capítulo (64, 128 y 256), presupuesto de poblaciones (H-29) y terreno 3D por bloques. 256×256 va a 74 ms/tick.
 - **H4, capítulo 2 (Ciclo cerrado, [ADR-022](ADR/ADR-022-capitulo-2.md)):** gradientes de latitud y relieve (H-30), objetivos de ocupar franjas, reciclar y acumular O₂, y misiones 2.1 a 2.4.
-- **H5, capítulo 3 (Cooperación):** transiciones evolutivas (eucariota y multicelular).
+- **H5, capítulo 3 (Cooperación, [ADR-023](ADR/ADR-023-capitulo-3.md)):** eucariota y multicelular, transiciones por endosimbiosis y biopelícula, y misiones 3.1 a 3.3.
 - **H6, capítulo 4 (Cadenas tróficas):** herbivoría, depredación y dispersión activa.
 - **H7, capítulo 5 (Mente):** cognición, socialidad e índice de inteligencia.
 - **H8:** narrativa y equilibrado.

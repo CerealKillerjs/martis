@@ -123,6 +123,12 @@ public sealed class MetabolismWorkspace
     /// </summary>
     public int? PopulationBudget { get; set; }
 
+    /// <summary>Major transitions of this world (H5, ADR-023); null means none, and update-ecology does nothing.</summary>
+    public TransitionCatalog? Transitions { get; set; }
+
+    /// <summary>Transitions that happened this tick, in order.</summary>
+    public List<TransitionEvent> TransitionEvents { get; } = [];
+
     private readonly Dictionary<string, PopulationParameters> _populationParameters = new(StringComparer.Ordinal);
     private readonly Dictionary<string, EvolutionParameters> _evolutionParameters = new(StringComparer.Ordinal);
 
@@ -234,6 +240,7 @@ public sealed class MetabolismWorkspace
         Extinct.Clear();
         Newborns.Clear();
         MutationEvents.Clear();
+        TransitionEvents.Clear();
         Totals.Reset();
         Totals.ExternalInflowKg = PendingInflowKg;
         PendingInflowKg = 0;

@@ -189,6 +189,9 @@ public partial class CampaignMenu : Control
         "closed_cycle" => "Ciclo cerrado",
         "cold_frontier" => "Frontera helada",
         "oxygen" => "Atmósfera",
+        "symbiosis" => "Simbiosis",
+        "complex_cells" => "Células complejas",
+        "multicellular" => "Multicelularidad",
         _ => mission.Id.Replace('_', ' '),
     };
 

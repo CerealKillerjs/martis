@@ -62,7 +62,7 @@ public sealed record SessionEvent(long Tick, string Kind, string Text, int Cell 
 /// chapter its own: 64, 128 or 256 cells per side. <see cref="Gradient"/> names a file in
 /// <c>data/scenarios</c> laid over the uniform baseline (H4, H-30); null keeps it uniform.
 /// </summary>
-public sealed record WorldOptions(int GridSize = 64, int? PopulationBudget = null, string? Gradient = null)
+public sealed record WorldOptions(int GridSize = 64, int? PopulationBudget = null, string? Gradient = null, string? Transitions = null)
 {
     public static readonly WorldOptions Default = new();
 }
@@ -82,7 +82,7 @@ public sealed class GameSession
     private readonly HashSet<string> _reportedObjectives = new(StringComparer.Ordinal);
     private readonly Dictionary<string, int> _organismIndex;
 
-    private GameSession(MarsBaselineScenario scenario, BiologyCatalog biology, MissionDefinition? mission, ulong seed, StateSnapshot? resume, MissionProgress? progress = null, WorldOptions? world = null, EnvironmentGradient? gradient = null)
+    private GameSession(MarsBaselineScenario scenario, BiologyCatalog biology, MissionDefinition? mission, ulong seed, StateSnapshot? resume, MissionProgress? progress = null, WorldOptions? world = null, string? repositoryRoot = null)
     {
         world ??= WorldOptions.Default;
         var width = resume?.Configuration.MapWidth ?? world.GridSize;
@@ -93,7 +93,9 @@ public sealed class GameSession
         Scenario = scenario;
         Biology = biology;
         Seed = seed;
-        (Engine, Workspace) = MarsBaselineWorld.CreateWithBiology(scenario, biology, seed, width, height, world.PopulationBudget, resume is null ? gradient : null);
+        Transitions = repositoryRoot is not null && world.Transitions is { } transitions ? TransitionCatalog.LoadPublished(repositoryRoot, transitions, biology) : null;
+        var gradient = resume is null && repositoryRoot is not null && world.Gradient is { } file ? EnvironmentGradient.LoadPublished(repositoryRoot, file) : null;
+        (Engine, Workspace) = MarsBaselineWorld.CreateWithBiology(scenario, biology, seed, width, height, world.PopulationBudget, gradient, Transitions);
         if (resume is not null)
         {
             resume.Restore(Engine);
@@ -134,6 +136,9 @@ public sealed class GameSession
     }
 
     public MarsBaselineScenario Scenario { get; }
+
+    /// <summary>Major transitions of this world (H5); null when the chapter has none.</summary>
+    public TransitionCatalog? Transitions { get; }
 
     /// <summary>Map size (taken from the snapshot when resuming) and population budget of this run.</summary>
     public WorldOptions World { get; }
@@ -216,7 +221,7 @@ public sealed class GameSession
             null,
             null,
             world,
-            GradientOf(repositoryRoot, world));
+            repositoryRoot);
 
     /// <summary>A new game of one campaign mission (<c>data/missions/<paramref name="missionFile"/></c>).</summary>
     public static GameSession NewGame(string repositoryRoot, ulong seed, string missionFile, WorldOptions? world = null)
@@ -230,7 +235,7 @@ public sealed class GameSession
             null,
             null,
             world,
-            GradientOf(repositoryRoot, world));
+            repositoryRoot);
     }
 
     /// <summary>
@@ -248,7 +253,8 @@ public sealed class GameSession
             snapshot.Configuration.WorldSeed,
             snapshot,
             progress,
-            world);
+            world,
+            repositoryRoot);
     }
 
     public static GameSession Resume(string repositoryRoot, StateSnapshot snapshot, bool withMission = true, WorldOptions? world = null)
@@ -261,11 +267,9 @@ public sealed class GameSession
             snapshot.Configuration.WorldSeed,
             snapshot,
             null,
-            world);
+            world,
+            repositoryRoot);
     }
-
-    private static EnvironmentGradient? GradientOf(string repositoryRoot, WorldOptions? world)
-        => world?.Gradient is { } file ? EnvironmentGradient.LoadPublished(repositoryRoot, file) : null;
 
     public int CellIndex(int x, int y) => Engine.State.ToLinearIndex(x, y);
 
@@ -329,6 +333,11 @@ public sealed class GameSession
                 Pay(Math.Min(Research?.Definition.Rewards.Mutation ?? 0.0, (Research?.Definition.Rewards.MutationCap ?? 0.0) - _mutationPoints), mutation: true);
                 var genes = string.Join(", ", item.Changes.Select(change => $"{change.GeneId} {change.Before:0.00}→{change.After:0.00}"));
                 Add("mutation", $"Nueva variante #{item.ChildId} de {Name(item.OrganismId)} en ({item.CellIndex % Width}, {item.CellIndex / Width}): {genes}", item.CellIndex);
+            }
+
+            foreach (var item in Workspace.TransitionEvents)
+            {
+                Add("transition", $"¡{item.Title}! Nace {Name(item.Product)} #{item.ChildId} en ({item.CellIndex % Width}, {item.CellIndex / Width})", item.CellIndex);
             }
 
             foreach (var id in Workspace.Extinct)
@@ -458,7 +467,7 @@ public sealed class GameSession
             return new ExperimentForecast(organismId, 0, [], false, "Hay un despliegue pendiente: avanza un sol antes de experimentar");
         }
 
-        var (lab, _) = MarsBaselineWorld.CreateWithBiology(Scenario, Biology, Seed, Width, Height, World.PopulationBudget);
+        var (lab, _) = MarsBaselineWorld.CreateWithBiology(Scenario, Biology, Seed, Width, Height, World.PopulationBudget, null, Transitions);
         Capture().Restore(lab);
         var cell = CellIndex(x, y);
         lab.ApplyCommand(new IntroducePopulationCommand(organismId, cell, biomassKg, genes));

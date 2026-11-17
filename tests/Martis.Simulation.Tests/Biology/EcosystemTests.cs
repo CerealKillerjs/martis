@@ -17,12 +17,12 @@ public sealed class EcosystemTests
     private static readonly HostInfo Host = new("t", "t", "t");
 
     [Fact]
-    public void TheCatalogHasThePhototrophTheDecomposerAndTheExtremophile()
+    public void TheCatalogHasTheMicrobesAndTheChapterThreeOrganisms()
     {
         var catalog = Catalog();
 
         Assert.Equal(
-            new[] { "decomposer", "extremophile", "phototroph" },
+            new[] { "decomposer", "eukaryote", "extremophile", "multicellular", "phototroph" },
             catalog.Organisms.Select(organism => organism.Definition.Category).Order(StringComparer.Ordinal));
         var decomposer = catalog.Organism("decomposer_d01");
         Assert.Equal("heterotrophic_assimilation", decomposer.GrowthReaction.Id);

@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "complex_cells",
+    "name": "CÉLULAS COMPLEJAS — 3.2",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (campaña H5)",
+    "review": "Misión del capítulo 3 de la campaña «Génesis» (ADR-023). Umbrales GAME_BALANCE propuestos.",
+    "sequential": false,
+    "briefing": "Ya sabemos cultivar eucariotas. Son más grandes y más lentos, pero sus mitocondrias les dan energía de sobra y no agotan el agua como las bacterias. Extiéndelos por la región.",
+    "objectives": [
+      {
+        "id": "spread",
+        "type": "occupy",
+        "organism": "eukaryote_k01",
+        "count": "mission.complex_cells.cells",
+        "title": "Extiende los eucariotas",
+        "hint": "Investiga «Cultivo de eucariotas» (tecla R) para desplegarlos desde el biorreactor."
+      },
+      {
+        "id": "sustain",
+        "type": "sustain",
+        "organism": "eukaryote_k01",
+        "min_biomass": "mission.complex_cells.min_biomass_kg",
+        "sols": "mission.complex_cells.sustain_sols",
+        "title": "Mantén una población grande",
+        "hint": "Un poco de descomponedor junto a cada colonia recicla a los muertos."
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.complex_cells.cells",
+      "field": "count",
+      "value": 4.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 3 (H5); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Casillas con eucariotas.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.complex_cells.min_biomass_kg",
+      "field": "min_biomass",
+      "value": 5.0,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 3 (H5); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa eucariota mínima.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.complex_cells.sustain_sols",
+      "field": "sols",
+      "value": 60.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 3 (H5); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles seguidos por encima del mínimo.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    }
+  ]
+}
