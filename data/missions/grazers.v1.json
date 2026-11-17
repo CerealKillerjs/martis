@@ -28,7 +28,8 @@
         "title": "Mantén a los herbívoros",
         "hint": "Sin fotótrofos que comer, los herbívoros gastan su reserva y mueren. Una parte de la presa siempre se esconde y vuelve a crecer."
       }
-    ]
+    ],
+    "debrief": "Los primeros animales pastan sobre tus colonias. Has visto que, si comen demasiado deprisa, se quedan sin comida."
   },
   "location": {
     "site": "model"

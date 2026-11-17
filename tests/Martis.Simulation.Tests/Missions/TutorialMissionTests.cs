@@ -18,7 +18,7 @@ public sealed class TutorialMissionTests
 
         Assert.True(mission.Sequential);
         Assert.Equal(
-            ["orbit_camera", "zoom_camera", "select_overlay", "inspect_cell", "analyze_region", "run_time"],
+            ["orbit_camera", "zoom_camera", "select_overlay", "inspect_cell", "rover_view", "drive_rover", "orbital_view", "analyze_region", "run_time"],
             mission.Objectives.Select(objective => objective.Id));
         Assert.Equal(ObjectiveKind.Elapsed, mission.Objectives[^1].Kind);
     }
@@ -38,9 +38,9 @@ public sealed class TutorialMissionTests
         Assert.Equal("select_overlay", tracker.ActiveObjective!.Id);
 
         session.RecordAction("select-overlay");
-        Assert.Equal("analyze_region", tracker.ActiveObjective!.Id);
+        Assert.Equal("rover_view", tracker.ActiveObjective!.Id);
         var active = tracker.Status().Single(status => status.Active);
-        Assert.Equal("analyze_region", active.Id);
+        Assert.Equal("rover_view", active.Id);
         Assert.False(string.IsNullOrWhiteSpace(active.Hint));
     }
 
@@ -52,7 +52,7 @@ public sealed class TutorialMissionTests
         var waiting = session.Mission!.Status().Single(status => status.Id == "run_time");
         Assert.Equal(0, waiting.Progress);
 
-        foreach (var action in new[] { "orbit-camera", "zoom-camera", "select-overlay", "inspect-cell", "analyze-region" })
+        foreach (var action in new[] { "orbit-camera", "zoom-camera", "select-overlay", "inspect-cell", "rover-view", "drive-rover", "orbital-view", "analyze-region" })
         {
             session.RecordAction(action);
         }

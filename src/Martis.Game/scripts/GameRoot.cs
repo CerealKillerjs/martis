@@ -32,6 +32,9 @@ public partial class GameRoot : Node
     private long _seenEvents;
     private (int X, int Y) _selected = (-1, -1);
     private bool _celebrated;
+
+    /// <summary>When the HUD shows hints in the current campaign mission (H8); null in free play.</summary>
+    private MissionGuidance? _guidance;
     private Dictionary<string, string> _options = new(StringComparer.Ordinal);
     private CampaignProgress _campaign = null!;
     private CampaignMission? _mission;
@@ -191,11 +194,24 @@ public partial class GameRoot : Node
         ChapterChanged?.Invoke(ChapterId);
         var chapter = _campaign.Campaign.ChapterOf(mission.Id);
         var definition = _session.Mission!.Definition;
+        var concepts = string.Join(" · ", mission.Concepts.Select(id => _campaign.Campaign.Concept(id).Title));
+        var learn = concepts.Length > 0 ? $"\n\nAprenderás: {concepts}" : string.Empty;
+        var first = _guidance?.ShowsHint ?? true ? definition.Objectives[0].Hint ?? definition.Objectives[0].Title : definition.Objectives[0].Title;
         _hud.Banner(
             definition.Name,
-            string.Create(CultureInfo.InvariantCulture, $"Capítulo {chapter.Number} · {chapter.Title}\n\n{definition.Briefing}"),
-            ("Empezar", () => _hud.Toast(definition.Objectives[0].Hint ?? definition.Objectives[0].Title)));
+            string.Create(CultureInfo.InvariantCulture, $"Capítulo {chapter.Number} · {chapter.Title} · {Guidance(chapter.Guidance)}\n\n{definition.Briefing}{learn}"),
+            ("Empezar", () => _hud.Toast(first)));
     }
+
+    /// <summary>How the briefing names the help of a chapter (H8).</summary>
+    private static string Guidance(GuidanceLevel level) => level switch
+    {
+        GuidanceLevel.Tutorial => "Tutorial guiado",
+        GuidanceLevel.Hints => "Con pistas",
+        GuidanceLevel.OnRequest => "Pistas si las pides",
+        GuidanceLevel.Minimal => "Ayuda mínima",
+        _ => "Sin ayuda",
+    };
 
     private void FreePlay() => FreePlay(_options.TryGetValue("grid", out var grid) ? int.Parse(grid, CultureInfo.InvariantCulture) : 64);
 
@@ -318,6 +334,9 @@ public partial class GameRoot : Node
     {
         _session = session;
         _seenEvents = 0;
+        _guidance = _mission is not null && session.Mission is not null
+            ? new MissionGuidance(_campaign.Campaign.ChapterOf(_mission.Id).Guidance, _campaign.Campaign.Guidance, session.Tick)
+            : null;
         _celebrated = session.Mission?.IsComplete ?? false;
         if (_world is not null && (_world.Ground.CellsX != session.Width || _world.Ground.CellsY != session.Height))
         {
@@ -352,6 +371,13 @@ public partial class GameRoot : Node
             _menu.LoadChosen += Load;
             _menu.ResumeChosen += CloseMenu;
             _hud.AnalyzeRequested += Analyze;
+            _hud.HintRequested += () =>
+            {
+                if (_guidance?.Request() == true)
+                {
+                    Refresh();
+                }
+            };
             _hud.ExperimentRequested += Experiment;
             _hud.DeployToggled += on => _hud.Toast(on ? "Elige una celda para la colonia." : "Despliegue cancelado.");
             _hud.SetOrganisms(session.Organisms);
@@ -379,7 +405,12 @@ public partial class GameRoot : Node
     {
         _view = _session.View();
         _world.Show(_view);
-        _hud.ShowMission(_session.Mission, MissionCaption());
+        if (_session.Mission is { } tracked)
+        {
+            _guidance?.Observe(tracked, _session.Tick);
+        }
+
+        _hud.ShowMission(_session.Mission, MissionCaption(), _guidance);
         _hud.ShowEconomy(_session.Research, _session.InoculumKg);
         if (_session.Research is { } research && research.Points != _savedPoints)
         {
@@ -437,7 +468,10 @@ public partial class GameRoot : Node
         _campaign.Complete(_mission.Id);
         SaveCampaign();
         var title = _mission.Id == "first_colony" ? "¡PRIMERA COLONIA!" : "¡MISIÓN COMPLETADA!";
-        var done = $"{mission.Definition.Name} completada en el sol {_session.Tick}.";
+        var learned = string.Join(" · ", _mission.Concepts.Select(id => _campaign.Campaign.Concept(id).Title));
+        var debrief = mission.Definition.Debrief is { } text ? $"\n\n{text}" : string.Empty;
+        var codex = learned.Length > 0 ? $"\n\nNuevo en el códice: {learned}." : string.Empty;
+        var done = $"{mission.Definition.Name} completada en el sol {_session.Tick}.{debrief}{codex}\n\n";
         if (_campaign.Next is not { } next)
         {
             _hud.Banner(title, done + " Has terminado todas las misiones disponibles: los próximos capítulos llegarán pronto.", ("Seguir explorando", () => { }), ("Menú", OpenMenu));
@@ -610,14 +644,27 @@ public partial class GameRoot : Node
     /// <summary>Screenshot of the campaign menu with some progress, for docs and review.</summary>
     private async void MenuShowcase(string path)
     {
-        if (_options.ContainsKey("progress"))
+        if (_options.TryGetValue("progress", out var upTo))
         {
-            _campaign.Complete("awakening");
-            _campaign.Complete("first_colony");
+            // --progress completes the first two missions; --progress=<id> every mission up to that one.
+            var last = string.IsNullOrEmpty(upTo) || upTo == "true" ? "first_colony" : upTo;
+            foreach (var mission in _campaign.Campaign.Missions)
+            {
+                _campaign.Complete(mission.Id);
+                if (mission.Id == last)
+                {
+                    break;
+                }
+            }
         }
 
         _playing = true;
         OpenMenu();
+        if (_options.ContainsKey("codex"))
+        {
+            _menu.ToggleCodex();
+        }
+
         if (_options.TryGetValue("briefing", out var id))
         {
             StartMission(_campaign.Campaign.Mission(id));

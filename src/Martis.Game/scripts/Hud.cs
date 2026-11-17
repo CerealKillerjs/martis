@@ -67,6 +67,9 @@ public partial class Hud : Control
 
     public event Action? AnalyzeRequested;
 
+    /// <summary>The player pressed «Pista» (H8): the host asks the mission guidance and refreshes.</summary>
+    public event Action? HintRequested;
+
     public event Action? ExperimentRequested;
 
     public event Action<bool>? DeployToggled;
@@ -248,7 +251,11 @@ public partial class Hud : Control
         _clock.Text = $"{minutes / 60:00}:{minutes % 60:00} LMST";
     }
 
-    public void ShowMission(MissionTracker? mission, string? caption = null)
+    /// <summary>
+    /// Objectives of the mission. <paramref name="guidance"/> decides whether the active hint
+    /// is visible (H8): without it the hint is always shown, as in free play.
+    /// </summary>
+    public void ShowMission(MissionTracker? mission, string? caption = null, MissionGuidance? guidance = null)
     {
         _missionCaption.Text = caption ?? "MISIÓN";
         foreach (var child in _missionRows.GetChildren())
@@ -287,7 +294,22 @@ public partial class Hud : Control
                 row.AddChild(count);
             }
 
-            if (status.Active && !string.IsNullOrWhiteSpace(status.Hint))
+            var hidden = guidance is not null && !guidance.ShowsHint;
+            if (status.Active && hidden && guidance!.CanRequest && !string.IsNullOrWhiteSpace(status.Hint))
+            {
+                var ask = new Button { Text = "💡 Pista", Flat = true, SizeFlagsHorizontal = SizeFlags.ShrinkBegin, TooltipText = "Muestra una pista para este objetivo." };
+                ask.AddThemeFontSizeOverride("font_size", 12);
+                ask.AddThemeColorOverride("font_color", Accent);
+                ask.Pressed += () => HintRequested?.Invoke();
+                row.AddChild(ask);
+                label.AddThemeColorOverride("font_color", Colors.White);
+            }
+            else if (status.Active && hidden)
+            {
+                label.AddThemeColorOverride("font_color", Colors.White);
+            }
+
+            if (status.Active && !hidden && !string.IsNullOrWhiteSpace(status.Hint))
             {
                 var hint = new PanelContainer();
                 var style = new StyleBoxFlat { BgColor = new Color(1f, 0.55f, 0.25f, 0.14f), BorderColor = Accent, ContentMarginLeft = 8, ContentMarginRight = 8, ContentMarginTop = 5, ContentMarginBottom = 5 };

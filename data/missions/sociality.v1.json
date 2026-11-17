@@ -35,7 +35,8 @@
         "title": "Mantén la sociedad",
         "hint": "Una sociedad caza herbívoros y depredadores: necesita mucha vida por debajo."
       }
-    ]
+    ],
+    "debrief": "Las primeras sociedades cazan juntas y se reparten la comida. La cooperación las hace más resistentes que cualquier depredador solitario."
   },
   "location": {
     "site": "model"

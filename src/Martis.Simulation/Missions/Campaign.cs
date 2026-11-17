@@ -5,14 +5,23 @@ using Martis.Simulation.Sessions;
 
 namespace Martis.Simulation.Missions;
 
-/// <summary>One mission of the campaign, in play order. <see cref="File"/> is under <c>data/missions</c>.</summary>
-public sealed record CampaignMission(string Id, string File, string ChapterId, int Number);
+/// <summary>
+/// One mission of the campaign, in play order. <see cref="File"/> is under <c>data/missions</c>.
+/// <see cref="Teaches"/> names the concepts (H8) the player learns by finishing it.
+/// </summary>
+public sealed record CampaignMission(string Id, string File, string ChapterId, int Number, IReadOnlyList<string>? Teaches = null)
+{
+    public IReadOnlyList<string> Concepts => Teaches ?? [];
+}
+
+/// <summary>A concept of the codex (H8): what a mission teaches, shown in its briefing and debrief.</summary>
+public sealed record CampaignConcept(string Id, string Title, string Text);
 
 /// <summary>
 /// One chapter. <see cref="GridSize"/> is the side of the map its missions use (64, 128 or
 /// 256, Daniel 2026-11-16). A chapter with no missions is announced but not playable yet.
 /// </summary>
-public sealed record CampaignChapter(string Id, int Number, string Title, string Summary, int GridSize, IReadOnlyList<CampaignMission> Missions, int? PopulationBudget = null, string? Gradient = null, string? Transitions = null, string? Trophic = null)
+public sealed record CampaignChapter(string Id, int Number, string Title, string Summary, int GridSize, IReadOnlyList<CampaignMission> Missions, int? PopulationBudget = null, string? Gradient = null, string? Transitions = null, string? Trophic = null, GuidanceLevel Guidance = GuidanceLevel.Hints)
 {
     public bool Playable => Missions.Count > 0;
 
@@ -25,7 +34,7 @@ public sealed record CampaignChapter(string Id, int Number, string Title, string
 /// from the first bacteria to complex and intelligent life. Loaded from
 /// <c>data/campaign/*.json</c>.
 /// </summary>
-public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<CampaignChapter> Chapters)
+public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<CampaignChapter> Chapters, IReadOnlyList<CampaignConcept>? ConceptList = null, GuidancePolicy? GuidancePolicy = null)
 {
     public const string GenesisFile = "genesis.v1.json";
 
@@ -37,6 +46,16 @@ public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<Ca
     /// <summary>World of the first chapter with that map size, for free play on a big map; null for an unknown size.</summary>
     public WorldOptions? WorldFor(int gridSize)
         => Chapters.FirstOrDefault(chapter => chapter.GridSize == gridSize)?.World;
+
+    /// <summary>Concepts of the codex in the order the campaign teaches them (H8).</summary>
+    public IReadOnlyList<CampaignConcept> Concepts => ConceptList ?? [];
+
+    /// <summary>When hints appear in each guidance level (H8).</summary>
+    public GuidancePolicy Guidance => GuidancePolicy ?? GuidancePolicy.Default;
+
+    public CampaignConcept Concept(string conceptId)
+        => Concepts.FirstOrDefault(concept => concept.Id == conceptId)
+            ?? throw new KeyNotFoundException($"The campaign has no concept '{conceptId}'.");
 
     public CampaignChapter ChapterOf(string missionId)
         => Chapters.First(chapter => chapter.Missions.Any(mission => mission.Id == missionId));
@@ -83,7 +102,10 @@ public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<Ca
                     throw new InvalidDataException($"Mission '{id}' appears twice in the campaign.");
                 }
 
-                missions.Add(new CampaignMission(id, mission.GetProperty("file").GetString()!, chapterId, missions.Count + 1));
+                IReadOnlyList<string>? teaches = mission.TryGetProperty("teaches", out var taught)
+                    ? [.. taught.EnumerateArray().Select(concept => concept.GetString()!)]
+                    : null;
+                missions.Add(new CampaignMission(id, mission.GetProperty("file").GetString()!, chapterId, missions.Count + 1, teaches));
             }
 
             chapters.Add(new CampaignChapter(
@@ -96,11 +118,65 @@ public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<Ca
                 item.TryGetProperty("population_budget", out var budget) ? (int)parameters.RequireNumber(budget.GetString()!).Value : null,
                 item.TryGetProperty("gradient", out var gradient) ? gradient.GetString() : null,
                 item.TryGetProperty("transitions", out var transitions) ? transitions.GetString() : null,
-                item.TryGetProperty("trophic", out var trophic) ? trophic.GetString() : null));
+                item.TryGetProperty("trophic", out var trophic) ? trophic.GetString() : null,
+                item.TryGetProperty("guidance", out var guidance) ? ParseGuidance(chapterId, guidance.GetString()) : GuidanceLevel.Hints));
         }
 
-        return new CampaignDefinition(meta.GetProperty("id").GetString()!, meta.GetProperty("name").GetString()!, chapters);
+        var concepts = new List<CampaignConcept>();
+        if (document.RootElement.TryGetProperty("concepts", out var conceptItems))
+        {
+            foreach (var item in conceptItems.EnumerateArray())
+            {
+                var concept = new CampaignConcept(item.GetProperty("id").GetString()!, item.GetProperty("title").GetString()!, item.GetProperty("text").GetString()!);
+                if (concepts.Any(other => other.Id == concept.Id) || string.IsNullOrWhiteSpace(concept.Title) || string.IsNullOrWhiteSpace(concept.Text))
+                {
+                    throw new InvalidDataException($"Concept '{concept.Id}' is repeated or has no title or text.");
+                }
+
+                concepts.Add(concept);
+            }
+        }
+
+        var taughtBy = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var mission in chapters.SelectMany(chapter => chapter.Missions))
+        {
+            foreach (var concept in mission.Concepts)
+            {
+                if (concepts.All(item => item.Id != concept))
+                {
+                    throw new InvalidDataException($"Mission '{mission.Id}' teaches unknown concept '{concept}'.");
+                }
+
+                if (!taughtBy.TryAdd(concept, mission.Id))
+                {
+                    throw new InvalidDataException($"Concept '{concept}' is taught by both '{taughtBy[concept]}' and '{mission.Id}'.");
+                }
+            }
+        }
+
+        GuidancePolicy? policy = null;
+        if (meta.TryGetProperty("guidance", out var policyItem))
+        {
+            double Read(string name) => parameters.RequireNumber(policyItem.GetProperty(name).GetString()!).Value;
+            policy = new GuidancePolicy(Read("on_request_stall_sols"), Read("minimal_stall_sols"));
+            if (!(policy.OnRequestStallSols > 0) || policy.MinimalStallSols < policy.OnRequestStallSols)
+            {
+                throw new InvalidDataException("Guidance needs 0 < on_request_stall_sols <= minimal_stall_sols.");
+            }
+        }
+
+        return new CampaignDefinition(meta.GetProperty("id").GetString()!, meta.GetProperty("name").GetString()!, chapters, concepts, policy);
     }
+
+    private static GuidanceLevel ParseGuidance(string chapterId, string? value) => value switch
+    {
+        "tutorial" => GuidanceLevel.Tutorial,
+        "hints" => GuidanceLevel.Hints,
+        "on_request" => GuidanceLevel.OnRequest,
+        "minimal" => GuidanceLevel.Minimal,
+        "none" => GuidanceLevel.None,
+        _ => throw new InvalidDataException($"Chapter '{chapterId}' has unknown guidance '{value}'; use tutorial, hints, on_request, minimal or none."),
+    };
 }
 
 /// <summary>
@@ -127,6 +203,10 @@ public sealed class CampaignProgress
     public CampaignMission? Next => Campaign.Missions.FirstOrDefault(mission => !_completed.Contains(mission.Id));
 
     public bool IsComplete(string missionId) => _completed.Contains(missionId);
+
+    /// <summary>Concepts of the finished missions, in the order the campaign teaches them (the codex, H8).</summary>
+    public IReadOnlyList<CampaignConcept> Learned
+        => [.. Campaign.Missions.Where(mission => _completed.Contains(mission.Id)).SelectMany(mission => mission.Concepts).Select(Campaign.Concept)];
 
     public bool IsUnlocked(string missionId)
     {

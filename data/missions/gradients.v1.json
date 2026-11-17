@@ -35,7 +35,8 @@
         "title": "Mantén las colonias",
         "hint": "Si una colonia se apaga, siembra otra en una franja más fresca."
       }
-    ]
+    ],
+    "debrief": "Has repartido vida entre zonas distintas. El ecuador y los polos no piden lo mismo, y has aprendido a mirar el mapa antes de sembrar."
   },
   "location": {
     "site": "model"

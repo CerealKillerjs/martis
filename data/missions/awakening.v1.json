@@ -9,7 +9,7 @@
     "author": "MARTIS Motor (campaña H1)",
     "review": "Misión de la campaña «Génesis» (ADR-019). Umbrales GAME_BALANCE propuestos.",
     "sequential": true,
-    "briefing": "Sol 0. La sonda MARTIS acaba de posarse en el cráter Gale. Antes de sembrar vida, aprende a leer el planeta: mueve la cámara, consulta las capas de datos e inspecciona el terreno.",
+    "briefing": "Sol 0. La sonda MARTIS acaba de posarse en el cráter Gale. Antes de sembrar vida, aprende a leer el planeta: mueve la cámara, consulta las capas de datos, inspecciona el terreno y prueba el rover sembrador.",
     "objectives": [
       {
         "id": "orbit_camera",
@@ -40,6 +40,27 @@
         "hint": "Haz clic izquierdo en el terreno: el inspector muestra el entorno y los recursos de esa celda."
       },
       {
+        "id": "rover_view",
+        "type": "action",
+        "action": "rover-view",
+        "title": "Sube al rover",
+        "hint": "Pulsa Tab para pasar a la cámara del rover sembrador."
+      },
+      {
+        "id": "drive_rover",
+        "type": "action",
+        "action": "drive-rover",
+        "title": "Conduce el rover",
+        "hint": "Usa WASD o las flechas. Solo podrás sembrar a 3 casillas del rover."
+      },
+      {
+        "id": "orbital_view",
+        "type": "action",
+        "action": "orbital-view",
+        "title": "Vuelve a la vista orbital",
+        "hint": "Pulsa Tab otra vez para ver la región desde arriba."
+      },
+      {
         "id": "analyze_region",
         "type": "action",
         "action": "analyze-region",
@@ -53,7 +74,8 @@
         "title": "Deja correr el tiempo",
         "hint": "Pulsa Espacio o un botón de velocidad (▶, ▶▶, ▶▶▶) y observa pasar los soles."
       }
-    ]
+    ],
+    "debrief": "Ya sabes leer Marte y moverte por él. Has visto que cada zona tiene su propio clima y sus recursos, y que el rover es tu mano en la superficie. Lo siguiente es sembrar."
   },
   "location": {
     "site": "model"

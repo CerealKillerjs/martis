@@ -65,13 +65,15 @@ public sealed record MissionObjective(
 /// A mission loaded from <c>data/missions/*.json</c>. <see cref="Briefing"/> is the story
 /// text the game shows before playing. A <see cref="Sequential"/> mission (tutorial) only
 /// lets the first pending objective complete; the others wait their turn (campaign, H1).
+/// <see cref="Debrief"/> is what the game tells the player when the mission is complete (H8).
 /// </summary>
 public sealed record MissionDefinition(
     string Id,
     string Name,
     IReadOnlyList<MissionObjective> Objectives,
     string? Briefing = null,
-    bool Sequential = false)
+    bool Sequential = false,
+    string? Debrief = null)
 {
     public const string FirstColonyFile = "first_colony.v1.json";
 
@@ -146,7 +148,8 @@ public sealed record MissionDefinition(
             meta.GetProperty("name").GetString()!,
             objectives,
             Text(meta, "briefing"),
-            meta.TryGetProperty("sequential", out var sequential) && sequential.GetBoolean());
+            meta.TryGetProperty("sequential", out var sequential) && sequential.GetBoolean(),
+            Text(meta, "debrief"));
     }
 
     private static string? Text(JsonElement item, string name)

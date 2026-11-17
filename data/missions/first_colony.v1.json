@@ -54,7 +54,8 @@
         "title": "Observar mutaciones",
         "hint": "Espera a que aparezca una variante nueva en el registro de eventos."
       }
-    ]
+    ],
+    "debrief": "Tu primera colonia vive. Has diseñado un fotótrofo, lo has probado en el laboratorio y ha aguantado varias generaciones. Cada kilo de biomasa ha fijado CO₂ y ha soltado oxígeno."
   },
   "location": {
     "site": "model"

@@ -36,7 +36,8 @@
         "title": "Mantén la red",
         "hint": "Cada colonia necesita su descomponedor para no agotar el agua."
       }
-    ]
+    ],
+    "debrief": "La red de colonias ha cambiado el aire de la región: hay más oxígeno que cuando llegaste. Es la primera huella de la terraformación."
   },
   "location": {
     "site": "model"

@@ -28,7 +28,8 @@
         "title": "Que los productores aguanten",
         "hint": "Si los fotótrofos caen, siembra más colonias o pon menos herbívoros en cada una."
       }
-    ]
+    ],
+    "debrief": "La red se sostiene: los productores crecen más deprisa de lo que se los comen. Has construido un ecosistema estable."
   },
   "location": {
     "site": "model"

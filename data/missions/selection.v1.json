@@ -49,7 +49,8 @@
         "title": "Mantén el linaje",
         "hint": "Si la biomasa cae por debajo del mínimo, la racha vuelve a cero. Equilibra fotótrofos y descomponedores."
       }
-    ]
+    ],
+    "debrief": "Marte ya está seleccionando a tus organismos: las variantes que resisten mejor ganan terreno. A partir de ahora la evolución trabaja contigo."
   },
   "location": {
     "site": "model"

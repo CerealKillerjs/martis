@@ -28,7 +28,8 @@
         "title": "Mantén una población grande",
         "hint": "Un poco de descomponedor junto a cada colonia recicla a los muertos."
       }
-    ]
+    ],
+    "debrief": "Los eucariotas aguantan donde las bacterias se agotaban. Tu biosfera ya no depende solo de microbios simples."
   },
   "location": {
     "site": "model"

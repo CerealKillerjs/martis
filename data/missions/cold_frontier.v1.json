@@ -30,7 +30,8 @@
         "title": "Mantén la colonia polar",
         "hint": "Baja la fotosíntesis en el laboratorio: crecer despacio es sobrevivir en el frío."
       }
-    ]
+    ],
+    "debrief": "Los extremófilos han llevado la vida a los polos. Donde nada más crecía, ahora hay pioneros preparando el terreno."
   },
   "location": {
     "site": "model"

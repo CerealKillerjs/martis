@@ -7,7 +7,11 @@
     "status": "PROPOSED",
     "date": "2026-11-16",
     "author": "MARTIS Motor (campaña H1)",
-    "review": "Estructura aprobada por Daniel el 2026-11-16: mapas de 64, 128 y 256 casillas según el capítulo. Los capítulos 2 a 5 se completan en H3–H7."
+    "review": "Estructura aprobada por Daniel el 2026-11-16: mapas de 64, 128 y 256 casillas según el capítulo. Los capítulos 2 a 5 se completan en H3–H7. H8: la ayuda se retira por capítulos (tutorial, pistas, a petición, mínima, ninguna) y cada misión enseña conceptos del códice.",
+    "guidance": {
+      "on_request_stall_sols": "campaign.guidance.on_request_stall_sols",
+      "minimal_stall_sols": "campaign.guidance.minimal_stall_sols"
+    }
   },
   "chapters": [
     {
@@ -18,17 +22,29 @@
       "missions": [
         {
           "id": "awakening",
-          "file": "awakening.v1.json"
+          "file": "awakening.v1.json",
+          "teaches": [
+            "leer_marte",
+            "rover"
+          ]
         },
         {
           "id": "first_colony",
-          "file": "first_colony.v1.json"
+          "file": "first_colony.v1.json",
+          "teaches": [
+            "fotosintesis",
+            "diseno_genetico"
+          ]
         },
         {
           "id": "selection",
-          "file": "selection.v1.json"
+          "file": "selection.v1.json",
+          "teaches": [
+            "seleccion"
+          ]
         }
-      ]
+      ],
+      "guidance": "tutorial"
     },
     {
       "id": "ch2",
@@ -38,23 +54,36 @@
       "missions": [
         {
           "id": "gradients",
-          "file": "gradients.v1.json"
+          "file": "gradients.v1.json",
+          "teaches": [
+            "gradientes"
+          ]
         },
         {
           "id": "closed_cycle",
-          "file": "closed_cycle.v1.json"
+          "file": "closed_cycle.v1.json",
+          "teaches": [
+            "ciclo_carbono"
+          ]
         },
         {
           "id": "cold_frontier",
-          "file": "cold_frontier.v1.json"
+          "file": "cold_frontier.v1.json",
+          "teaches": [
+            "extremofilos"
+          ]
         },
         {
           "id": "oxygen",
-          "file": "oxygen.v1.json"
+          "file": "oxygen.v1.json",
+          "teaches": [
+            "oxigeno"
+          ]
         }
       ],
       "population_budget": "campaign.population_budget.grid_128",
-      "gradient": "gradients.v1.json"
+      "gradient": "gradients.v1.json",
+      "guidance": "hints"
     },
     {
       "id": "ch3",
@@ -64,20 +93,30 @@
       "missions": [
         {
           "id": "symbiosis",
-          "file": "symbiosis.v1.json"
+          "file": "symbiosis.v1.json",
+          "teaches": [
+            "endosimbiosis"
+          ]
         },
         {
           "id": "complex_cells",
-          "file": "complex_cells.v1.json"
+          "file": "complex_cells.v1.json",
+          "teaches": [
+            "eucariotas"
+          ]
         },
         {
           "id": "multicellular",
-          "file": "multicellular.v1.json"
+          "file": "multicellular.v1.json",
+          "teaches": [
+            "multicelularidad"
+          ]
         }
       ],
       "population_budget": "campaign.population_budget.grid_128",
       "gradient": "gradients.v1.json",
-      "transitions": "transitions.v1.json"
+      "transitions": "transitions.v1.json",
+      "guidance": "on_request"
     },
     {
       "id": "ch4",
@@ -87,21 +126,31 @@
       "missions": [
         {
           "id": "grazers",
-          "file": "grazers.v1.json"
+          "file": "grazers.v1.json",
+          "teaches": [
+            "herbivoria"
+          ]
         },
         {
           "id": "food_web",
-          "file": "food_web.v1.json"
+          "file": "food_web.v1.json",
+          "teaches": [
+            "red_trofica"
+          ]
         },
         {
           "id": "predators",
-          "file": "predators.v1.json"
+          "file": "predators.v1.json",
+          "teaches": [
+            "depredacion"
+          ]
         }
       ],
       "population_budget": "campaign.population_budget.grid_256",
       "gradient": "gradients.v1.json",
       "transitions": "transitions.v1.json",
-      "trophic": "trophic.v1.json"
+      "trophic": "trophic.v1.json",
+      "guidance": "minimal"
     },
     {
       "id": "ch5",
@@ -111,17 +160,24 @@
       "missions": [
         {
           "id": "sociality",
-          "file": "sociality.v1.json"
+          "file": "sociality.v1.json",
+          "teaches": [
+            "socialidad"
+          ]
         },
         {
           "id": "mind",
-          "file": "mind.v1.json"
+          "file": "mind.v1.json",
+          "teaches": [
+            "inteligencia"
+          ]
         }
       ],
       "population_budget": "campaign.population_budget.grid_256",
       "gradient": "gradients.v1.json",
       "transitions": "transitions.v1.json",
-      "trophic": "trophic.v1.json"
+      "trophic": "trophic.v1.json",
+      "guidance": "none"
     }
   ],
   "location": {
@@ -163,6 +219,129 @@
         1,
         10000000.0
       ]
+    },
+    {
+      "id": "campaign.guidance.on_request_stall_sols",
+      "field": "on_request_stall_sols",
+      "value": 30.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la guía progresiva (H8); Dani debe ajustarlo jugando.",
+      "rationale": "Soles sin avanzar tras los que la pista aparece sola en el capítulo 3.",
+      "range": [
+        1,
+        1000000.0
+      ]
+    },
+    {
+      "id": "campaign.guidance.minimal_stall_sols",
+      "field": "minimal_stall_sols",
+      "value": 90.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para la guía progresiva (H8); Dani debe ajustarlo jugando.",
+      "rationale": "Soles sin avanzar tras los que la pista aparece sola en el capítulo 4.",
+      "range": [
+        1,
+        1000000.0
+      ]
+    }
+  ],
+  "concepts": [
+    {
+      "id": "leer_marte",
+      "title": "Leer el planeta",
+      "text": "Marte cambia de un sitio a otro: temperatura, agua, radiación y luz deciden qué puede vivir en cada sitio. Antes de sembrar, mira las capas de datos y analiza la región. Terraformar empieza por saber qué tienes."
+    },
+    {
+      "id": "rover",
+      "title": "El rover sembrador",
+      "text": "Solo puedes sembrar cerca del rover. Con Tab pasas de la vista orbital a la del rover y con WASD lo conduces. La batería se gasta al conducir y se recarga junto al módulo."
+    },
+    {
+      "id": "fotosintesis",
+      "title": "Fotosíntesis",
+      "text": "Los fotótrofos usan la luz para convertir CO₂ y agua en biomasa y liberan oxígeno. Son la base de todo: sin productores no hay nada que comer ni oxígeno que respirar."
+    },
+    {
+      "id": "diseno_genetico",
+      "title": "Diseño genético",
+      "text": "En el laboratorio ajustas los genes de un organismo antes de soltarlo. Cada gen tiene un coste: más protección UV no sale gratis. Prueba el diseño con un experimento antes de gastar inóculo."
+    },
+    {
+      "id": "seleccion",
+      "title": "Mutación y selección",
+      "text": "Cada copia del genoma puede cambiar. Las variantes que aguantan mejor la radiación y el frío dejan más descendientes. La evolución trabaja para ti si le das tiempo y diversidad."
+    },
+    {
+      "id": "gradientes",
+      "title": "Gradientes",
+      "text": "El ecuador es más cálido y luminoso que los polos, y las tierras altas reciben más radiación que las cuencas. Cada zona pide un organismo distinto."
+    },
+    {
+      "id": "ciclo_carbono",
+      "title": "Ciclo cerrado",
+      "text": "Los descomponedores devuelven al suelo el carbono y el agua de la biomasa muerta. Sin ellos, una colonia agota su entorno y muere. Un Marte terraformado necesita ciclos cerrados."
+    },
+    {
+      "id": "extremofilos",
+      "title": "Extremófilos",
+      "text": "Algunos organismos resisten frío, sequedad y radiación extremos a cambio de crecer despacio. Son los pioneros de las zonas donde nada más sobrevive."
+    },
+    {
+      "id": "oxigeno",
+      "title": "Oxígeno y atmósfera",
+      "text": "Cada colonia de fotótrofos libera un poco de oxígeno. Una red de colonias empieza a cambiar el aire de una región: es el primer paso para hacer Marte habitable."
+    },
+    {
+      "id": "endosimbiosis",
+      "title": "Endosimbiosis",
+      "text": "Cuando dos organismos viven juntos en el mismo sitio, a veces uno acaba dentro del otro. Así nacen células más complejas, con energía de sobra."
+    },
+    {
+      "id": "eucariotas",
+      "title": "Células complejas",
+      "text": "Los eucariotas son más grandes y lentos, pero gestionan mejor el agua y la energía. Aguantan donde las bacterias se agotan."
+    },
+    {
+      "id": "multicelularidad",
+      "title": "Multicelularidad",
+      "text": "Las células que producen mucha biopelícula se quedan pegadas al dividirse y se reparten el trabajo. Es el salto a organismos grandes."
+    },
+    {
+      "id": "herbivoria",
+      "title": "Herbívoros",
+      "text": "Los primeros animales comen productores. Si comen más deprisa de lo que crece el pasto, se quedan sin comida: siempre debe quedar un refugio."
+    },
+    {
+      "id": "red_trofica",
+      "title": "Red trófica",
+      "text": "Un ecosistema estable tiene más productores que consumidores. Repartir los herbívoros entre colonias evita que agoten una sola."
+    },
+    {
+      "id": "depredacion",
+      "title": "Depredación",
+      "text": "Los depredadores controlan a los herbívoros, pero dependen de toda la cadena que tienen debajo. Cada nivel solo aprovecha una parte de la energía del anterior."
+    },
+    {
+      "id": "socialidad",
+      "title": "Socialidad",
+      "text": "Los depredadores longevos aprenden unos de otros y cooperan. Una sociedad come de varios niveles y aguanta mejor los malos tiempos."
+    },
+    {
+      "id": "inteligencia",
+      "title": "Inteligencia",
+      "text": "El índice de inteligencia mide cuántos niveles de vida hay y cuánto pesan las sociedades. Es un extra: la meta sigue siendo un Marte vivo."
     }
   ]
 }

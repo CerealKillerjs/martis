@@ -123,7 +123,7 @@ public sealed class EconomyTests
         var session = GameSession.NewGame(Repo.Root(), 5UL, "awakening.v1.json");
         var research = new ResearchState(Economy());
         session.AttachEconomy(research);
-        foreach (var action in new[] { "orbit-camera", "zoom-camera", "select-overlay", "inspect-cell", "analyze-region" })
+        foreach (var action in new[] { "orbit-camera", "zoom-camera", "select-overlay", "inspect-cell", "rover-view", "drive-rover", "orbital-view", "analyze-region" })
         {
             session.RecordAction(action);
         }
@@ -131,7 +131,7 @@ public sealed class EconomyTests
         session.Advance(5);
 
         Assert.True(session.Mission!.IsComplete);
-        Assert.Equal((6 * 5) + 15, research.Points, 9);
+        Assert.Equal((9 * 5) + 15, research.Points, 9);
         Assert.Contains(session.Events, item => item.Kind == "research");
 
         var colony = GameSession.NewGame(Repo.Root(), 5UL, "first_colony.v1.json");
