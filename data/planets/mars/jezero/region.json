@@ -2,6 +2,7 @@
   "schema": "martis.region",
   "id": "jezero",
   "name": "Cráter Jezero",
+  "date": "2026-11-17",
   "center": {
     "lat": 18.4,
     "lon": 77.55
@@ -114,5 +115,54 @@
     "F09_039203_1984_XN_18N282W__F09_039348_1984_XN_18N282W",
     "D12_031871_1986_XN_18N282W__D12_031805_1986_XN_18N282W",
     "B22_018210_1978_XN_17N283W__D19_034772_1978_XN_17N283W"
+  ],
+  "parameters": [
+    {
+      "id": "jezero.height_min",
+      "field": "min_m",
+      "value": -3190.51806640625,
+      "unit": "m",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:jezero",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Mars HRSC-MOLA Blended DEM Global 200 m v2 (USGS Astrogeology / ESA-DLR-FU Berlin / NASA) + CTX DTMs (USGS, CC0)",
+          "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+          "accessed": "2026-11-17",
+          "where": "lowest sample of the blended relief over the region"
+        }
+      ]
+    },
+    {
+      "id": "jezero.height_max",
+      "field": "max_m",
+      "value": -458.91363525390625,
+      "unit": "m",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:jezero",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Mars HRSC-MOLA Blended DEM Global 200 m v2 (USGS Astrogeology / ESA-DLR-FU Berlin / NASA) + CTX DTMs (USGS, CC0)",
+          "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+          "accessed": "2026-11-17",
+          "where": "highest sample of the blended relief over the region"
+        }
+      ]
+    },
+    {
+      "id": "jezero.size",
+      "field": "size_m",
+      "value": 96000.0,
+      "unit": "m",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "OK",
+      "note": "Lado del cuadrado de la región jugable, centrado en el punto elegido."
+    }
   ]
 }

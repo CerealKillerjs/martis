@@ -116,6 +116,28 @@ def feather(valid: np.ndarray, width: int) -> np.ndarray:
     return weight / (width + 1)
 
 
+def parameters(meta: dict) -> list[dict]:
+    """The region's numbers as a classified parameter catalogue (every data file is one)."""
+    base = meta["sources"][0]
+
+    def measured(pid: str, field: str, value: float, unit: str, where: str) -> dict:
+        return {
+            "id": f"{meta['id']}.{pid}", "field": field, "value": value, "unit": unit,
+            "classification": "SCIENTIFIC_MEASURED", "scope": f"regional:{meta['id']}", "version": "1", "status": "OK",
+            "source": [{"citation": f"{base['name']} ({base['by']}) + CTX DTMs (USGS, CC0)", "url": base["url"], "accessed": meta["date"], "where": where}],
+        }
+
+    return [
+        measured("height_min", "min_m", meta["height"]["min_m"], "m", "lowest sample of the blended relief over the region"),
+        measured("height_max", "max_m", meta["height"]["max_m"], "m", "highest sample of the blended relief over the region"),
+        {
+            "id": f"{meta['id']}.size", "field": "size_m", "value": meta["size_m"], "unit": "m",
+            "classification": "GAME_BALANCE", "scope": "model", "version": "1", "status": "OK",
+            "note": "Lado del cuadrado de la región jugable, centrado en el punto elegido.",
+        },
+    ]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--region", required=True, choices=sorted(REGIONS))
@@ -181,6 +203,7 @@ def main() -> int:
         "schema": "martis.region",
         "id": args.region,
         "name": region["name"],
+        "date": __import__("datetime").date.today().isoformat(),
         "center": {"lat": region["lat"], "lon": region["lon"]},
         "size_m": region["size_km"] * 1000.0,
         "height": {"file": "height.png", "pixels": n, "spacing_m": spacing, "min_m": low, "max_m": high},
@@ -194,6 +217,7 @@ def main() -> int:
         ],
         "ctx_strips": used,
     }
+    meta["parameters"] = parameters(meta)
     with open(os.path.join(args.out, "region.json"), "w", encoding="utf-8") as handle:
         json.dump(meta, handle, ensure_ascii=False, indent=2)
         handle.write("\n")
