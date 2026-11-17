@@ -342,8 +342,8 @@ public partial class World3D : Node3D
         _terrainMaterial = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/terrain.gdshader") };
         _terrainMaterial.SetShaderParameter("cell_data", _cellTexture);
         _terrainMaterial.SetShaderParameter("glow_data", _glowTexture);
-        _knowledgeImage = Image.CreateEmpty(Ground.CellsX, Ground.CellsY, false, Image.Format.Rgf);
-        _knowledgeImage.Fill(new Color(1, 1, 0, 1)); // known until a knowledge map says otherwise (menu backdrop)
+        _knowledgeImage = Image.CreateEmpty(Ground.CellsX, Ground.CellsY, false, Image.Format.Rgbf);
+        _knowledgeImage.Fill(new Color(1, 1, 0, 1)); // B = heat (E1); known until a knowledge map says otherwise (menu backdrop)
         _knowledgeTexture = ImageTexture.CreateFromImage(_knowledgeImage);
         _terrainMaterial.SetShaderParameter("knowledge_data", _knowledgeTexture);
         _terrainMaterial.SetShaderParameter("world_size", Ground.SizeX);
