@@ -35,7 +35,8 @@
         "title": "Mantén al primer organismo",
         "hint": "Los multicelulares resisten mejor la radiación, pero crecen despacio."
       }
-    ]
+    ],
+    "debrief": "Las células ya no viven solas: forman organismos que se reparten el trabajo. La vida de Marte empieza a crecer de tamaño."
   },
   "location": {
     "site": "model"

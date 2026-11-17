@@ -17,7 +17,7 @@ public sealed class ChapterTwoTests
 
         Assert.True(chapter.Playable);
         Assert.Equal(128, chapter.GridSize);
-        Assert.Equal(["gradients", "closed_cycle", "cold_frontier", "oxygen"], chapter.Missions.Select(mission => mission.Id));
+        Assert.Equal(["gradients", "closed_cycle", "first_heat", "cold_frontier", "oxygen"], chapter.Missions.Select(mission => mission.Id));
     }
 
     [Fact]
@@ -26,7 +26,7 @@ public sealed class ChapterTwoTests
         var progress = new CampaignProgress(Campaign);
         Assert.False(progress.IsUnlocked("gradients"));
 
-        foreach (var id in new[] { "awakening", "first_colony", "selection" })
+        foreach (var id in new[] { "awakening", "sampling", "stations", "first_colony", "selection" })
         {
             Assert.True(progress.Complete(id));
         }

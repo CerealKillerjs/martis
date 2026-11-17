@@ -28,7 +28,8 @@
         "title": "Mantén a los depredadores",
         "hint": "Pocos depredadores y muchos herbívoros: la cadena se sostiene desde abajo."
       }
-    ]
+    ],
+    "debrief": "Tres niveles completos: productores, herbívoros y depredadores. Cada uno depende de todo lo que tiene debajo."
   },
   "location": {
     "site": "model"

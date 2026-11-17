@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "first_heat",
+    "name": "PRIMER CALOR — 2.3",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (campaña H8)",
+    "review": "Primera misión de terraformación regional de la Era I (documento maestro v2.0, §10 y §11; ADR-028 y ADR-033). Sin umbrales numéricos.",
+    "sequential": true,
+    "briefing": "El frío limita dónde puede crecer tu vida. Un calefactor templa el suelo a su alrededor, pero gasta la energía del módulo y se desgasta cada sol. Monta uno y aprende a mantenerlo.",
+    "debrief": "Has cambiado el clima de un rincón de Marte. El calor no es gratis: ocupa energía que no usan las estaciones, se va si el calefactor se avería y no ayuda a todos los organismos por igual.",
+    "objectives": [
+      {
+        "id": "build_heater",
+        "type": "action",
+        "action": "build-heater",
+        "title": "Monta un calefactor",
+        "hint": "En Exploración (F1), sobre suelo medido, pulsa H. Cuesta batería del rover y energía del módulo."
+      },
+      {
+        "id": "repair_heater",
+        "type": "action",
+        "action": "repair-heater",
+        "title": "Repáralo",
+        "hint": "El calefactor se desgasta cada sol. Deja correr unos soles, acerca el rover a menos de 2 casillas y pulsa X."
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": []
+}

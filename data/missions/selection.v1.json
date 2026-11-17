@@ -2,7 +2,7 @@
   "metadata": {
     "schema": "martis.mission",
     "id": "selection",
-    "name": "PRESIÓN SELECTIVA — 1.3",
+    "name": "PRESIÓN SELECTIVA — 1.5",
     "version": "1",
     "status": "PROPOSED",
     "date": "2026-11-16",
@@ -49,7 +49,8 @@
         "title": "Mantén el linaje",
         "hint": "Si la biomasa cae por debajo del mínimo, la racha vuelve a cero. Equilibra fotótrofos y descomponedores."
       }
-    ]
+    ],
+    "debrief": "Marte ya está seleccionando a tus organismos: las variantes que resisten mejor ganan terreno. A partir de ahora la evolución trabaja contigo."
   },
   "location": {
     "site": "model"

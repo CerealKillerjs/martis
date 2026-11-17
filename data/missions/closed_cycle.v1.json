@@ -37,7 +37,8 @@
         "title": "Mantén la colonia cálida",
         "hint": "Usa el laboratorio: si el pronóstico cae a cero, añade más descomponedor."
       }
-    ]
+    ],
+    "debrief": "Con los descomponedores el carbono y el agua vuelven al suelo y la colonia ya no se agota. Un Marte vivo tiene que reciclar todo lo que usa."
   },
   "location": {
     "site": "model"

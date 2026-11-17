@@ -36,7 +36,8 @@
         "title": "Mantén a los eucariotas",
         "hint": "El eucariota respira además de hacer fotosíntesis: devuelve agua al suelo y resiste mejor."
       }
-    ]
+    ],
+    "debrief": "Dos organismos se han convertido en uno. Las células complejas que han nacido tienen energía de sobra para lo que viene."
   },
   "location": {
     "site": "model"
