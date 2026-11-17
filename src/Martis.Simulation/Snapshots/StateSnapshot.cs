@@ -265,8 +265,8 @@ public sealed record StateSnapshot(
             Read(environment.WaterVapor),
             Read(environment.SoilPorosity),
             Read(environment.PerchlorateMassKg),
-            environment.PerchlorateWtPercent,
-            environment.WaterIceWtPercent,
+            Percent(environment.PerchlorateWtPercent),
+            Percent(environment.WaterIceWtPercent),
             resources.Quantities.Select(quantity => quantity.Value).ToArray(),
             buffer.Quantities.Select(quantity => quantity.Value).ToArray(),
             budget.RecordedTotalKg,
@@ -292,8 +292,8 @@ public sealed record StateSnapshot(
         environment.WaterVapor = Write(image.WaterVaporKg);
         environment.SoilPorosity = Write(image.SoilPorosity);
         environment.PerchlorateMassKg = Write(image.PerchlorateMassKg);
-        environment.PerchlorateWtPercent = image.PerchlorateWtPercent;
-        environment.WaterIceWtPercent = image.WaterIceWtPercent;
+        environment.PerchlorateWtPercent = AssignedDouble.Set(image.PerchlorateWtPercent);
+        environment.WaterIceWtPercent = AssignedDouble.Set(image.WaterIceWtPercent);
         ResourceColumns.WriteDeposits(resources, image.Deposits);
         ResourceColumns.WriteDemands(buffer, image.Demands);
         budget.RecordedTotalKg = image.WaterBudgetTotalKg;
@@ -304,6 +304,10 @@ public sealed record StateSnapshot(
 
         ledger.RestoreRecorded(image.InitialMass?.ToArray());
     }
+
+    // The save format keeps the two weight percents as plain numbers (T03b, #8 made them
+    // AssignedDouble later): an unset percent is saved as 0 and restored as set, as before #8.
+    private static double Percent(AssignedDouble value) => value.IsSet ? value.Value : 0.0;
 
     private static double? Read(AssignedDouble value) => value.IsSet ? value.Value : null;
 
