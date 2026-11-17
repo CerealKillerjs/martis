@@ -22,6 +22,10 @@ uniform vec2 scan_center = vec2(-1.0);   // last rover scan, cell units
 uniform float scan_radius = 4.0;
 uniform float scan_age = 99.0;           // seconds since that scan
 
+// Real ground (M1, ADR-034): orbital image of the region as brightness; 0 = procedural only.
+uniform sampler2D real_albedo : filter_linear_mipmap, repeat_disable, hint_default_white;
+uniform float real_mix = 0.0;
+
 varying vec3 world_pos;
 varying vec3 world_normal;
 
@@ -96,6 +100,20 @@ void fragment() {
     albedo = mix(albedo, basalt, smoothstep(0.25, 0.6, slope));
     albedo = mix(albedo, dust, smoothstep(0.55, 0.9, world_pos.y * 0.12 + n * 0.4) * 0.5);
     albedo *= 0.85 + 0.3 * fine;
+    if (real_mix > 0.0) {
+        // The CTX image is greyscale: it sets the brightness of a Martian palette, from dark
+        // basaltic sand to bright dusty rock, and the procedural grain adds detail close up.
+        // Local contrast: the brightness against its blurred surroundings, so the seams
+        // between orbital strips fade and the landforms stand out.
+        float g = texture(real_albedo, uv).r;
+        float g_low = textureLod(real_albedo, uv, 6.0).r;
+        float b = clamp(0.5 + (g - g_low) * 2.6 + (g_low - 0.45) * 0.35, 0.0, 1.0);
+        vec3 real = mix(vec3(0.16, 0.075, 0.045), vec3(0.66, 0.36, 0.19), smoothstep(0.1, 0.9, b));
+        real = mix(real, basalt * 0.75, smoothstep(0.42, 0.15, b) * 0.45);
+        real = mix(real, dust * 0.9, smoothstep(0.7, 0.95, b) * 0.4);
+        real *= 0.9 + 0.2 * fine;
+        albedo = mix(albedo, real, real_mix);
+    }
 
     vec3 emission = vec3(0.0);
 

@@ -17,7 +17,10 @@ public sealed class Terrain
 
     private readonly float[] _heights;
 
-    public Terrain(int cellsX, int cellsY, ulong seed)
+    /// <summary>Vertical exaggeration of real relief in the scaled-down region (M1, ADR-034).</summary>
+    public const float ReliefExaggeration = 4f;
+
+    public Terrain(int cellsX, int cellsY, ulong seed, Martis.Simulation.Planets.RegionRelief? relief = null)
     {
         CellsX = cellsX;
         CellsY = cellsY;
@@ -30,8 +33,22 @@ public sealed class Terrain
         VertsX = (cellsX * Resolution) + 1;
         VertsZ = (cellsY * Resolution) + 1;
         _heights = new float[VertsX * VertsZ];
-        Generate(seed);
+        Relief = relief;
+        if (relief is null)
+        {
+            Generate(seed);
+        }
+        else
+        {
+            FromRelief(relief, seed);
+        }
     }
+
+    /// <summary>The real relief this terrain shows, if any (M1).</summary>
+    public Martis.Simulation.Planets.RegionRelief? Relief { get; }
+
+    /// <summary>Metres of the real region per world unit (1 without real relief).</summary>
+    public float MetresPerUnit => Relief is null ? 1f : (float)(Relief.Definition.SizeM / SizeX);
 
     public int CellsX { get; }
 
@@ -258,6 +275,29 @@ public sealed class Terrain
         z = (z ^ (z >> 27)) * 0x94D049BB133111EBUL;
         z ^= z >> 31;
         return (z >> 40) / (float)(1UL << 24);
+    }
+
+    /// <summary>
+    /// Real relief (M1, ADR-034): the region's height map scaled to the map, with a vertical
+    /// exaggeration so a 96 km region still reads as relief, plus faint ripples below the data's
+    /// resolution.
+    /// </summary>
+    private void FromRelief(Martis.Simulation.Planets.RegionRelief relief, ulong seed)
+    {
+        var ripples = new FastNoiseLite { Seed = unchecked((int)seed), NoiseType = FastNoiseLite.NoiseTypeEnum.SimplexSmooth, Frequency = 0.3f, FractalOctaves = 3 };
+        var metres = relief.Definition.SizeM / SizeX;
+        var mid = (relief.Definition.MinHeightM + relief.Definition.MaxHeightM) / 2.0;
+        var step = CellSize / Resolution;
+        for (var z = 0; z < VertsZ; z++)
+        {
+            for (var x = 0; x < VertsX; x++)
+            {
+                var h = (relief.HeightAt(x * step * metres, z * step * metres) - mid) / metres * ReliefExaggeration;
+                var wx = (x * step) - (SizeX / 2f);
+                var wz = (z * step) - (SizeZ / 2f);
+                _heights[(z * VertsX) + x] = (float)h + (ripples.GetNoise2D(wx, wz) * 0.08f);
+            }
+        }
     }
 
     private void Generate(ulong seed)

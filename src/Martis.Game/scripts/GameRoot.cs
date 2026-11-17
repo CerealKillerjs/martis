@@ -324,11 +324,39 @@ public partial class GameRoot : Node
         }
     }
 
+    private Martis.Simulation.Planets.RegionRelief? _relief;
+    private bool _reliefTried;
+
+    /// <summary>
+    /// The real relief of Jezero (M1, ADR-034), loaded once. <c>--procedural</c> keeps the old
+    /// invented terrain; a missing or broken region file falls back to it too.
+    /// </summary>
+    private Martis.Simulation.Planets.RegionRelief? Relief()
+    {
+        if (_reliefTried || _options.ContainsKey("procedural"))
+        {
+            return _relief;
+        }
+
+        _reliefTried = true;
+        try
+        {
+            var planet = Martis.Simulation.Planets.PlanetDefinition.LoadPublished(_dataRoot);
+            _relief = Martis.Simulation.Planets.RegionRelief.Load(planet.Region("jezero"));
+        }
+        catch (Exception exception) when (exception is System.IO.IOException or System.IO.InvalidDataException or KeyNotFoundException or System.Text.Json.JsonException or InvalidOperationException)
+        {
+            GD.PushWarning($"Relieve real no disponible, se usa el procedural: {exception.Message}");
+        }
+
+        return _relief;
+    }
+
     private World3D BuildWorld(GameSession session)
     {
         var world = new World3D { Name = "World" };
         AddChild(world);
-        world.Build(session.Width, session.Height, session.Seed);
+        world.Build(session.Width, session.Height, session.Seed, Relief());
         world.Camera.Used += Act;
         return world;
     }

@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "schema": "martis.planet",
+    "id": "mars",
+    "name": "Marte",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (M1)",
+    "review": "ARC-003 (Documento Maestro v2.0): un PlanetDefinition por planeta. Constantes físicas y regiones jugables con relieve real.",
+    "planet": {
+      "radius_m": "mars.radius",
+      "gravity_m_s2": "mars.gravity",
+      "sol_s": "mars.sol"
+    },
+    "regions": [
+      {
+        "id": "jezero",
+        "folder": "mars/jezero",
+        "cell_m": "jezero.cell"
+      }
+    ]
+  },
+  "location": {
+    "site": "Mars (planetary constants) + Jezero crater (region)"
+  },
+  "parameters": [
+    {
+      "id": "mars.radius",
+      "field": "radius_m",
+      "value": 3396190.0,
+      "unit": "m",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "planetary_mean",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "IAU/IAG Mars 2000 sphere (radius of the reference sphere used by the USGS Mars products this game reads)",
+          "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+          "accessed": "2026-11-17",
+          "where": "CRS of the GeoTIFF: SPHEROID[\"Mars_2000_Sphere_IAU_IAG\",3396190,0]"
+        }
+      ],
+      "note": "Radio de la esfera de referencia de los datos de relieve; así el juego y los datos usan la misma geometría."
+    },
+    {
+      "id": "mars.gravity",
+      "field": "gravity_m_s2",
+      "value": 3.71,
+      "unit": "m/s^2",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "planetary_mean",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Williams D.R., Mars Fact Sheet, NASA GSFC NSSDCA",
+          "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+          "accessed": "2026-11-17",
+          "where": "Surface gravity (mean). Valor de referencia; la página no se pudo abrir desde el entorno de desarrollo."
+        }
+      ]
+    },
+    {
+      "id": "mars.sol",
+      "field": "sol_s",
+      "value": 88775.244,
+      "unit": "s",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "planetary_mean",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Williams D.R., Mars Fact Sheet, NASA GSFC NSSDCA",
+          "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+          "accessed": "2026-11-17",
+          "where": "Length of day (24.6597 h). Valor de referencia; la página no se pudo abrir desde el entorno de desarrollo."
+        }
+      ]
+    },
+    {
+      "id": "jezero.cell",
+      "field": "cell_m",
+      "value": 375.0,
+      "unit": "m",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "OK",
+      "note": "Lado de una celda científica en Jezero: 256 celdas cubren los 96 km de la región."
+    }
+  ]
+}

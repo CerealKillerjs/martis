@@ -57,9 +57,9 @@ public partial class World3D : Node3D
 
     public bool HasLander => _lander.Visible;
 
-    public void Build(int width, int height, ulong seed)
+    public void Build(int width, int height, ulong seed, Martis.Simulation.Planets.RegionRelief? relief = null)
     {
-        Ground = new Terrain(width, height, seed);
+        Ground = new Terrain(width, height, seed, relief);
         BuildEnvironment();
         BuildTerrain(seed);
         BuildDomes(width * height);
@@ -349,6 +349,14 @@ public partial class World3D : Node3D
         _terrainMaterial.SetShaderParameter("world_size", Ground.SizeX);
         _terrainMaterial.SetShaderParameter("cells", (float)Ground.CellsX);
         _terrainMaterial.SetShaderParameter("highlight_cell", new Vector2(-1, -1));
+        if (Ground.Relief is { } relief && Image.LoadFromFile(relief.Definition.AlbedoFile) is { } albedo && !albedo.IsEmpty())
+        {
+            // Real ground (M1): the orbital image gives the brightness, the shader keeps the colour.
+            albedo.GenerateMipmaps();
+            _terrainMaterial.SetShaderParameter("real_albedo", ImageTexture.CreateFromImage(albedo));
+            _terrainMaterial.SetShaderParameter("real_mix", 1f);
+        }
+
         var terrain = new Node3D { Name = "Terrain" };
         AddChild(terrain);
         foreach (var chunk in Ground.BuildChunks())
@@ -358,7 +366,7 @@ public partial class World3D : Node3D
 
         var skirtMaterial = new StandardMaterial3D
         {
-            AlbedoColor = new Color(0.55f, 0.28f, 0.16f),
+            AlbedoColor = Ground.Relief is null ? new Color(0.55f, 0.28f, 0.16f) : new Color(0.36f, 0.18f, 0.1f),
             Roughness = 1f,
         };
         AddChild(new MeshInstance3D { Mesh = Ground.BuildSkirt(MathF.Max(700f, Ground.SizeX * 1.4f), 240, seed), MaterialOverride = skirtMaterial, Name = "Skirt", Position = new Vector3(0, -0.02f, 0) });

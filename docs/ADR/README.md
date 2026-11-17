@@ -32,5 +32,6 @@
 - [ADR-031 — Robots e instalaciones: desgaste, estaciones y órdenes (V4)](ADR-031-robots-e-instalaciones.md) (Propuesto)
 - [ADR-032 — Valle Aurora, lugares de interés y guardado completo (V5)](ADR-032-valle-y-guardado-completo.md) (Propuesto)
 - [ADR-033 — Calentamiento regional: calefactores y anomalía térmica (E1)](ADR-033-calentamiento-regional.md) (Propuesto)
+- [ADR-034 — Marte real: relieve de Jezero y PlanetDefinition (M1)](ADR-034-marte-real-jezero.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).
