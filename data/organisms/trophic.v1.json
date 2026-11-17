@@ -1,0 +1,388 @@
+{
+  "metadata": {
+    "schema": "martis.trophic",
+    "id": "genesis_trophic",
+    "name": "Cadenas tróficas",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (H6)",
+    "review": "Herbivoría y depredación con respuesta funcional de Holling tipo II (ADR-024). Conservan la masa de cada casilla.",
+    "links": [
+      {
+        "id": "grazing",
+        "consumer": "grazer_h01",
+        "prey": [
+          "phototroph_a01",
+          "extremophile_e01",
+          "eukaryote_k01",
+          "multicellular_m01"
+        ],
+        "max_intake": "trophic.grazing.max_intake",
+        "half_saturation": "trophic.grazing.half_saturation",
+        "efficiency": "trophic.grazing.efficiency",
+        "energy": "trophic.grazing.energy",
+        "max_prey_fraction": "trophic.grazing.max_prey_fraction",
+        "refuge": "trophic.grazing.refuge"
+      },
+      {
+        "id": "predation",
+        "consumer": "predator_p01",
+        "prey": [
+          "grazer_h01"
+        ],
+        "max_intake": "trophic.predation.max_intake",
+        "half_saturation": "trophic.predation.half_saturation",
+        "efficiency": "trophic.predation.efficiency",
+        "energy": "trophic.predation.energy",
+        "max_prey_fraction": "trophic.predation.max_prey_fraction",
+        "refuge": "trophic.predation.refuge"
+      },
+      {
+        "id": "hunting",
+        "consumer": "social_s01",
+        "prey": [
+          "grazer_h01",
+          "phototroph_a01",
+          "eukaryote_k01",
+          "multicellular_m01"
+        ],
+        "max_intake": "trophic.hunting.max_intake",
+        "half_saturation": "trophic.hunting.half_saturation",
+        "efficiency": "trophic.hunting.efficiency",
+        "energy": "trophic.hunting.energy",
+        "max_prey_fraction": "trophic.hunting.max_prey_fraction",
+        "refuge": "trophic.hunting.refuge"
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "trophic.grazing.max_intake",
+      "field": "max_intake",
+      "value": 0.3,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 4 (H6); Ciencia debe revisarla.",
+      "rationale": "Presa comida por kg de consumidor y sol con presa abundante.",
+      "range": [
+        0,
+        100
+      ]
+    },
+    {
+      "id": "trophic.grazing.half_saturation",
+      "field": "half_saturation",
+      "value": 0.5,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 4 (H6); Ciencia debe revisarla.",
+      "rationale": "Biomasa de presa a la que se come la mitad del máximo.",
+      "range": [
+        1e-09,
+        1000
+      ]
+    },
+    {
+      "id": "trophic.grazing.efficiency",
+      "field": "efficiency",
+      "value": 0.3,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 4 (H6); Ciencia debe revisarla.",
+      "rationale": "Fracción de lo comido que se convierte en biomasa del consumidor.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "trophic.grazing.energy",
+      "field": "energy",
+      "value": 200000.0,
+      "unit": "J/kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 4 (H6); Ciencia debe revisarla.",
+      "rationale": "Energía que entra en la reserva por kg asimilado.",
+      "range": [
+        0,
+        1000000000.0
+      ]
+    },
+    {
+      "id": "trophic.grazing.max_prey_fraction",
+      "field": "max_prey_fraction",
+      "value": 0.2,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 4 (H6); Ciencia debe revisarla.",
+      "rationale": "Fracción máxima de la presa que se come en un sol.",
+      "range": [
+        1e-09,
+        1
+      ]
+    },
+    {
+      "id": "trophic.predation.max_intake",
+      "field": "max_intake",
+      "value": 0.15,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 4 (H6); Ciencia debe revisarla.",
+      "rationale": "Presa comida por kg de consumidor y sol con presa abundante.",
+      "range": [
+        0,
+        100
+      ]
+    },
+    {
+      "id": "trophic.predation.half_saturation",
+      "field": "half_saturation",
+      "value": 0.3,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 4 (H6); Ciencia debe revisarla.",
+      "rationale": "Biomasa de presa a la que se come la mitad del máximo.",
+      "range": [
+        1e-09,
+        1000
+      ]
+    },
+    {
+      "id": "trophic.predation.efficiency",
+      "field": "efficiency",
+      "value": 0.25,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 4 (H6); Ciencia debe revisarla.",
+      "rationale": "Fracción de lo comido que se convierte en biomasa del consumidor.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "trophic.predation.energy",
+      "field": "energy",
+      "value": 200000.0,
+      "unit": "J/kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 4 (H6); Ciencia debe revisarla.",
+      "rationale": "Energía que entra en la reserva por kg asimilado.",
+      "range": [
+        0,
+        1000000000.0
+      ]
+    },
+    {
+      "id": "trophic.predation.max_prey_fraction",
+      "field": "max_prey_fraction",
+      "value": 0.2,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 4 (H6); Ciencia debe revisarla.",
+      "rationale": "Fracción máxima de la presa que se come en un sol.",
+      "range": [
+        1e-09,
+        1
+      ]
+    },
+    {
+      "id": "trophic.grazing.refuge",
+      "field": "refuge",
+      "value": 0.3,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 4 (H6); Ciencia debe revisarla.",
+      "rationale": "Biomasa de presa por casilla que se esconde y no se come.",
+      "range": [
+        0,
+        1000
+      ]
+    },
+    {
+      "id": "trophic.predation.refuge",
+      "field": "refuge",
+      "value": 0.05,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 4 (H6); Ciencia debe revisarla.",
+      "rationale": "Biomasa de presa por casilla que se esconde y no se come.",
+      "range": [
+        0,
+        1000
+      ]
+    },
+    {
+      "id": "trophic.hunting.max_intake",
+      "field": "max_intake",
+      "value": 0.1,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 5 (H7); Ciencia debe revisarla.",
+      "rationale": "Caza cooperativa: max_intake.",
+      "range": [
+        0,
+        100
+      ]
+    },
+    {
+      "id": "trophic.hunting.half_saturation",
+      "field": "half_saturation",
+      "value": 0.3,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 5 (H7); Ciencia debe revisarla.",
+      "rationale": "Caza cooperativa: half_saturation.",
+      "range": [
+        1e-09,
+        1000
+      ]
+    },
+    {
+      "id": "trophic.hunting.efficiency",
+      "field": "efficiency",
+      "value": 0.3,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 5 (H7); Ciencia debe revisarla.",
+      "rationale": "Caza cooperativa: efficiency.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "trophic.hunting.energy",
+      "field": "energy",
+      "value": 200000.0,
+      "unit": "J/kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 5 (H7); Ciencia debe revisarla.",
+      "rationale": "Caza cooperativa: energy.",
+      "range": [
+        0,
+        1000000000.0
+      ]
+    },
+    {
+      "id": "trophic.hunting.max_prey_fraction",
+      "field": "max_prey_fraction",
+      "value": 0.2,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 5 (H7); Ciencia debe revisarla.",
+      "rationale": "Caza cooperativa: max_prey_fraction.",
+      "range": [
+        1e-09,
+        1
+      ]
+    },
+    {
+      "id": "trophic.hunting.refuge",
+      "field": "refuge",
+      "value": 0.3,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Relación trófica de juego propuesta para el capítulo 5 (H7); Ciencia debe revisarla.",
+      "rationale": "Caza cooperativa: refuge.",
+      "range": [
+        0,
+        1000
+      ]
+    }
+  ]
+}

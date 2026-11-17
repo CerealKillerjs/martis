@@ -7,8 +7,9 @@ namespace Martis.Domain.Validation;
 /// docs/DATA_DICTIONARY.md, which TDD invariant it resembles.
 /// VAL-004 is declared so the TDD id stays stable. No field in this milestone
 /// is a TDD probability, so the validator does not emit it.
-/// VAL-006, VAL-007 and VAL-008 are not produced: consumption, elemental
-/// balance and energy balance are not implemented.
+/// VAL-006, VAL-007 and VAL-008 are produced by the conservation step of the
+/// simulation (T04), not by <see cref="SimulationValidator"/>: they compare a tick
+/// with its start, which a single state cannot show.
 /// </summary>
 public static class InvariantIds
 {
@@ -21,6 +22,9 @@ public static class InvariantIds
     public const string ProbabilityInUnitInterval = "VAL-004";
 
     public const string GeneInUnitInterval = "VAL-005";
+    public const string ConsumptionWithinAvailability = "VAL-006";
+    public const string ElementalMassConserved = "VAL-007";
+    public const string EnergyWithinAvailability = "VAL-008";
 
     public const string TemperaturePositive = "DOM-VAL-001";
 

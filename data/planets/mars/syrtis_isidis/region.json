@@ -1,0 +1,94 @@
+{
+  "schema": "martis.region",
+  "id": "syrtis_isidis",
+  "name": "Syrtis–Isidis",
+  "date": "2026-11-17",
+  "center": {
+    "lat": 12.2518,
+    "lon": 78.5
+  },
+  "projection_lat": 19.0,
+  "size_m": 400000.0,
+  "height": {
+    "file": "height.png",
+    "pixels": 2049,
+    "spacing_m": 195.3125,
+    "min_m": -4917.36328125,
+    "max_m": 699.9165649414062
+  },
+  "albedo": {
+    "file": "albedo.jpg",
+    "pixels": 4096
+  },
+  "bounds_deg": {
+    "west": 74.9314598795858,
+    "south": 8.877679028376956,
+    "east": 82.0685401204142,
+    "north": 15.625920971623042
+  },
+  "ctx_coverage": 0.0,
+  "sources": [
+    {
+      "name": "Mars HRSC-MOLA Blended DEM Global 200 m v2",
+      "by": "USGS Astrogeology / ESA-DLR-FU Berlin / NASA",
+      "license": "public domain",
+      "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif"
+    },
+    {
+      "name": "Global CTX mosaic, MC-13 Syrtis Major, 100 m (Robbins et al.)",
+      "by": "USGS Astrogeology / NASA-JPL-MSSS",
+      "license": "public domain",
+      "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/Mars_MRO_CTX_Equi_Mosaics_Robbins/100mpp/MC13_100mpp.16bit.tif"
+    }
+  ],
+  "ctx_strips": [],
+  "parameters": [
+    {
+      "id": "syrtis_isidis.height_min",
+      "field": "min_m",
+      "value": -4917.36328125,
+      "unit": "m",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:syrtis_isidis",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Mars HRSC-MOLA Blended DEM Global 200 m v2 (USGS Astrogeology / ESA-DLR-FU Berlin / NASA) ",
+          "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+          "accessed": "2026-11-17",
+          "where": "lowest sample of the blended relief over the region"
+        }
+      ]
+    },
+    {
+      "id": "syrtis_isidis.height_max",
+      "field": "max_m",
+      "value": 699.9165649414062,
+      "unit": "m",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:syrtis_isidis",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Mars HRSC-MOLA Blended DEM Global 200 m v2 (USGS Astrogeology / ESA-DLR-FU Berlin / NASA) ",
+          "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+          "accessed": "2026-11-17",
+          "where": "highest sample of the blended relief over the region"
+        }
+      ]
+    },
+    {
+      "id": "syrtis_isidis.size",
+      "field": "size_m",
+      "value": 400000.0,
+      "unit": "m",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "OK",
+      "note": "Lado del cuadrado de la región jugable, centrado en el punto elegido."
+    }
+  ]
+}

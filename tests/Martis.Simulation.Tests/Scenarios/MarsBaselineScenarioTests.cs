@@ -1,9 +1,11 @@
 using System.Text.Json.Nodes;
+using Martis.Domain.Common;
 using Martis.Domain.Environment;
 using Martis.Domain.Parameters;
 using Martis.Domain.Validation;
 using Martis.Simulation.Engine;
 using Martis.Simulation.Scenarios;
+using Martis.Simulation.Snapshots;
 
 namespace Martis.Simulation.Tests.Scenarios;
 
@@ -24,10 +26,10 @@ public sealed class MarsBaselineScenarioTests
         Equal(0.25, cell.IonizingAbsorbedDoseGyPerSol);
         Equal(0.5, cell.IonizingEquivalentDoseSvPerSol);
         Equal(10, cell.SolarIrradiance);
-        Equal(20, cell.PerchlorateWtPercent);
-        Equal(5, cell.WaterIceWtPercent);
+        Equal(20, cell.PerchlorateWtPercent.Value);
+        Equal(5, cell.WaterIceWtPercent.Value);
         Equal(0.5, cell.WaterIce);
-        Assert.NotEqual(cell.WaterIce, cell.WaterIceWtPercent);
+        Assert.NotEqual(cell.WaterIce, cell.WaterIceWtPercent.Value);
         Assert.False(scenario.SepEnabled);
         Assert.True(cell.UvRadiation.IsUnset);
         Assert.True(cell.SoilPorosity.IsUnset);
@@ -131,6 +133,45 @@ public sealed class MarsBaselineScenarioTests
         Assert.Equal("gale", warning.CellSite);
         Assert.Contains("regional:jezero", warning.Message, StringComparison.Ordinal);
         Assert.Contains("gale", warning.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(nameof(EnvironmentState.PerchlorateWtPercent))]
+    [InlineData(nameof(EnvironmentState.WaterIceWtPercent))]
+    public void WeightPercentsMustArriveAssigned(string field)
+    {
+        var json = MutateScience(root =>
+        {
+            var entry = root["metadata"]!["v0_field_map"]![field]!.AsObject();
+            entry["id"] = null;
+            entry["status"] = "UNASSIGNED";
+        });
+        var error = Assert.Throws<ScenarioLoadException>(() => MarsBaselineScenario.Load(json, ScenarioFixtures.Deposits));
+        Assert.Equal(field, error.FieldName);
+        Assert.Contains(field, error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SnapshotKeepsUnsetWeightPercentDistinctFromAssignedZero()
+    {
+        var scenario = Load();
+        var engine = MarsBaselineWorld.Create(scenario, 3UL, 1, 1);
+        var cell = engine.State.Environment[0];
+        cell.PerchlorateWtPercent = AssignedDouble.Unset;
+        cell.WaterIceWtPercent = AssignedDouble.Set(0.0);
+        var snapshot = ScenarioRunSnapshot.Capture(engine, scenario);
+        cell.PerchlorateWtPercent = AssignedDouble.Set(1.0);
+        cell.WaterIceWtPercent = AssignedDouble.Set(2.0);
+
+        snapshot.Restore(engine);
+
+        Assert.True(cell.PerchlorateWtPercent.IsUnset);
+        Assert.Throws<InvalidOperationException>(() => _ = cell.PerchlorateWtPercent.Value);
+        Assert.True(cell.WaterIceWtPercent.IsSet);
+        Equal(0.0, cell.WaterIceWtPercent.Value);
+        var view = SimulationSnapshotFactory.Capture(engine, scenario);
+        Assert.Null(view.Cells[0].PerchlorateWtPercent);
+        Equal(0.0, view.Cells[0].WaterIceWtPercent!.Value);
     }
 
     [Theory]

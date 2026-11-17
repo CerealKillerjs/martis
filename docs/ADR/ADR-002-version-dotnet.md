@@ -49,3 +49,6 @@ Fuente: <https://dotnet.microsoft.com/en-us/download/dotnet>.
 - `dotnet build MARTIS.sln -c Release` y `dotnet test` con exit 0 (S1-03).
 - Test de arquitectura/props: todos los proyectos `src/` (excepto Game) tienen el mismo TFM.
 - El runtime y la versión del SDK se escriben en `metadata.json` de cada ejecución del CLI.
+
+## Nota de T08 (2026-11-16)
+`Martis.Game` también usa `net10.0` con Godot 4.7.2 ([ADR-017](ADR-017-juego-3d-godot.md)); todo el repositorio queda en un solo TFM.

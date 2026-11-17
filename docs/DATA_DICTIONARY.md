@@ -6,7 +6,7 @@ Las cifras que son una medición o una estimación llevan su fuente y su clasifi
 
 VAL-001..005 significan solo lo que dice el TDD §10. Las reglas añadidas en este hito son DOM-VAL-001..016. La columna «se parece a» dice qué VAL del TDD recuerda, sin sustituirlo. La elección de unidad es `MODEL_ASSUMPTION`. La clasificación, la fuente y el ámbito van por valor en el JSON del escenario (TDD §10.2).
 
-VAL-006, VAL-007 y VAL-008 no se comprueban: no hay consumo, balance elemental ni balance de energía.
+VAL-006, VAL-007 y VAL-008 se comprueban en el paso `validate-conservation` del pipeline con biología (`pipeline-v3` desde T06; T04, [ADR-012](ADR/ADR-012-modelo-metabolico.md)).
 
 ## Tiempo
 
@@ -32,13 +32,13 @@ No hay `DeltaTimeDays` en el código. La edad de la población va en soles.
 | WaterVapor | AssignedDouble | kg por celda, condicionado a H-07 | Stock físico. La biología no lo consume | unset, o finito y ≥ 0. En MarsBaseline v0 queda unset. Unset no entra en la suma como medición | DOM-VAL-004 si está asignado | VAL-001 |
 | SoilPorosity | AssignedDouble | fracción de volumen | El intervalo [0, 1] es la definición de la fracción, no un supuesto | unset, o finito y en [0, 1]. En MarsBaseline v0 queda unset | DOM-VAL-003 si está asignado | VAL-005, sin ser un gen |
 | PerchlorateMassKg | AssignedDouble | kg por celda | Sin asignar hasta H-07. El wt % no se convierte a kg | unset, o finito y ≥ 0 | DOM-VAL-004 si está asignado | VAL-001 |
-| PerchlorateWtPercent | double | wt % ClO4 | Fracción másica. No es PerchlorateMassKg | finito y en [0, 100] | DOM-VAL-016 | ninguno de §10 |
-| WaterIceWtPercent | double | wt % | Fracción másica. No es WaterIce en kg | finito y en [0, 100] | DOM-VAL-016 | ninguno de §10 |
+| PerchlorateWtPercent | AssignedDouble | wt % ClO4 | Fracción másica. No es PerchlorateMassKg. Unset no es 0. El cargador de MarsBaseline lo exige asignado | unset, o finito y en [0, 100]. El 0 asignado es un dato | DOM-VAL-016 si está asignado | ninguno de §10 |
+| WaterIceWtPercent | AssignedDouble | wt % | Fracción másica. No es WaterIce en kg. Unset no es 0. El cargador de MarsBaseline lo exige asignado | unset, o finito y en [0, 100]. El 0 asignado es un dato | DOM-VAL-016 si está asignado | ninguno de §10 |
 | Scope | EnvironmentScope o null | — | Ámbito principal, por celda. MarsBaseline lo toma de metadata.scope_id | en un escenario cargado, uno de PlanetaryMean, Regional(SiteId), Lab, Game | DOM-VAL-010 si falta | ninguno de §10 |
 
 Referencias de dosis, no copiadas al código. La clasificación `SCIENTIFIC_ESTIMATED` es la del valor por sol derivado; el valor nativo de Hassler es `SCIENTIFIC_MEASURED`. Hassler et al. 2014, Science 343:1244797, doi:10.1126/science.1244797, 0,210 ± 0,040 mGy/día ≈ 2,158·10⁻⁴ Gy/sol; Guo et al. 2021, doi:10.1007/s00159-021-00136-5, 0,49 ± 0,08 mSv/día ≈ 5,03·10⁻⁴ Sv/sol. El paso de día a sol multiplica por 88 775 / 86 400 y es `MODEL_ASSUMPTION` porque supone un día RAD de 24 h.
 
-`AssignedDouble` por defecto es unset. Unset no es el número 0: `Set(0)` es otro valor. `CheckInvariants` no exige que un `AssignedDouble` esté asignado. `SimulationValidator` con `ValidationContext.LoadedScenario` sí exige temperatura, presión y alcance. UV, vapor, porosidad y `PerchlorateMassKg` pueden quedar unset en un escenario cargado: MarsBaseline v0 los deja así. Un mundo sin escenario puede pasar el validador con esos campos sin asignar. Ese mismo estado no es un escenario válido.
+`AssignedDouble` por defecto es unset. Unset no es el número 0: `Set(0)` es otro valor. `CheckInvariants` no exige que un `AssignedDouble` esté asignado. `SimulationValidator` con `ValidationContext.LoadedScenario` sí exige temperatura, presión y alcance. UV, vapor, porosidad y `PerchlorateMassKg` pueden quedar unset en un escenario cargado: MarsBaseline v0 los deja así. Los dos wt % también distinguen unset de 0; el cargador de MarsBaseline sigue exigiéndolos asignados (`RequireMapped`). Un mundo sin escenario puede pasar el validador con esos campos sin asignar. Ese mismo estado no es un escenario válido.
 
 `SiteId` es un identificador de sitio, distinto de organismo, gen y reacción. `Regional` exige texto.
 
@@ -165,3 +165,39 @@ El cargador genérico lee un documento con `metadata`, `location` y `parameters`
 | SimulationSnapshot | vista en Contracts | Celdas, poblaciones y estadísticas copiadas. No sigue los cambios posteriores del mundo |
 
 El CLI `simulate` acepta `--scenario`, `--seed`, `--ticks` y `--output`, crea ese mundo vacío, avanza los ticks e imprime el tick final. No escribe resultados y no abre `data/scenarios`.
+
+## Metabolismo (T04)
+
+| Nombre | Tipo | Unidad | Rango | Invariante |
+| --- | --- | --- | --- | --- |
+| ChemicalFormula | Domain.Chemistry | recuentos de átomos | símbolos de elemento con recuento > 0 | se deriva la masa molar, no se guarda |
+| StoichiometricTerm.Moles | decimal | mol por unidad de avance | > 0 | `A·S = 0` por elemento (VAL-007, al cargar) |
+| ReactionDefinition.CarbonMoles | decimal | mol C por unidad de avance | > 0 | pasa el avance en mol C al avance de la reacción |
+| PopulationIntroduction / IntroducePopulationCommand | Simulation / Contracts | kg de biomasa seca | finito y > 0, organismo conocido, celda en la rejilla | la masa entra como flujo externo en `mass_balance.csv` |
+| mass_balance.csv | archivo | kg, mol, J | una fila por intervalo de historia | `max_element_error_kg ≤ 1e-12 + 1e-9·|M|` |
+| VAL-006 | invariante | kg | consumido ≤ depósito al empezar el tick | por celda y depósito |
+| VAL-007 | invariante | kg | masa de cada elemento conservada | por celda, contando entradas externas |
+| VAL-008 | invariante | J | gasto ≤ reserva inicial + ganancia | por población |
+
+## Poblaciones (T05)
+
+| Nombre | Tipo | Unidad | Rango | Invariante |
+| --- | --- | --- | --- | --- |
+| mᵢ (término de mortalidad) | double | probabilidad por tick | [0, 1] | `1 − exp(−r·estrés·Δt)`; fuera de rango es un error |
+| m (mortalidad combinada) | double | probabilidad por tick | [0, 1] | `1 − Π(1 − mᵢ)` |
+| Population.Viability | double | adimensional | [0, 1] | supervivencia del último tick, `1 − m` (DOM-VAL-008) |
+| Population.AgeDistributionMeanSols | double | sol | ≥ 0 | supervivientes +Δt; recién nacidos entran con 0 |
+| K | double | kg por celda | > 0 | `min(K_space, K_C, K_N, K_P)`; no crea recursos |
+| necromasa | double (por tick) | kg por celda | ≥ 0 | se recicla en el mismo tick; VAL-007 la cuenta |
+| extinción | regla | individuos | `N < 1` | la población se quita y su biomasa es necromasa |
+
+## Evolución (T06)
+
+| Nombre | Tipo | Unidad | Rango | Invariante |
+| --- | --- | --- | --- | --- |
+| mutation.trait_probability (μ) | double | probabilidad por gen y evento | [0, 1] | μ = 0 ⇒ ninguna variante nueva |
+| mutation.sigma (σ) | double | expresión génica | ≥ 0 | `g′ = clamp(g + σz, 0, 1)` (VAL-005) |
+| drift.effective_size (Nₑ) | double | individuos | ≥ 1 | separado de la abundancia agregada |
+| variant.merge_tolerance | double | expresión génica | [0, 1] | variantes más cercanas se fusionan |
+| MaxVariantsPerSpeciesPerCell | int | variantes | ≥ 1 (32) | nunca se supera tras `apply-selection-and-drift` (ADR-006) |
+| mutations.csv | archivo | — | una fila por variante nueva | misma semilla ⇒ mismas filas (VAL-010) |

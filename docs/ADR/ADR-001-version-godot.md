@@ -49,3 +49,6 @@ Opción 1 de forma **provisional**: usar **Godot 4.7.2-stable (.NET)** como vers
 
 ## Nota de aprobación (2026-11-16)
 Godot 4.7.2-stable (.NET). Se reevalúa en T08.
+
+## Nota de T08 (2026-11-16)
+Se mantiene **Godot 4.7.2-stable (.NET)**; 4.8 sigue en beta. Comprobado: `Godot.NET.Sdk/4.7.2` compila `Martis.Game` con `TargetFramework` `net10.0` y el ejecutable 4.7.2 lo carga. Detalle en [ADR-017](ADR-017-juego-3d-godot.md).

@@ -1,0 +1,94 @@
+{
+  "schema": "martis.region",
+  "id": "nili_norte",
+  "name": "Nili Fossae norte",
+  "date": "2026-11-17",
+  "center": {
+    "lat": 25.7482,
+    "lon": 78.5
+  },
+  "projection_lat": 19.0,
+  "size_m": 400000.0,
+  "height": {
+    "file": "height.png",
+    "pixels": 2049,
+    "spacing_m": 195.3125,
+    "min_m": -2970.822509765625,
+    "max_m": 1708.637451171875
+  },
+  "albedo": {
+    "file": "albedo.jpg",
+    "pixels": 4096
+  },
+  "bounds_deg": {
+    "west": 74.9314598795858,
+    "south": 22.374079028376958,
+    "east": 82.0685401204142,
+    "north": 29.122320971623044
+  },
+  "ctx_coverage": 0.0,
+  "sources": [
+    {
+      "name": "Mars HRSC-MOLA Blended DEM Global 200 m v2",
+      "by": "USGS Astrogeology / ESA-DLR-FU Berlin / NASA",
+      "license": "public domain",
+      "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif"
+    },
+    {
+      "name": "Global CTX mosaic, MC-13 Syrtis Major, 100 m (Robbins et al.)",
+      "by": "USGS Astrogeology / NASA-JPL-MSSS",
+      "license": "public domain",
+      "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/Mars_MRO_CTX_Equi_Mosaics_Robbins/100mpp/MC13_100mpp.16bit.tif"
+    }
+  ],
+  "ctx_strips": [],
+  "parameters": [
+    {
+      "id": "nili_norte.height_min",
+      "field": "min_m",
+      "value": -2970.822509765625,
+      "unit": "m",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:nili_norte",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Mars HRSC-MOLA Blended DEM Global 200 m v2 (USGS Astrogeology / ESA-DLR-FU Berlin / NASA) ",
+          "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+          "accessed": "2026-11-17",
+          "where": "lowest sample of the blended relief over the region"
+        }
+      ]
+    },
+    {
+      "id": "nili_norte.height_max",
+      "field": "max_m",
+      "value": 1708.637451171875,
+      "unit": "m",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:nili_norte",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Mars HRSC-MOLA Blended DEM Global 200 m v2 (USGS Astrogeology / ESA-DLR-FU Berlin / NASA) ",
+          "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+          "accessed": "2026-11-17",
+          "where": "highest sample of the blended relief over the region"
+        }
+      ]
+    },
+    {
+      "id": "nili_norte.size",
+      "field": "size_m",
+      "value": 400000.0,
+      "unit": "m",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "OK",
+      "note": "Lado del cuadrado de la región jugable, centrado en el punto elegido."
+    }
+  ]
+}

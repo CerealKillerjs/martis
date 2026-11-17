@@ -1,0 +1,119 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "first_colony",
+    "name": "FIRST COLONY — 001",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (T09)",
+    "review": "Misión de referencia del TDD B.6. Los umbrales de «mantener varias generaciones» son propuestas (H-19).",
+    "briefing": "Ya sabes leer Marte. Ahora toca sembrarlo: diseña un microbio capaz de soportar la radiación, pruébalo en el laboratorio y despliega la primera colonia de la historia del planeta.",
+    "objectives": [
+      {
+        "id": "analyze_region",
+        "type": "action",
+        "action": "analyze-region",
+        "title": "Analizar la región",
+        "hint": "Pulsa «Analizar región» para conocer el entorno."
+      },
+      {
+        "id": "design_phototroph",
+        "type": "design",
+        "capability": "photoautotrophy",
+        "title": "Diseñar un fotótrofo",
+        "hint": "En el laboratorio (F3), cambia al menos un gen del fotótrofo (por ejemplo, sube UV_PROTECTION). Se cumple cuando tu diseño vive en el mapa."
+      },
+      {
+        "id": "run_experiment",
+        "type": "action",
+        "action": "run-experiment",
+        "title": "Experimentar antes de desplegar",
+        "hint": "Elige una celda y pulsa «Experimentar»: verás la previsión de biomasa sin tocar el mundo real."
+      },
+      {
+        "id": "deploy_colony",
+        "type": "deploy",
+        "capability": "photoautotrophy",
+        "title": "Desplegar la colonia",
+        "hint": "Siembra en terreno cartografiado: lleva el rover al sitio (F1 y WASD) y pulsa F, o pulsa «Desplegar» y haz clic dentro de su alcance. Un descomponedor cerca recicla el agua y el carbono."
+      },
+      {
+        "id": "sustain_generations",
+        "type": "sustain",
+        "capability": "photoautotrophy",
+        "min_biomass": "mission.first_colony.min_biomass_kg",
+        "sols": "mission.first_colony.sustain_sols",
+        "title": "Mantener la población varias generaciones",
+        "hint": "Mantén la biomasa fotótrofa por encima del mínimo durante muchos soles seguidos."
+      },
+      {
+        "id": "observe_mutations",
+        "type": "mutations",
+        "count": "mission.first_colony.mutations",
+        "title": "Observar mutaciones",
+        "hint": "Espera a que aparezca una variante nueva en el registro de eventos."
+      }
+    ],
+    "debrief": "Tu primera colonia vive. Has diseñado un fotótrofo, lo has probado en el laboratorio y ha aguantado varias generaciones. Cada kilo de biomasa ha fijado CO₂ y ha soltado oxígeno."
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.first_colony.min_biomass_kg",
+      "field": "min_biomass_kg",
+      "value": 0.1,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para H-19; Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa fotótrofa total mínima para contar un sol como sostenido.",
+      "range": [
+        1e-12,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.first_colony.sustain_sols",
+      "field": "sustain_sols",
+      "value": 200.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para H-19; Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles seguidos por encima del mínimo. Con una tasa neta de ~2 %/sol son varias generaciones de la biomasa.",
+      "range": [
+        1,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.first_colony.mutations",
+      "field": "mutations",
+      "value": 1.0,
+      "unit": "variantes",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para H-19; Dani/Ciencia deben confirmarlo.",
+      "rationale": "Variantes nuevas que hay que observar.",
+      "range": [
+        1,
+        1000000.0
+      ]
+    }
+  ]
+}

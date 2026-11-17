@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "mind",
+    "name": "MENTE — 5.2",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (campaña H7)",
+    "review": "Misión del capítulo 5 de la campaña «Génesis» (ADR-025). Umbrales GAME_BALANCE propuestos.",
+    "sequential": false,
+    "briefing": "La vida de Marte ya tiene productores, herbívoros, depredadores y sociedades. Falta lo último: que la mente crezca sobre una biosfera completa. El índice de inteligencia mide los cuatro niveles vivos y el peso de las sociedades. Llévalo a 100 y Marte tendrá, por fin, quien lo piense.",
+    "objectives": [
+      {
+        "id": "full_biosphere",
+        "type": "intelligence",
+        "count": "mission.mind.index",
+        "min_biomass": "mission.mind.reference_kg",
+        "title": "Lleva el índice de inteligencia a 100",
+        "hint": "Cada nivel vivo suma 20 (productores, herbívoros, depredadores, sociedades) y las sociedades suman 20 más al crecer."
+      },
+      {
+        "id": "lasting_mind",
+        "type": "sustain",
+        "capability": "cognition",
+        "min_biomass": "mission.mind.min_biomass_kg",
+        "sols": "mission.mind.sustain_sols",
+        "title": "Que la mente perdure",
+        "hint": "Sin productores no hay herbívoros, sin herbívoros no hay depredadores y sin ellos no hay sociedad."
+      }
+    ],
+    "debrief": "Marte tiene productores, consumidores y sociedades sobre una biosfera completa. La vida que sembraste ya puede pensar en su planeta."
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.mind.index",
+      "field": "count",
+      "value": 100.0,
+      "unit": "puntos",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 5 (H7); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Índice de inteligencia objetivo (máximo 100).",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.mind.reference_kg",
+      "field": "min_biomass",
+      "value": 0.1,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 5 (H7); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa de sociedades que da los últimos 20 puntos del índice.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.mind.min_biomass_kg",
+      "field": "min_biomass",
+      "value": 0.1,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 5 (H7); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa mínima de organismos con cognición.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.mind.sustain_sols",
+      "field": "sols",
+      "value": 100.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 5 (H7); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles seguidos por encima del mínimo.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    }
+  ]
+}

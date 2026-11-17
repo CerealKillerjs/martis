@@ -1,0 +1,252 @@
+{
+  "metadata": {
+    "schema": "martis.planet",
+    "id": "mars",
+    "name": "Marte",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (M1, M3)",
+    "review": "ARC-003 (Documento Maestro v2.0): un PlanetDefinition por planeta. Constantes físicas y regiones jugables con relieve real.",
+    "planet": {
+      "radius_m": "mars.radius",
+      "gravity_m_s2": "mars.gravity",
+      "sol_s": "mars.sol"
+    },
+    "regions": [
+      {
+        "id": "jezero",
+        "folder": "mars/jezero",
+        "cell_m": "jezero.cell",
+        "rover_speed_m_s": "jezero.rover_speed",
+        "travel_factor": "jezero.travel_factor"
+      },
+      {
+        "id": "isidis_west",
+        "folder": "mars/isidis_west",
+        "cell_m": "isidis_west.cell",
+        "rover_speed_m_s": "jezero.rover_speed",
+        "travel_factor": "jezero.travel_factor"
+      },
+      {
+        "id": "nili_norte",
+        "folder": "mars/nili_norte",
+        "cell_m": "isidis_west.cell",
+        "rover_speed_m_s": "jezero.rover_speed",
+        "travel_factor": "jezero.travel_factor"
+      },
+      {
+        "id": "isidis_norte",
+        "folder": "mars/isidis_norte",
+        "cell_m": "isidis_west.cell",
+        "rover_speed_m_s": "jezero.rover_speed",
+        "travel_factor": "jezero.travel_factor"
+      },
+      {
+        "id": "syrtis_isidis",
+        "folder": "mars/syrtis_isidis",
+        "cell_m": "isidis_west.cell",
+        "rover_speed_m_s": "jezero.rover_speed",
+        "travel_factor": "jezero.travel_factor"
+      },
+      {
+        "id": "syrtis_norte",
+        "folder": "mars/syrtis_norte",
+        "cell_m": "isidis_west.cell",
+        "rover_speed_m_s": "jezero.rover_speed",
+        "travel_factor": "jezero.travel_factor"
+      }
+    ],
+    "sections": [
+      {
+        "id": "isidis_occidental",
+        "name": "Isidis occidental",
+        "lat": 19.0,
+        "lon": 78.5,
+        "size_km": 400,
+        "region": "isidis_west",
+        "inserts": [
+          "jezero"
+        ],
+        "start": true,
+        "unlock_era": 1,
+        "unlock": "Inicio del modo historia",
+        "summary": "El cráter Jezero y su delta, las fosas de Nili Fossae, el borde de Syrtis Major y el oeste de la llanura de Isidis.",
+        "arrival": {
+          "lat": 18.444,
+          "lon": 77.451,
+          "name": "Octavia E. Butler, lugar de aterrizaje de Perseverance (aprox.)"
+        },
+        "places": "isidis_west.v1.json",
+        "tile": [
+          0,
+          0
+        ]
+      },
+      {
+        "id": "nili_norte",
+        "name": "Nili Fossae norte",
+        "lat": 25.7482,
+        "lon": 78.5,
+        "size_km": 400,
+        "region": "nili_norte",
+        "tile": [
+          0,
+          -1
+        ],
+        "unlock_era": 2,
+        "unlock": "Era II · Ecosistemas",
+        "summary": "Las fosas de Nili continúan hacia el norte, con arcillas y carbonatos expuestos, hasta el borde de Utopia."
+      },
+      {
+        "id": "isidis_norte",
+        "name": "Isidis norte",
+        "lat": 19.0,
+        "lon": 85.6371,
+        "size_km": 400,
+        "region": "isidis_norte",
+        "tile": [
+          1,
+          0
+        ],
+        "unlock_era": 2,
+        "unlock": "Era II · Ecosistemas",
+        "summary": "El norte de la llanura de Isidis, el fondo de una gran cuenca de impacto."
+      },
+      {
+        "id": "syrtis_isidis",
+        "name": "Syrtis–Isidis",
+        "lat": 12.2518,
+        "lon": 78.5,
+        "size_km": 400,
+        "region": "syrtis_isidis",
+        "tile": [
+          0,
+          1
+        ],
+        "unlock_era": 3,
+        "unlock": "Era III · Inteligencia",
+        "summary": "La meseta volcánica oscura de Syrtis Major que baja hacia el borde de Isidis."
+      },
+      {
+        "id": "syrtis_norte",
+        "name": "Syrtis Major norte",
+        "lat": 19.0,
+        "lon": 71.3629,
+        "size_km": 400,
+        "region": "syrtis_norte",
+        "tile": [
+          -1,
+          0
+        ],
+        "unlock_era": 3,
+        "unlock": "Era III · Inteligencia",
+        "summary": "El extremo norte de la meseta de Syrtis Major, al oeste de Nili Fossae."
+      }
+    ]
+  },
+  "location": {
+    "site": "Mars (planetary constants) + Isidis west section (Jezero insert)"
+  },
+  "parameters": [
+    {
+      "id": "mars.radius",
+      "field": "radius_m",
+      "value": 3396190.0,
+      "unit": "m",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "planetary_mean",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "IAU/IAG Mars 2000 sphere (radius of the reference sphere used by the USGS Mars products this game reads)",
+          "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+          "accessed": "2026-11-17",
+          "where": "CRS of the GeoTIFF: SPHEROID[\"Mars_2000_Sphere_IAU_IAG\",3396190,0]"
+        }
+      ],
+      "note": "Radio de la esfera de referencia de los datos de relieve; así el juego y los datos usan la misma geometría."
+    },
+    {
+      "id": "mars.gravity",
+      "field": "gravity_m_s2",
+      "value": 3.71,
+      "unit": "m/s^2",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "planetary_mean",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Williams D.R., Mars Fact Sheet, NASA GSFC NSSDCA",
+          "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+          "accessed": "2026-11-17",
+          "where": "Surface gravity (mean). Valor de referencia; la página no se pudo abrir desde el entorno de desarrollo."
+        }
+      ]
+    },
+    {
+      "id": "mars.sol",
+      "field": "sol_s",
+      "value": 88775.244,
+      "unit": "s",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "planetary_mean",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Williams D.R., Mars Fact Sheet, NASA GSFC NSSDCA",
+          "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+          "accessed": "2026-11-17",
+          "where": "Length of day (24.6597 h). Valor de referencia; la página no se pudo abrir desde el entorno de desarrollo."
+        }
+      ]
+    },
+    {
+      "id": "jezero.cell",
+      "field": "cell_m",
+      "value": 375.0,
+      "unit": "m",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "OK",
+      "note": "Lado de una celda científica en Jezero: 256 celdas cubren los 96 km de la región."
+    },
+    {
+      "id": "jezero.rover_speed",
+      "field": "rover_speed_m_s",
+      "value": 20.0,
+      "unit": "m/s",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "OK",
+      "note": "Velocidad del rover conducido a escala real. Elegida por Daniel (2026-11-17): 20 m/s, una celda de 375 m en unos 20 s; mucho más rápido que un rover real, a propósito."
+    },
+    {
+      "id": "jezero.travel_factor",
+      "field": "travel_factor",
+      "value": 30.0,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "OK",
+      "note": "Viaje rápido: con una orden de movimiento (G) el rover avanza 30 veces más deprisa, como si el tiempo se acelerara."
+    },
+    {
+      "id": "isidis_west.cell",
+      "field": "cell_m",
+      "value": 1562.5,
+      "unit": "m",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "OK",
+      "note": "Lado de una celda científica en la sección inicial del modo historia: 256 celdas cubren los 400 km. Elegido por Daniel (2026-11-17): la sección más grande con celdas de ~1,5 km."
+    }
+  ]
+}

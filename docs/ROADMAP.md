@@ -1,5 +1,7 @@
 # ROADMAP técnico de MARTIS (T01–T10)
 
+> **Histórico.** T01–T10 y el Sprint 1 están completados y fusionados en `main`. El plan vigente son las fases A–I del [Documento Maestro v2.0](maestro/MARTIS_Documento_Maestro_v2.0.docx) (§34); el estado y los siguientes pasos están en [ESTADO.md](ESTADO.md).
+
 Fuente: TDD v1.0 §16 (hitos), §18–19 (primer sprint y prototipo), Anexo B.7 (estimación). Estado de todo el documento: **propuesta pendiente de visto bueno de Dani**. Huecos referenciados como H-nn están en [`TDD_HUECOS.md`](TDD_HUECOS.md); decisiones en [`ADR/`](ADR/README.md).
 
 ## Primer objetivo: prototipo CLI (TDD §19)
@@ -18,7 +20,7 @@ dotnet run --project src/Martis.Cli -- simulate \
 echo $?   # 0
 ```
 
-- Existen `metadata.json`, `final_snapshot.json`, `resource_history.csv`, `simulation.log` (+ `population_history.csv` con cabecera) en la carpeta de salida (H-16: `mutations.csv` y `mass_balance.csv` llegan con T06/T04).
+- Existen `metadata.json`, `final_snapshot.json`, `resource_history.csv`, `simulation.log` (+ `population_history.csv` con cabecera) en la carpeta de salida (H-16: `mass_balance.csv` llegó con T04 y `mutations.csv` con T06).
 - `tick == 1000` en el snapshot final; el validador no reporta violaciones.
 - Dos ejecuciones con la misma semilla producen ficheros idénticos byte a byte (VAL-010; misma plataforma y runtime, §6).
 - Un estado inválido inyectado en un test hace que el CLI termine con exit ≠ 0 y deje en el log semilla, tick, celda y sistema.
@@ -80,42 +82,77 @@ Convención: «Criterio TDD» es el literal de §16; «Criterio verificable» es
 - **Criterio TDD:** Balances verificables.
 - **Criterio verificable:** para cada reacción de `data/reactions/*.json`, test automático `A·S = 0` (VAL-007); tests de consumo ≤ disponibilidad (VAL-006) y energía consumida ≤ disponible (VAL-008); `mass_balance.csv` con error `ε_M ≤ ε_abs + ε_rel·|M|` por tick; asignación proporcional entre poblaciones sin ventaja por orden de iteración.
 - **Depende de:** T02, T03; H-18 (unidades, composición elemental con fuente).
+- **Estado:** implementado en `pipeline-v1` ([ADR-012](ADR/ADR-012-modelo-metabolico.md), propuesto): un fotótrofo (`phototroph_a01`), cuatro reacciones balanceadas, reparto proporcional y VAL-006/007/008 por tick.
 
 ### T05 — Population Engine
 - **Contenido (TDD):** Crecimiento, mortalidad, capacidad y competencia.
 - **Criterio TDD:** Dinámica coherente según condiciones.
 - **Criterio verificable (propuesta):** pruebas por escenario con semilla fija: sin recursos ⇒ no hay crecimiento; recursos limitantes ⇒ crecimiento acotado por la capacidad `K = min(...)` sin crear recursos; mortalidad combinada `1 − Π(1 − mᵢ)` ∈ [0,1]; propiedad: abundancia y biomasa nunca negativas. «Coherente» se define con los casos esperados que acuerde MARTIS Ciencia (no con números inventados).
 - **Depende de:** T04.
+- **Estado:** implementado en `pipeline-v2` ([ADR-013](ADR/ADR-013-dinamica-de-poblaciones.md), propuesto): mortalidad combinada de seis términos, mantenimiento e inanición, capacidad `K = min(K_space, K_C, K_N, K_P)`, extinción con menos de un individuo y reciclaje de la necromasa.
 
 ### T06 — Evolution Engine
 - **Contenido (TDD):** Mutación, herencia, selección y deriva.
 - **Criterio TDD:** Variabilidad reproducible.
 - **Criterio verificable:** misma semilla ⇒ mismas variantes y frecuencias (VAL-010); genes siempre en [0,1] (VAL-005); nunca más de `MaxVariantsPerSpeciesPerCell` variantes (ADR-006); fusión conserva abundancia y biomasa; `mutations.csv` generado.
 - **Depende de:** T05; ADR-006, ADR-009.
+- **Estado:** implementado en `pipeline-v3` ([ADR-014](ADR/ADR-014-evolucion.md), propuesto): mutación gaussiana acotada con el flujo Mutation, deriva multinomial con Nₑ (flujo GeneticDrift), fusión por tolerancia, tope de variantes y `mutations.csv`.
 
 ### T07 — Persistence
 - **Contenido (TDD):** SQLite, snapshots, migraciones y recuperación.
 - **Criterio TDD:** Guardar, cerrar, recuperar y continuar.
 - **Criterio verificable:** test de integración: guardar, reabrir la base, cargar y continuar N ticks produce el mismo estado que ejecutar sin interrumpir (VAL-009 + VAL-010); corromper un byte del último snapshot ⇒ se recupera el anterior; migración inicial de §9.2 aplicada y versionada; H-14 (semilla ulong↔INTEGER) cubierta por test.
 - **Depende de:** T02, T03 (estado estable), T06 recomendado; ADR-004.
+- **Estado:** implementado ([ADR-015](ADR/ADR-015-guardado-sqlite.md), propuesto): formato binario `MRTS` v1 con SHA-256, esquema de estado v2, migraciones 1 (§9.2) y 2, `SaveGameStore`, recuperación del snapshot anterior y `simulate --save/--resume`.
 
 ### T08 — Godot Integration
 - **Contenido (TDD):** Mapa, reloj, estadísticas y controles.
 - **Criterio TDD:** Observar y controlar simulación.
 - **Criterio verificable:** `Main.tscn` arranca con la versión fijada (ADR-001), muestra el mapa 64×64 como textura generada desde datos de celdas, reloj y estadísticas; pausa y cambio de velocidad funcionan (lista de comprobación manual con captura); Godot solo usa comandos/snapshots inmutables (el test de arquitectura prohíbe referencias a estado mutable); ninguna llamada a nodos desde el hilo de simulación.
 - **Depende de:** T03, T07; decisión final de versión Godot/TFM (ADR-001/002, H-25).
+- **Estado:** implementado en 3D ([ADR-017](ADR/ADR-017-juego-3d-godot.md), propuesto) a petición de Dani: relieve procedural, capas de datos 64×64 sobre el terreno, colonias bioluminiscentes, ciclo día/noche, misión, inspector, laboratorio, despliegue, guardado y carga. Godot 4.7.2 con `net10.0`.
 
 ### T09 — Ecosystem MVP
 - **Contenido (TDD):** Tres arquetipos (fotótrofo, descomponedor, extremófilo), reciclaje y ecología.
 - **Criterio TDD:** Completar FIRST COLONY.
 - **Criterio verificable:** los tres arquetipos definidos en `data/organisms/` con parámetros clasificados; reciclaje de biomasa muerta conserva elementos (VAL-007); la misión FIRST COLONY (B.6: analizar región, diseñar fotótrofo, experimentar, desplegar, mantener varias generaciones, observar mutaciones) se completa en un escenario con semilla. **Umbrales de «mantener varias generaciones» pendientes de definir (H-19).**
 - **Depende de:** T06, T08.
+- **Estado:** motor implementado ([ADR-016](ADR/ADR-016-ecosistema-y-first-colony.md), propuesto): descomponedor D01 y extremófilo E01, ciclo de carbono y agua cerrado, diseño de genoma y misión FIRST COLONY completable con semilla en el CLI (`--mission first_colony`). La parte jugable va en T08. Umbrales H-19 propuestos.
 
 ### T10 — Optimization
 - **Contenido (TDD):** Benchmarks y perfiles.
 - **Criterio TDD:** Cumplir objetivos acordados.
 - **Criterio verificable:** benchmarks BenchmarkDotNet (`EnvironmentUpdate`, `MetabolismUpdate`, `PopulationUpdate`, `MutationUpdate`, `SnapshotCreation/Restore`, `FullSimulation`) con hardware, runtime, tiempo medio, memoria y GC documentados; comparación con §7.4 (4.096 celdas, 10.000 poblaciones, 3 organismos, ≤ 32 variantes, 1.000 ticks < 10 s, snapshot < 1 s, memoria < 256 MB) **en equipo de referencia documentado (H-20)**. Los objetivos pueden ajustarse con mediciones; ninguna cifra se da por conseguida sin reporte.
 - **Depende de:** T04–T06 y T09 para el cierre; los benchmarks parciales empiezan en el Sprint 1.
+- **Estado:** medido ([BENCHMARK.md](BENCHMARK.md)): suite BenchmarkDotNet en `benchmarks/Martis.Benchmarks` y perfil por paso. FIRST COLONY va a 6 ms/tick. La carga de §7.4 va a 110–175 ms/tick porque las mutaciones llevan las poblaciones a ~80 000 (H-29). Primeras optimizaciones aplicadas; quedan las recomendaciones del informe.
+
+## Modo historia (campaña «Génesis», [ADR-019](ADR/ADR-019-modo-historia.md))
+
+Cada hito va en una rama y un PR propios, apilados.
+
+- **H1, marco de campaña:** capítulos, desbloqueo en orden, guía paso a paso y progreso guardado (H-31). Capítulo 1 jugable (1.1 Despertar, 1.2 Primera colonia, 1.3 Presión selectiva).
+- **H2, economía ([ADR-020](ADR/ADR-020-economia.md)):** puntos de investigación para el árbol tecnológico y el inóculo del biorreactor, que limita los despliegues.
+- **H3, mapas grandes ([ADR-021](ADR/ADR-021-mapas-grandes.md)):** tamaño de rejilla por capítulo (64, 128 y 256), presupuesto de poblaciones (H-29) y terreno 3D por bloques. 256×256 va a 74 ms/tick.
+- **H4, capítulo 2 (Ciclo cerrado, [ADR-022](ADR/ADR-022-capitulo-2.md)):** gradientes de latitud y relieve (H-30), objetivos de ocupar franjas, reciclar y acumular O₂, y misiones 2.1 a 2.4.
+- **H5, capítulo 3 (Cooperación, [ADR-023](ADR/ADR-023-capitulo-3.md)):** eucariota y multicelular, transiciones por endosimbiosis y biopelícula, y misiones 3.1 a 3.3.
+- **H6, capítulo 4 (Cadenas tróficas, [ADR-024](ADR/ADR-024-capitulo-4.md)):** herbívoros y depredadores con respuesta de Holling y refugio, y misiones 4.1 a 4.3. La dispersión activa queda aplazada.
+- **H7, capítulo 5 (Mente, [ADR-025](ADR/ADR-025-capitulo-5.md)):** colonia social que nace de depredadores longevos, caza cooperativa, índice de inteligencia y misiones 5.1 y 5.2. La especie que transforma su mundo queda para después de H8.
+- **H8, guía progresiva ([ADR-028](ADR/ADR-028-guia-progresiva.md)):** pistas que se retiran por capítulos, códice de conceptos con etiqueta epistémica, resumen al cerrar cada misión, eras y tipos de misión del documento maestro v2.0 y tutorial del rover.
+- **H9:** equilibrado jugando (H-32, H-33) y diagnóstico de fallos de misión (§30 del documento maestro).
+
+### Expedición (jugabilidad abierta, elegida por Daniel el 2026-11-17)
+
+- **J1, rover sembrador ([ADR-026](ADR/ADR-026-expedicion-rover.md)):** rover en tercera persona (Tab cambia de vista, WASD conduce), siembra solo dentro de su alcance y batería que se recarga junto al módulo.
+- **J2–J5:** descartados el 2026-11-17 al adoptar el Documento Maestro v2.0.
+
+### Corte vertical del Documento Maestro v2.0 (§32)
+
+- **V1, modos sobre un mismo estado ([ADR-027](ADR/ADR-027-modos-sobre-un-estado.md)):** Exploración, Estratégico, Laboratorio y Planetario (F1–F4), control de tiempo con tope por modo y libro de órdenes.
+- **V2, conocimiento y escaneo ([ADR-029](ADR/ADR-029-conocimiento-y-escaneo.md)):** niebla de conocimiento por celda, sonda orbital por franjas, cámaras y escáner del rover (C); no se siembra a ciegas.
+- **V3, muestras y laboratorio ([ADR-030](ADR/ADR-030-muestras-y-laboratorio.md)):** muestreo de terreno medido (M), entrega en el módulo, análisis en cola con puntos de investigación y diseño desde el genoma de una muestra.
+- **V4, robots e instalaciones ([ADR-031](ADR/ADR-031-robots-e-instalaciones.md)):** desgaste y fallos deterministas del rover, estaciones fijas con presupuesto de energía que se averían y se reparan, órdenes de desplazamiento pendientes hasta llegar o fallar.
+- **V5, Valle Aurora y guardado completo ([ADR-032](ADR/ADR-032-valle-y-guardado-completo.md)):** cinco lugares de interés que pasan de anomalía a descubrimiento con el conocimiento, y guardado de toda la expedición junto a la instantánea.
+- **Después:** fase E (terraformación regional) y `PlanetDefinition` (ARC-003).
 
 ## Fuera de alcance del MVP (TDD §0, B.5)
 

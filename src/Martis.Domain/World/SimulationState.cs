@@ -53,6 +53,50 @@ public sealed class SimulationState
 
     public long Tick { get; set; }
 
+    /// <summary>
+    /// Id the next new population receives. Kept in the save (schema v2) so an id is
+    /// never reused after an extinction. <see cref="AllocatePopulationId"/> also stays
+    /// above every id in <see cref="Populations"/>.
+    /// </summary>
+    public long NextPopulationId { get; set; } = 1;
+
+    /// <summary>
+    /// Returns a fresh population id and advances <see cref="NextPopulationId"/>.
+    /// Only populations appended since the last call are scanned while the list has not
+    /// been shortened or reordered (the last scanned population is still in its place);
+    /// otherwise the whole list is scanned again (T10: a full scan per mutation was O(N²)).
+    /// </summary>
+    public long AllocatePopulationId()
+    {
+        var id = NextPopulationId;
+        var start = 0;
+        if (_scannedCount > 0
+            && _scannedCount <= Populations.Count
+            && ReferenceEquals(Populations[_scannedCount - 1], _lastScanned)
+            && id >= _scannedFloor)
+        {
+            start = _scannedCount;
+        }
+
+        for (var i = start; i < Populations.Count; i++)
+        {
+            if (Populations[i].Id.Value >= id)
+            {
+                id = Populations[i].Id.Value + 1;
+            }
+        }
+
+        NextPopulationId = id + 1;
+        _scannedCount = Populations.Count;
+        _lastScanned = _scannedCount > 0 ? Populations[_scannedCount - 1] : null;
+        _scannedFloor = NextPopulationId;
+        return id;
+    }
+
+    private int _scannedCount;
+    private Population? _lastScanned;
+    private long _scannedFloor;
+
     public EnvironmentState[] Environment { get; }
 
     public ResourcePool[] Resources { get; }

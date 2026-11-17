@@ -534,6 +534,11 @@ public sealed class ParameterCatalog
             return new ParameterScope.Regional(site);
         }
 
+        if (string.Equals(text, "model", StringComparison.Ordinal))
+        {
+            return new ParameterScope.Model();
+        }
+
         if (text.StartsWith("analog:", StringComparison.Ordinal))
         {
             var name = text["analog:".Length..];
@@ -546,7 +551,7 @@ public sealed class ParameterCatalog
         }
 
         throw new ParameterLoadException(
-            $"Parameter '{id}' has scope '{text}'. Expected regional:<site>, planetary_mean or analog:<name>.",
+            $"Parameter '{id}' has scope '{text}'. Expected regional:<site>, planetary_mean, analog:<name> or model.",
             id);
     }
 

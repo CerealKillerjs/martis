@@ -1,0 +1,119 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "oxygen",
+    "name": "ATMÓSFERA — 2.5",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (campaña H4)",
+    "review": "Misión del capítulo 2 de la campaña «Génesis» (ADR-022). Umbrales GAME_BALANCE propuestos.",
+    "sequential": false,
+    "briefing": "Cada fotótrofo libera oxígeno al fijar carbono. Una colonia no cambia nada; una red de colonias empieza a cambiar el aire de la región. Es el primer paso hacia formas de vida que respiran.",
+    "objectives": [
+      {
+        "id": "network",
+        "type": "occupy",
+        "capability": "photoautotrophy",
+        "count": "mission.oxygen.colonies",
+        "title": "Extiende una red de colonias",
+        "hint": "Mejora el biorreactor para desplegar más a menudo."
+      },
+      {
+        "id": "oxygen",
+        "type": "accumulate",
+        "resource": "Oxygen",
+        "amount": "mission.oxygen.oxygen_kg",
+        "title": "Libera oxígeno a la atmósfera",
+        "hint": "El oxígeno se mide en todo el mapa desde el inicio de la misión. Cuanta más fotosíntesis, más oxígeno."
+      },
+      {
+        "id": "sustain_network",
+        "type": "sustain",
+        "capability": "photoautotrophy",
+        "min_biomass": "mission.oxygen.min_biomass_kg",
+        "sols": "mission.oxygen.sustain_sols",
+        "title": "Mantén la red",
+        "hint": "Cada colonia necesita su descomponedor para no agotar el agua."
+      }
+    ],
+    "debrief": "La red de colonias ha cambiado el aire de la región: hay más oxígeno que cuando llegaste. Es la primera huella de la terraformación."
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.oxygen.colonies",
+      "field": "count",
+      "value": 5.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Casillas distintas con fotótrofos.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.oxygen.oxygen_kg",
+      "field": "amount",
+      "value": 8.0,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Oxígeno ganado en todo el mapa.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.oxygen.min_biomass_kg",
+      "field": "min_biomass",
+      "value": 5.0,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa fotótrofa mínima.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.oxygen.sustain_sols",
+      "field": "sols",
+      "value": 60.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles seguidos por encima del mínimo.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    }
+  ]
+}

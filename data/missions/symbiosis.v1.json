@@ -1,0 +1,119 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "symbiosis",
+    "name": "SIMBIOSIS — 3.1",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (campaña H5)",
+    "review": "Misión del capítulo 3 de la campaña «Génesis» (ADR-023). Umbrales GAME_BALANCE propuestos.",
+    "sequential": false,
+    "briefing": "Hace dos mil millones de años, en la Tierra, una célula se tragó a otra y no la digirió: se quedaron juntas para siempre. Así nacieron las células complejas. Aquí puede volver a pasar. Junta fotótrofos y descomponedores en la misma casilla y deja que convivan.",
+    "objectives": [
+      {
+        "id": "pair_up",
+        "type": "occupy",
+        "organism": "decomposer_d01",
+        "count": "mission.symbiosis.pairs",
+        "title": "Junta descomponedores con fotótrofos",
+        "hint": "Despliega un descomponedor en la misma casilla que una colonia de fotótrofos. Los dos necesitan al menos 0,2 kg."
+      },
+      {
+        "id": "first_eukaryote",
+        "type": "occupy",
+        "organism": "eukaryote_k01",
+        "count": "mission.symbiosis.eukaryotes",
+        "title": "Presencia la endosimbiosis",
+        "hint": "La fusión es un suceso al azar: cada sol de convivencia es una oportunidad. Acelera el tiempo y mira la bitácora."
+      },
+      {
+        "id": "sustain_eukaryote",
+        "type": "sustain",
+        "organism": "eukaryote_k01",
+        "min_biomass": "mission.symbiosis.min_biomass_kg",
+        "sols": "mission.symbiosis.sustain_sols",
+        "title": "Mantén a los eucariotas",
+        "hint": "El eucariota respira además de hacer fotosíntesis: devuelve agua al suelo y resiste mejor."
+      }
+    ],
+    "debrief": "Dos organismos se han convertido en uno. Las células complejas que han nacido tienen energía de sobra para lo que viene."
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.symbiosis.pairs",
+      "field": "count",
+      "value": 1.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 3 (H5); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Casillas con descomponedores.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.symbiosis.eukaryotes",
+      "field": "count",
+      "value": 1.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 3 (H5); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Casillas con eucariotas.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.symbiosis.min_biomass_kg",
+      "field": "min_biomass",
+      "value": 0.5,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 3 (H5); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa eucariota mínima.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.symbiosis.sustain_sols",
+      "field": "sols",
+      "value": 40.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 3 (H5); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles seguidos por encima del mínimo.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    }
+  ]
+}

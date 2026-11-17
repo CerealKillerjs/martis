@@ -7,7 +7,7 @@ namespace Martis.Cli;
 /// <summary>
 /// Headless entry point of the MARTIS engine.
 /// <c>--version</c> prints the product version.
-/// <c>simulate</c> advances an empty world and prints the final tick.
+/// <c>simulate</c> runs the TDD §19 prototype flow and writes the result files.
 /// </summary>
 public static class Program
 {
@@ -21,7 +21,7 @@ public static class Program
     /// Prints the engine version, or runs <c>simulate</c>.
     /// </summary>
     /// <param name="args">Command-line arguments supplied by the host.</param>
-    /// <returns><c>0</c> on success; <c>1</c> when the arguments are not recognised.</returns>
+    /// <returns><c>0</c> on success, <c>1</c> when a run fails, <c>2</c> when the arguments are not recognised.</returns>
     public static int Main(string[] args)
     {
         // Keep the allowed project references in the assembly manifest.
@@ -41,7 +41,7 @@ public static class Program
         }
 
         Console.Error.WriteLine(SimulateCommand.Usage);
-        return 1;
+        return SimulateCommand.InvalidArguments;
     }
 
     /// <summary>

@@ -58,6 +58,27 @@ public sealed class ResourcePool
         new(nameof(MineralCarbon), MineralCarbon),
     ];
 
+    /// <summary>Number of deposits, the length of <see cref="Quantities"/>.</summary>
+    public const int SlotCount = 9;
+
+    /// <summary>
+    /// The deposit at a <see cref="Quantities"/> position, without building the list (H3:
+    /// per-cell loops on 256×256 maps). Same order as <see cref="Quantities"/>.
+    /// </summary>
+    public double ValueAt(int slot) => slot switch
+    {
+        0 => CarbonDioxide,
+        1 => Water,
+        2 => Oxygen,
+        3 => Nitrogen,
+        4 => Phosphorus,
+        5 => Sulfur,
+        6 => Iron,
+        7 => OrganicCarbon,
+        8 => MineralCarbon,
+        _ => throw new ArgumentOutOfRangeException(nameof(slot), slot, "A pool has nine deposits."),
+    };
+
     /// <summary>
     /// Throws <see cref="ArgumentOutOfRangeException"/> for the first deposit that
     /// is negative or not finite. The parameter name is the deposit name.

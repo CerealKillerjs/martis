@@ -1,8 +1,10 @@
 # SPRINT 01 — Infraestructura ejecutable y prototipo CLI
 
+> **Histórico.** El Sprint 1 está completado. Ver [ESTADO.md](ESTADO.md).
+
 Fuente: TDD v1.0 §18 (cinco jornadas), §18.1 (checklist), §19 (definición de terminado). Estado: **propuesta pendiente de visto bueno de Dani**.
 
-**Meta:** que el prototipo CLI de §19 funcione de extremo a extremo (MarsBaseline, 64×64, 1000 ticks, validar, snapshot, guardar resultados, exit 0). **Eso todavía no está hecho.** La biblioteca ya carga el escenario MarsBaseline v0.4. El CLI no cierra el §19: no escribe el snapshot ni los ficheros de resultados. Eso sigue en S1-32. **Godot no hace falta para el CLI**, así que las tareas de Godot son paralelas y no bloquean.
+**Meta:** que el prototipo CLI de §19 funcione de extremo a extremo (MarsBaseline, 64×64, 1000 ticks, validar, snapshot, guardar resultados, exit 0). **Hecho desde S1-31/S1-32/S1-33:** `simulate` carga MarsBaseline v0.4, avanza los ticks con validación, escribe `metadata.json`, `final_snapshot.json`, `resource_history.csv`, `population_history.csv` y `simulation.log`, y sale con 0; un estado inválido sale con 1. Quedan S1-34 (matriz de invariantes), S1-35 (benchmark), S1-36 (cierre) y las tareas paralelas de Godot (S1-07, S1-08). **Godot no hace falta para el CLI**, así que las tareas de Godot son paralelas y no bloquean.
 
 ## Reglas del sprint
 
@@ -218,6 +220,29 @@ Recorrer el checklist 18.1 y la definición de terminado §19 sobre un **clon li
 | 9 | Crear SimulationSnapshot — captura del estado | S1-28, S1-31 | round-trip VAL-009 |
 | 10 | Crear pruebas automatizadas — build y tests satisfactorios | S1-05, S1-15, S1-21, S1-24, S1-29, S1-30, S1-33, S1-34, S1-36 (+ S1-06 CI) | `dotnet test MARTIS.sln` exit 0 |
 
+## Cierre del sprint (S1-36), 2026-11-16
+
+Recorrido sobre un **clon limpio** de `claude/t10-benchmarks`, que incluye T04–T10 encima del Sprint 1. El SDK local es 10.0.115 y `global.json` fija 10.0.404, así que el clon se compiló con un `global.json` local que no se sube. La CI compila con 10.0.404 sobre un checkout limpio en Linux y Windows.
+
+- `dotnet build MARTIS.sln -c Release`: 0 avisos y 0 errores.
+- `dotnet test MARTIS.sln`: Domain 509, Simulation 143, Persistence 16 e Integration 46 en verde. Falla solo `GlobalJsonPinsTheNet10Sdk`, por el `global.json` local; en CI pasa.
+- `dotnet run --project src/Martis.Cli -- simulate --scenario mars_baseline --seed 12345 --ticks 1000 --output results/experiment_001`: exit 0, los ficheros de S1-32 (más `mass_balance.csv` y `mutations.csv` de T04–T06) y `"tick": 1000` en `final_snapshot.json`.
+
+| # | Ítem §18.1 | Estado | Evidencia |
+|---|---|---|---|
+| 1 | Repositorio y README | Hecho | #3, README |
+| 2 | Godot .NET y SDK | Hecho en T08 | Godot 4.7.2 con `net10.0` ([ADR-017](ADR/ADR-017-juego-3d-godot.md), PR #15); la CI compila `src/Martis.Game` |
+| 3 | MARTIS.sln con proyectos independientes | Hecho | #3, `ProjectGraphTests` |
+| 4 | Martis.Domain | Hecho | #4, 509 tests de dominio |
+| 5 | SimulationState 64×64 | Hecho | #4, `SimulationStateTests` |
+| 6 | SimulationEngine por ticks | Hecho | #5, `EngineRepeatabilityTests` |
+| 7 | PRNG | Hecho | #5, `Pcg32Tests` (vectores oficiales) |
+| 8 | Escenario MarsBaseline | Hecho | #6, #7, `PublishedMarsBaselineTests` |
+| 9 | SimulationSnapshot | Hecho | #9 (JSON), #13 (binario), VAL-009 |
+| 10 | Pruebas automatizadas | Hecho | [INVARIANTES.md](INVARIANTES.md) (S1-34), CI |
+
+S1-35: [BENCHMARK.md](BENCHMARK.md). Huecos nuevos: H-29, H-30 y H-31 en [TDD_HUECOS.md](TDD_HUECOS.md).
+
 ## Mapa de días del TDD → tareas
 
 | Día (§18) | Tareas del TDD | Tareas |
@@ -234,6 +259,6 @@ Recorrer el checklist 18.1 y la definición de terminado §19 sobre un **clon li
 |---|---|---|
 | 001, 002, 003, 005 | S1-10, S1-11, S1-12, S1-14, S1-15 | incluye NaN/∞ |
 | 004 | S1-19, S1-21, S1-18 | probabilidades en [0,1] |
-| 006, 007, 008 | — | requieren metabolismo (T04); estado «pendiente» en S1-34 |
+| 006, 007, 008 | T04 (PR #10) | cubiertos por `ConservationSystem`; ver [INVARIANTES.md](INVARIANTES.md) |
 | 009 | S1-31 | round-trip |
 | 010 | S1-24, S1-33 | misma plataforma/runtime |

@@ -1,0 +1,168 @@
+{
+  "schema": "martis.region",
+  "id": "jezero",
+  "name": "Cráter Jezero",
+  "date": "2026-11-17",
+  "center": {
+    "lat": 18.4,
+    "lon": 77.55
+  },
+  "size_m": 96000.0,
+  "height": {
+    "file": "height.png",
+    "pixels": 2049,
+    "spacing_m": 46.875,
+    "min_m": -3190.51806640625,
+    "max_m": -458.91363525390625
+  },
+  "albedo": {
+    "file": "albedo.jpg",
+    "pixels": 4096
+  },
+  "bounds_deg": {
+    "west": 76.69658077214315,
+    "south": 17.590210966810467,
+    "east": 78.40341922785684,
+    "north": 19.20978903318953
+  },
+  "ctx_coverage": 0.9851205256477407,
+  "sources": [
+    {
+      "name": "Mars HRSC-MOLA Blended DEM Global 200 m v2",
+      "by": "USGS Astrogeology / ESA-DLR-FU Berlin / NASA",
+      "license": "public domain",
+      "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif"
+    },
+    {
+      "name": "MRO CTX controlled DTMs (68 strips)",
+      "by": "USGS Astrogeology",
+      "license": "CC0-1.0",
+      "url": "https://astrogeo-ard.s3.us-west-2.amazonaws.com/collectionindices/mro_ctx_controlled_usgs_dtms.parquet"
+    },
+    {
+      "name": "CTX mosaic of the Mars human exploration zones",
+      "by": "USGS Astrogeology / NASA-JPL-MSSS",
+      "license": "public domain",
+      "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/CTX_EZs/Jezero_CTX_BlockAdj_dd.tif"
+    }
+  ],
+  "ctx_strips": [
+    "K22_062095_1988_XN_18N282W__K22_061950_1988_XN_18N282W",
+    "K13_058429_1983_XN_18N283W__K12_058139_1983_XN_18N283W",
+    "K21_061673_1987_XN_18N283W__K21_061739_1987_XN_18N283W",
+    "K23_062385_1988_XN_18N282W__K23_062451_1988_XN_18N282W",
+    "K19_060763_1986_XN_18N282W__K19_060697_1985_XN_18N282W",
+    "K12_057928_1978_XN_17N282W__K12_058073_1978_XN_17N282W",
+    "J13_049897_1980_XN_18N283W__J12_049330_1982_XN_18N283W",
+    "J21_053022_1984_XN_18N282W__J21_053167_1984_XN_18N282W",
+    "K01_053589_1983_XN_18N283W__K01_053655_1983_XN_18N283W",
+    "G13_023102_1986_XN_18N282W__G13_023168_1986_XN_18N282W",
+    "G21_026280_1976_XN_17N283W__D02_027902_1975_XN_17N283W",
+    "F05_037752_2008_XN_20N282W__F05_037607_2008_XN_20N282W",
+    "K23_062240_1985_XN_18N283W__K23_062174_1986_XN_18N283W",
+    "K13_058574_1983_XN_18N282W__K13_058640_1983_XN_18N282W",
+    "P18_007925_1987_XN_18N282W__P19_008650_1987_XI_18N282W",
+    "K18_060341_1985_XN_18N282W__K18_060407_1984_XN_18N282W",
+    "N02_063242_1988_XN_18N283W__N03_063532_1988_XN_18N283W",
+    "N01_062741_1988_XN_18N282W__N03_063387_1988_XN_18N282W",
+    "J11_049053_1980_XN_18N282W__J11_049119_1982_XN_18N282W",
+    "K01_053734_1984_XN_18N282W__K05_055145_1985_XN_18N282W",
+    "G12_022746_1976_XN_17N282W__G11_022680_1976_XN_17N282W",
+    "J03_045994_1986_XN_18N282W__J03_046060_1986_XN_18N282W",
+    "D17_033717_1987_XN_18N281W__D16_033651_1987_XN_18N281W",
+    "F02_036618_1985_XN_18N282W__F03_037119_2001_XN_20N283W",
+    "B18_016720_1978_XN_17N283W__B18_016786_1978_XN_17N283W",
+    "N01_062886_1988_XN_18N282W__N02_063308_1988_XN_18N282W",
+    "K20_061185_1986_XN_18N283W__K19_060908_1985_XN_18N283W",
+    "K21_061607_1988_XN_18N283W__K19_060829_1986_XN_18N283W",
+    "K17_060196_1985_XN_18N282W__K18_060486_1984_XN_18N282W",
+    "N04_064020_1983_XN_18N283W__N04_063954_1982_XN_18N283W",
+    "G16_024513_1991_XN_19N283W__G18_025370_1981_XN_18N283W",
+    "F04_037396_1985_XN_18N282W__F17_042315_1986_XN_18N282W",
+    "D19_034495_1988_XN_18N282W__D20_035141_1987_XN_18N282W",
+    "B17_016364_1978_XN_17N282W__B17_016219_1978_XN_17N282W",
+    "B19_016931_1975_XN_17N283W__B19_017076_1975_XN_17N282W",
+    "N04_063809_1982_XN_18N282W__N05_064231_1982_XN_18N282W",
+    "P02_001820_1984_XI_18N282W__P06_003442_1987_XI_18N282W",
+    "N01_062952_1988_XN_18N282W__N01_062662_1988_XN_18N282W",
+    "K14_058996_1985_XN_18N282W__K14_058930_1986_XN_18N282W",
+    "K23_062530_1986_XN_18N282W__K23_062319_1986_XN_18N282W",
+    "K19_060829_1986_XN_18N283W__K22_062161_1987_XN_18N282W",
+    "K01_053945_1984_XN_18N282W__K01_053879_1984_XN_18N282W",
+    "J22_053378_1984_XN_18N282W__J22_053312_1984_XN_18N282W",
+    "F20_043739_1976_XN_17N283W__F21_043884_1976_XN_17N283W",
+    "F06_038029_1971_XN_17N283W__J04_046271_1983_XN_18N283W",
+    "D14_032794_1989_XN_18N282W__D15_033216_1989_XN_18N282W",
+    "D15_033150_1983_XN_18N281W__F17_042328_1984_XN_18N281W",
+    "B18_016509_1978_XN_17N282W__B18_016575_1978_XN_17N282W",
+    "B20_017498_1977_XN_17N283W__G01_018566_1978_XN_17N283W",
+    "N15_068162_1984_XN_18N283W__N12_067159_1988_XN_18N283W",
+    "K22_062029_1988_XN_18N282W__K22_061963_1988_XN_18N282W",
+    "N03_063453_1982_XN_18N282W__N03_063519_1982_XN_18N282W",
+    "K06_055567_1983_XN_18N283W__K05_055501_1983_XN_18N283W",
+    "K17_060130_1985_XN_18N282W__K18_060275_1985_XN_18N282W",
+    "J20_052521_1984_XN_18N282W__J20_052455_1984_XN_18N282W",
+    "K01_053800_1983_XN_18N283W__J22_053299_1983_XN_18N283W",
+    "J13_049752_1980_XN_18N283W__J13_050042_1981_XN_18N282W",
+    "G14_023524_1985_XN_18N282W__G13_023379_1985_XN_18N282W",
+    "J10_048842_1986_XN_18N282W__J11_048908_1986_XN_18N282W",
+    "J11_049264_1982_XN_18N283W__J12_049330_1982_XN_18N283W",
+    "J10_048631_1988_XN_18N281W__J12_049343_1988_XN_18N281W",
+    "F03_036829_1977_XN_17N283W__F03_037040_1994_XN_19N283W",
+    "F05_037818_1977_XN_17N282W__F04_037330_2008_XN_20N282W",
+    "F16_041893_1974_XN_17N283W__F14_041115_1974_XN_17N283W",
+    "D22_035629_1987_XN_18N282W__D21_035563_1987_XN_18N282W",
+    "F09_039203_1984_XN_18N282W__F09_039348_1984_XN_18N282W",
+    "D12_031871_1986_XN_18N282W__D12_031805_1986_XN_18N282W",
+    "B22_018210_1978_XN_17N283W__D19_034772_1978_XN_17N283W"
+  ],
+  "parameters": [
+    {
+      "id": "jezero.height_min",
+      "field": "min_m",
+      "value": -3190.51806640625,
+      "unit": "m",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:jezero",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Mars HRSC-MOLA Blended DEM Global 200 m v2 (USGS Astrogeology / ESA-DLR-FU Berlin / NASA) + CTX DTMs (USGS, CC0)",
+          "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+          "accessed": "2026-11-17",
+          "where": "lowest sample of the blended relief over the region"
+        }
+      ]
+    },
+    {
+      "id": "jezero.height_max",
+      "field": "max_m",
+      "value": -458.91363525390625,
+      "unit": "m",
+      "classification": "SCIENTIFIC_MEASURED",
+      "scope": "regional:jezero",
+      "version": "1",
+      "status": "OK",
+      "source": [
+        {
+          "citation": "Mars HRSC-MOLA Blended DEM Global 200 m v2 (USGS Astrogeology / ESA-DLR-FU Berlin / NASA) + CTX DTMs (USGS, CC0)",
+          "url": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif",
+          "accessed": "2026-11-17",
+          "where": "highest sample of the blended relief over the region"
+        }
+      ]
+    },
+    {
+      "id": "jezero.size",
+      "field": "size_m",
+      "value": 96000.0,
+      "unit": "m",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "OK",
+      "note": "Lado del cuadrado de la región jugable, centrado en el punto elegido."
+    }
+  ]
+}

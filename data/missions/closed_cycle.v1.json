@@ -1,0 +1,138 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "closed_cycle",
+    "name": "CICLO CERRADO — 2.2",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (campaña H4)",
+    "review": "Misión del capítulo 2 de la campaña «Génesis» (ADR-022). Umbrales GAME_BALANCE propuestos.",
+    "sequential": false,
+    "briefing": "En la franja cálida todo crece más deprisa, y también se agota antes: una colonia sola se bebe el agua de su casilla y muere. Los descomponedores devuelven al suelo el agua y los nutrientes de la biomasa muerta. Cierra el ciclo y la colonia vivirá.",
+    "objectives": [
+      {
+        "id": "warm_colony",
+        "type": "occupy",
+        "capability": "photoautotrophy",
+        "min_temperature": "mission.closed_cycle.warm_k",
+        "count": "mission.closed_cycle.warm_cells",
+        "title": "Siembra en la franja cálida",
+        "hint": "La franja cálida es la fila central del mapa (capa de temperatura en rojo)."
+      },
+      {
+        "id": "recycle",
+        "type": "recycle",
+        "amount": "mission.closed_cycle.recycled_kg",
+        "title": "Recicla biomasa muerta",
+        "hint": "Despliega descomponedores junto a los fotótrofos. En el calor hacen falta más: prueba con 0,3 kg."
+      },
+      {
+        "id": "sustain_warm",
+        "type": "sustain",
+        "capability": "photoautotrophy",
+        "min_temperature": "mission.closed_cycle.warm_k",
+        "min_biomass": "mission.closed_cycle.min_biomass_kg",
+        "sols": "mission.closed_cycle.sustain_sols",
+        "title": "Mantén la colonia cálida",
+        "hint": "Usa el laboratorio: si el pronóstico cae a cero, añade más descomponedor."
+      }
+    ],
+    "debrief": "Con los descomponedores el carbono y el agua vuelven al suelo y la colonia ya no se agota. Un Marte vivo tiene que reciclar todo lo que usa."
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.closed_cycle.warm_k",
+      "field": "min_temperature",
+      "value": 240.0,
+      "unit": "K",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Temperatura mínima de la franja cálida.",
+      "range": [
+        0,
+        400
+      ]
+    },
+    {
+      "id": "mission.closed_cycle.warm_cells",
+      "field": "count",
+      "value": 1.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Casillas cálidas con fotótrofos.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.closed_cycle.recycled_kg",
+      "field": "amount",
+      "value": 10.0,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa reciclada por los descomponedores.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.closed_cycle.min_biomass_kg",
+      "field": "min_biomass",
+      "value": 1.0,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa fotótrofa mínima en la franja cálida.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.closed_cycle.sustain_sols",
+      "field": "sols",
+      "value": 60.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles seguidos por encima del mínimo.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    }
+  ]
+}

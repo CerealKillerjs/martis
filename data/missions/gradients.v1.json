@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "gradients",
+    "name": "GRADIENTES — 2.1",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-16",
+    "author": "MARTIS Motor (campaña H4)",
+    "review": "Misión del capítulo 2 de la campaña «Génesis» (ADR-022). Umbrales GAME_BALANCE propuestos.",
+    "sequential": true,
+    "briefing": "El módulo ha aterrizado en una región mucho mayor. Aquí Marte ya no es igual en todas partes: el ecuador del mapa es más cálido y luminoso, los bordes norte y sur son helados y oscuros, y las mesetas reciben más radiación. Aprende a leer el terreno antes de sembrar.",
+    "objectives": [
+      {
+        "id": "read_temperature",
+        "type": "action",
+        "action": "select-overlay",
+        "title": "Lee el mapa de temperatura",
+        "hint": "Abre «Capa» y elige «Temperatura» (o pulsa 1). El rojo es cálido y el azul, frío."
+      },
+      {
+        "id": "spread_colonies",
+        "type": "occupy",
+        "capability": "photoautotrophy",
+        "count": "mission.gradients.colonies",
+        "title": "Siembra fotótrofos en tres casillas",
+        "hint": "Las franjas templadas, entre el ecuador y los polos, son las más amables para el fotótrofo base. Cada despliegue gasta inóculo."
+      },
+      {
+        "id": "sustain_spread",
+        "type": "sustain",
+        "capability": "photoautotrophy",
+        "min_biomass": "mission.gradients.min_biomass_kg",
+        "sols": "mission.gradients.sustain_sols",
+        "title": "Mantén las colonias",
+        "hint": "Si una colonia se apaga, siembra otra en una franja más fresca."
+      }
+    ],
+    "debrief": "Has repartido vida entre zonas distintas. El ecuador y los polos no piden lo mismo, y has aprendido a mirar el mapa antes de sembrar."
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.gradients.colonies",
+      "field": "count",
+      "value": 3.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Casillas distintas con fotótrofos.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.gradients.min_biomass_kg",
+      "field": "min_biomass",
+      "value": 1.5,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa fotótrofa mínima.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.gradients.sustain_sols",
+      "field": "sols",
+      "value": 60.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 2 (H4); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles seguidos por encima del mínimo.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    }
+  ]
+}

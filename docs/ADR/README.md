@@ -1,5 +1,7 @@
 # Registro de ADR de MARTIS
 
+Cada decisión de diseño o arquitectura tiene su ADR. Para una nueva, usa el siguiente número libre (ADR-040), con estado *Propuesto*, y añádela a esta lista. El marco general está en el [Documento Maestro v2.0](../maestro/MARTIS_Documento_Maestro_v2.0.docx).
+
 - [ADR-000 — Reglas de arquitectura de MARTIS](ADR-000-reglas-de-arquitectura.md) (Aceptado, decisión de MARTIS Lead, 2026-11-16)
 - [ADR-001 — DT-001: Versión concreta de Godot 4 (.NET)](ADR-001-version-godot.md) (Aceptado)
 - [ADR-002 — DT-002: Versión de .NET (SDK y TFM)](ADR-002-version-dotnet.md) (Aceptado)
@@ -12,5 +14,33 @@
 - [ADR-009 — DT-009: Integración genética (herencia)](ADR-009-integracion-genetica.md) (Aceptado)
 - [ADR-010 — DT-010: Plataforma inicial](ADR-010-plataforma-inicial.md) (Aceptado)
 - [ADR-011 — Unidades del modelo](ADR-011-unidades-del-modelo.md) (Aceptado: decisión de MARTIS Lead tras la validación científica de MARTIS Ciencia (rondas 1-4 del PR #4, head ed68024), 2026-11-16)
+- [ADR-012 — Modelo metabólico v1 (T04)](ADR-012-modelo-metabolico.md) (Propuesto)
+- [ADR-013 — Dinámica de poblaciones v1 (T05)](ADR-013-dinamica-de-poblaciones.md) (Propuesto)
+- [ADR-014 — Evolución v1: mutación, deriva y variantes (T06)](ADR-014-evolucion.md) (Propuesto)
+- [ADR-015 — Guardado en SQLite, formato binario y recuperación (T07)](ADR-015-guardado-sqlite.md) (Propuesto)
+- [ADR-016 — Ecosistema MVP y misión FIRST COLONY (T09)](ADR-016-ecosistema-y-first-colony.md) (Propuesto)
+- [ADR-017 — Juego 3D en Godot 4.7.2 sobre `GameSession` (T08)](ADR-017-juego-3d-godot.md) (Propuesto)
+- [ADR-018 — Audio procedural: efectos, banda sonora generativa y viento](ADR-018-audio-procedural.md) (Propuesto)
+- [ADR-019 — Modo historia: campaña «Génesis» (H1)](ADR-019-modo-historia.md) (Propuesto)
+- [ADR-020 — Economía: investigación y carga del módulo (H2)](ADR-020-economia.md) (Propuesto)
+- [ADR-021 — Mapas grandes: 64, 128 y 256 casillas (H3)](ADR-021-mapas-grandes.md) (Propuesto)
+- [ADR-022 — Capítulo 2 «Ciclo cerrado»: gradientes y nuevos objetivos (H4)](ADR-022-capitulo-2.md) (Propuesto)
+- [ADR-023 — Capítulo 3 «Cooperación»: endosimbiosis y multicelularidad (H5)](ADR-023-capitulo-3.md) (Propuesto)
+- [ADR-024 — Capítulo 4 «Cadenas tróficas»: herbivoría y depredación (H6)](ADR-024-capitulo-4.md) (Propuesto)
+- [ADR-025 — Capítulo 5 «Mente»: socialidad e índice de inteligencia (H7)](ADR-025-capitulo-5.md) (Propuesto)
+- [ADR-026 — «Expedición»: el rover sembrador (J1)](ADR-026-expedicion-rover.md) (Propuesto)
+- [ADR-027 — Modos de juego sobre un mismo estado (V1)](ADR-027-modos-sobre-un-estado.md) (Propuesto)
+- [ADR-028 — Guía progresiva, códice y eras de la campaña (H8)](ADR-028-guia-progresiva.md) (Propuesto)
+- [ADR-029 — Conocimiento del terreno: sonda orbital y escáner (V2)](ADR-029-conocimiento-y-escaneo.md) (Propuesto)
+- [ADR-030 — Muestras y análisis de laboratorio (V3)](ADR-030-muestras-y-laboratorio.md) (Propuesto)
+- [ADR-031 — Robots e instalaciones: desgaste, estaciones y órdenes (V4)](ADR-031-robots-e-instalaciones.md) (Propuesto)
+- [ADR-032 — Valle Aurora, lugares de interés y guardado completo (V5)](ADR-032-valle-y-guardado-completo.md) (Propuesto)
+- [ADR-033 — Calentamiento regional: calefactores y anomalía térmica (E1)](ADR-033-calentamiento-regional.md) (Propuesto)
+- [ADR-034 — Marte real: relieve de Jezero y PlanetDefinition (M1)](ADR-034-marte-real-jezero.md) (Propuesto)
+- [ADR-035 — Jezero a escala real, cargado por trozos (M2)](ADR-035-escala-real-por-trozos.md) (Propuesto)
+- [ADR-036 — Secciones de Marte y sección inicial del modo historia (M3)](ADR-036-secciones-modo-historia.md) (Propuesto)
+- [ADR-037 — Pantalla de inicio y menú Esc](ADR-037-menu-inicio-y-menu-esc.md) (Propuesto)
+- [ADR-038 — El mundo crece por secciones (M4)](ADR-038-mundo-por-secciones.md) (Propuesto)
+- [ADR-039 — El modo historia en una sola partida (M5)](ADR-039-modo-historia-una-partida.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).

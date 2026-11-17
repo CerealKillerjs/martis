@@ -1,6 +1,7 @@
 # T01: compile and test the engine on Linux and Windows.
 # The SDK comes from global.json (10.0.404, rollForward latestPatch).
-# Godot is not installed. Martis.Game is not part of the solution.
+# Martis.Game is not part of the solution. Godot.NET.Sdk builds it on Linux without
+# the Godot editor (ADR-017); the headless smoke run needs Godot and stays local.
 
 name: CI
 
@@ -68,3 +69,9 @@ jobs:
 
       - name: Probar
         run: dotnet test MARTIS.sln -c Release --no-build
+
+      # Debug es la configuración del editor de Godot: incluye GodotSharpEditor y es la que
+      # fija packages.lock.json. Release restaura otro grafo y rompería el restore bloqueado.
+      - name: Compilar el juego Godot (Godot.NET.Sdk, sin editor)
+        if: runner.os == 'Linux'
+        run: dotnet build src/Martis.Game/Martis.Game.csproj -c Debug

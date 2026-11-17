@@ -1,0 +1,28 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+config/name="MARTIS"
+run/main_scene="res://scenes/Title.tscn"
+config/features=PackedStringArray("4.7", "C#", "Forward Plus")
+
+[autoload]
+
+GameAudio="*res://scripts/GameAudio.cs"
+GameLaunch="*res://scripts/GameLaunch.cs"
+
+[dotnet]
+project/assembly_name="Martis.Game"
+
+[display]
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[audio]
+
+driver/mix_rate=44100
+
+[rendering]
+anti_aliasing/quality/msaa_3d=2
