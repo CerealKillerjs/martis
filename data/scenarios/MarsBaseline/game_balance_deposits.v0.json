@@ -52,7 +52,7 @@
       "used_in_v0": true,
       "source": null,
       "note": "Accepted GAME_BALANCE v0.1 value. Not a Gale measurement.",
-      "rationale": "reserva de agua utilizable (abstracción de juego; no implica agua líquida estable en superficie)"
+      "rationale": "reserva de agua utilizable (abstracción de juego; no implica agua líquida estable en superficie). no sale del wt % de hielo ni del agua ligada de SAM."
     },
     {
       "id": "game.gale.deposit.oxygen",
@@ -163,7 +163,7 @@
       "status": "ACCEPTED",
       "used_in_v0": true,
       "source": null,
-      "note": "GAME_BALANCE proposal. Not a conversion of WaterIceWtPercent.",
+      "note": "Accepted GAME_BALANCE v0.1 value. Not a Gale measurement.",
       "rationale": "Cero kilogramos explícito de hielo. No se deriva del wt %. Una masa positiva inventaría hielo antes de cerrar H-07."
     }
   ]

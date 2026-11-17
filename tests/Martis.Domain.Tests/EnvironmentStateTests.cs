@@ -31,6 +31,8 @@ public sealed class EnvironmentStateTests
         nameof(EnvironmentState.WaterVapor),
         nameof(EnvironmentState.SoilPorosity),
         nameof(EnvironmentState.PerchlorateMassKg),
+        nameof(EnvironmentState.PerchlorateWtPercent),
+        nameof(EnvironmentState.WaterIceWtPercent),
     ];
 
     [Fact]
@@ -272,21 +274,46 @@ public sealed class EnvironmentStateTests
     {
         var state = new EnvironmentState
         {
-            PerchlorateWtPercent = value,
-            WaterIceWtPercent = value,
+            PerchlorateWtPercent = AssignedDouble.Set(value),
+            WaterIceWtPercent = AssignedDouble.Set(value),
         };
         state.CheckInvariants();
+        DoubleBits.Equal(value, state.PerchlorateWtPercent.Value);
+        DoubleBits.Equal(value, state.WaterIceWtPercent.Value);
+        DoubleBits.Equal(value, state.Quantities.Single(quantity => quantity.Name == nameof(EnvironmentState.PerchlorateWtPercent)).Value);
+        DoubleBits.Equal(value, state.Quantities.Single(quantity => quantity.Name == nameof(EnvironmentState.WaterIceWtPercent)).Value);
     }
 
     [Theory]
-    [InlineData(-0.01)]
-    [InlineData(100.01)]
-    [InlineData(double.NaN)]
-    [InlineData(double.PositiveInfinity)]
-    public void WeightPercentRejectsValuesOutsideTheClosedInterval(double value)
+    [InlineData(nameof(EnvironmentState.PerchlorateWtPercent), -0.01)]
+    [InlineData(nameof(EnvironmentState.PerchlorateWtPercent), 100.01)]
+    [InlineData(nameof(EnvironmentState.PerchlorateWtPercent), double.NaN)]
+    [InlineData(nameof(EnvironmentState.PerchlorateWtPercent), double.PositiveInfinity)]
+    [InlineData(nameof(EnvironmentState.PerchlorateWtPercent), double.NegativeInfinity)]
+    [InlineData(nameof(EnvironmentState.WaterIceWtPercent), -0.01)]
+    [InlineData(nameof(EnvironmentState.WaterIceWtPercent), 100.01)]
+    [InlineData(nameof(EnvironmentState.WaterIceWtPercent), double.NaN)]
+    [InlineData(nameof(EnvironmentState.WaterIceWtPercent), double.PositiveInfinity)]
+    [InlineData(nameof(EnvironmentState.WaterIceWtPercent), double.NegativeInfinity)]
+    public void WeightPercentRejectsValuesOutsideTheClosedInterval(string name, double value)
     {
-        var state = new EnvironmentState { PerchlorateWtPercent = value };
+        var state = new EnvironmentState();
+        var property = typeof(EnvironmentState).GetProperty(name);
+        Assert.NotNull(property);
+        property!.SetValue(state, AssignedDouble.Set(value));
         var error = Assert.Throws<ArgumentOutOfRangeException>(state.CheckInvariants);
-        Assert.Equal(nameof(EnvironmentState.PerchlorateWtPercent), error.ParamName);
+        Assert.Equal(name, error.ParamName);
+    }
+
+    [Fact]
+    public void ReadingAnUnsetWeightPercentThrows()
+    {
+        var state = new EnvironmentState();
+        Assert.True(state.PerchlorateWtPercent.IsUnset);
+        Assert.True(state.WaterIceWtPercent.IsUnset);
+        Assert.Throws<InvalidOperationException>(() => _ = state.PerchlorateWtPercent.Value);
+        Assert.Throws<InvalidOperationException>(() => _ = state.WaterIceWtPercent.Value);
+        Assert.DoesNotContain(state.Quantities, quantity => quantity.Name == nameof(EnvironmentState.PerchlorateWtPercent));
+        Assert.DoesNotContain(state.Quantities, quantity => quantity.Name == nameof(EnvironmentState.WaterIceWtPercent));
     }
 }

@@ -147,7 +147,9 @@ public sealed class ScenarioRunSnapshot
         private readonly double _porosity;
         private readonly bool _perchlorateMassSet;
         private readonly double _perchlorateMass;
+        private readonly bool _perchloratePercentSet;
         private readonly double _perchloratePercent;
+        private readonly bool _icePercentSet;
         private readonly double _icePercent;
         private readonly double[] _deposits;
         private readonly double _waterTotal;
@@ -171,7 +173,9 @@ public sealed class ScenarioRunSnapshot
             double porosity,
             bool perchlorateMassSet,
             double perchlorateMass,
+            bool perchloratePercentSet,
             double perchloratePercent,
+            bool icePercentSet,
             double icePercent,
             double[] deposits,
             double waterTotal,
@@ -194,7 +198,9 @@ public sealed class ScenarioRunSnapshot
             _porosity = porosity;
             _perchlorateMassSet = perchlorateMassSet;
             _perchlorateMass = perchlorateMass;
+            _perchloratePercentSet = perchloratePercentSet;
             _perchloratePercent = perchloratePercent;
+            _icePercentSet = icePercentSet;
             _icePercent = icePercent;
             _deposits = deposits;
             _waterTotal = waterTotal;
@@ -228,8 +234,10 @@ public sealed class ScenarioRunSnapshot
                 environment.SoilPorosity.IsSet ? environment.SoilPorosity.Value : 0.0,
                 environment.PerchlorateMassKg.IsSet,
                 environment.PerchlorateMassKg.IsSet ? environment.PerchlorateMassKg.Value : 0.0,
-                environment.PerchlorateWtPercent,
-                environment.WaterIceWtPercent,
+                environment.PerchlorateWtPercent.IsSet,
+                environment.PerchlorateWtPercent.IsSet ? environment.PerchlorateWtPercent.Value : 0.0,
+                environment.WaterIceWtPercent.IsSet,
+                environment.WaterIceWtPercent.IsSet ? environment.WaterIceWtPercent.Value : 0.0,
                 CellMassLedger.Read(resources, environment.WaterIce),
                 budget.RecordedTotalKg,
                 recorded);
@@ -248,8 +256,8 @@ public sealed class ScenarioRunSnapshot
             environment.WaterVapor = _vaporSet ? AssignedDouble.Set(_vapor) : AssignedDouble.Unset;
             environment.SoilPorosity = _porositySet ? AssignedDouble.Set(_porosity) : AssignedDouble.Unset;
             environment.PerchlorateMassKg = _perchlorateMassSet ? AssignedDouble.Set(_perchlorateMass) : AssignedDouble.Unset;
-            environment.PerchlorateWtPercent = _perchloratePercent;
-            environment.WaterIceWtPercent = _icePercent;
+            environment.PerchlorateWtPercent = _perchloratePercentSet ? AssignedDouble.Set(_perchloratePercent) : AssignedDouble.Unset;
+            environment.WaterIceWtPercent = _icePercentSet ? AssignedDouble.Set(_icePercent) : AssignedDouble.Unset;
             WriteDeposits(resources);
             budget.RecordedTotalKg = _waterTotal;
         }
@@ -267,8 +275,8 @@ public sealed class ScenarioRunSnapshot
             builder.Append(Flag(_vaporSet, _vapor)).Append(';');
             builder.Append(Flag(_porositySet, _porosity)).Append(';');
             builder.Append(Flag(_perchlorateMassSet, _perchlorateMass)).Append(';');
-            builder.Append(Bits(_perchloratePercent)).Append(';');
-            builder.Append(Bits(_icePercent)).Append(';');
+            builder.Append(Flag(_perchloratePercentSet, _perchloratePercent)).Append(';');
+            builder.Append(Flag(_icePercentSet, _icePercent)).Append(';');
             for (var i = 0; i < _deposits.Length; i++)
             {
                 builder.Append(Bits(_deposits[i])).Append(';');

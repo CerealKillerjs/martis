@@ -4,13 +4,14 @@ namespace Martis.Domain.Environment;
 
 /// <summary>
 /// Environmental scalars of one cell (TDD §2.2, ADR-011, R2-10).
-/// Temperature and pressure use <see cref="AssignedDouble"/>: the default is
-/// unset, which is not the number 0. A loaded scenario must assign both and
-/// must set <see cref="Scope"/>.
-/// Ultraviolet irradiance, vapor, porosity and perchlorate mass are also
-/// <see cref="AssignedDouble"/>. In MarsBaseline v0 the field map leaves them
-/// unassigned, so a zero is not invented for them. The other doubles are
-/// numbers the scenario writes explicitly. An unassigned value is omitted from
+/// Temperature, pressure, ultraviolet irradiance, vapor, porosity, perchlorate
+/// mass and the two weight percents use <see cref="AssignedDouble"/>. The default
+/// is unset, which is not the number 0. A loaded scenario must assign temperature
+/// and pressure and must set <see cref="Scope"/>.
+/// MarsBaseline v0 leaves ultraviolet, vapor, porosity and perchlorate mass
+/// unassigned, so a zero is not invented for them. The loader still requires
+/// both weight percents to arrive assigned. The other doubles are numbers the
+/// scenario writes explicitly. An unassigned value is omitted from
 /// <see cref="Quantities"/> and is not treated as a measured zero.
 /// </summary>
 public sealed class EnvironmentState
@@ -91,18 +92,20 @@ public sealed class EnvironmentState
     public AssignedDouble PerchlorateMassKg { get; set; }
 
     /// <summary>
-    /// Perchlorate as a mass fraction of ClO4, in the closed interval [0, 100].
-    /// Unit: wt %. This is not <see cref="PerchlorateMassKg"/> (DOM-VAL-016).
-    /// The scenario writes it. The default 0 is the empty-world number, not a Gale measurement.
+    /// Perchlorate as a mass fraction of ClO4. When assigned, the closed interval
+    /// [0, 100] includes both ends (DOM-VAL-016).
+    /// Unit: wt %. This is not <see cref="PerchlorateMassKg"/>.
+    /// Unset is not 0 wt %. The loader does not invent a zero.
     /// </summary>
-    public double PerchlorateWtPercent { get; set; }
+    public AssignedDouble PerchlorateWtPercent { get; set; }
 
     /// <summary>
-    /// Water ice as a mass fraction, in the closed interval [0, 100].
-    /// Unit: wt %. This is not <see cref="WaterIce"/> in kilograms (DOM-VAL-016).
-    /// The scenario writes it. The loader does not turn this fraction into kilograms.
+    /// Water ice as a mass fraction. When assigned, the closed interval [0, 100]
+    /// includes both ends (DOM-VAL-016).
+    /// Unit: wt %. This is not <see cref="WaterIce"/> in kilograms.
+    /// Unset is not 0 wt %. The loader does not turn this fraction into kilograms.
     /// </summary>
-    public double WaterIceWtPercent { get; set; }
+    public AssignedDouble WaterIceWtPercent { get; set; }
 
     /// <summary>
     /// Null until a scenario assigns where this cell applies.
@@ -129,15 +132,15 @@ public sealed class EnvironmentState
             AddIfSet(list, nameof(WaterVapor), WaterVapor);
             AddIfSet(list, nameof(SoilPorosity), SoilPorosity);
             AddIfSet(list, nameof(PerchlorateMassKg), PerchlorateMassKg);
-            list.Add(new NamedQuantity(nameof(PerchlorateWtPercent), PerchlorateWtPercent));
-            list.Add(new NamedQuantity(nameof(WaterIceWtPercent), WaterIceWtPercent));
+            AddIfSet(list, nameof(PerchlorateWtPercent), PerchlorateWtPercent);
+            AddIfSet(list, nameof(WaterIceWtPercent), WaterIceWtPercent);
             return list;
         }
     }
 
     /// <summary>
     /// Checks assigned numbers. Unset temperature, pressure, ultraviolet,
-    /// vapor, porosity or perchlorate mass is allowed here;
+    /// vapor, porosity, perchlorate mass or weight percent is allowed here;
     /// <see cref="Validation.SimulationValidator"/> rejects a missing temperature,
     /// pressure or scope when a scenario is loaded. Soil porosity uses the closed
     /// unit interval. Weight percents use the closed interval [0, 100].

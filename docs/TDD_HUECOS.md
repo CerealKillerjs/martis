@@ -53,7 +53,7 @@ Revisión de [docs/tdd/MARTIS_TDD_v1.0.txt](tdd/MARTIS_TDD_v1.0.txt) y de [docs/
 
 ## Deuda de modelo (ronda 2)
 
-- R2-10. Temperatura, presión, UV, vapor, porosidad y masa de perclorato distinguen «sin asignar» con `AssignedDouble`. T03b deja UV, vapor, porosidad y `PerchlorateMassKg` sin asignar en MarsBaseline v0. El hielo en kg es un depósito `GAME_BALANCE`, no una conversión del wt %. Los demás campos los escribe el escenario.
+- R2-10. Temperatura, presión, UV, vapor, porosidad, masa de perclorato y los dos wt % distinguen «sin asignar» con `AssignedDouble`. T03b deja UV, vapor, porosidad y `PerchlorateMassKg` sin asignar en MarsBaseline v0. El cargador sigue exigiendo los dos wt % asignados: unset no es 0. El hielo en kg es un depósito `GAME_BALANCE`, no una conversión del wt %. Los demás campos los escribe el escenario.
 - R2-11. `MaintenanceCost` y `ReproductionRate` están en [0, 1] y se leen por sol (1 tick). El primero es una fracción de `EnergyReserveJ`. El segundo es una tasa per cápita (0 significa que no se reproduce). El techo ≤ 1 es una decisión de diseño. Se calibran en T05/T06.
 - R2-12. El agua adsorbida o hidratada queda fuera de v0. DOM-VAL-012 comprueba la contabilidad contra el total registrado y no un doble conteo cuyo total se haya inflado. La conservación entre ticks se comprueba en T04.
 - R2-13. `BiomassKg` tiene pendiente declarar si es masa seca o húmeda, junto a la tabla de especies de los depósitos.

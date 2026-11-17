@@ -17,13 +17,14 @@ public sealed class GoldenVectorTests
     /// <summary>
     /// SHA-256 of the canonical text for seed 12345 after 100 ticks of pipeline-v0.
     /// Recomputed when the canonical text changes on purpose.
-    /// T03b changed that text: unset <c>AssignedDouble</c> fields are no longer
-    /// listed as zero, and the two weight-percent fields are listed at zero.
-    /// The tick and the five PRNG streams of this empty run are the same run as before.
-    /// R6-04's checkpoint does not move this hash.
+    /// R7-04 stores the two weight percents as <c>AssignedDouble</c>. On this empty
+    /// run they are unset, so the text omits them instead of listing a zero.
+    /// That is the only difference from a5946f6f…68b86: tick 100, the same five
+    /// PRNG streams, and the same remaining lines. R6-04's checkpoint does not
+    /// move this hash.
     /// </summary>
     public const string Expected =
-        "a5946f6f5cfa021d979ef3dbea1a161d4f781206fd7ca836a76a5a5191768b86";
+        "f5d58004520cffd5e49ee9bae1633bedc340a6e43289306eefd46d147344e7d1";
 
     [Fact]
     public void Seed12345After100TicksMatchesTheLockedFingerprint()

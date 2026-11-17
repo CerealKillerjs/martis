@@ -93,7 +93,7 @@ public sealed class PublishedMarsBaselineTests
             var cell = engine.State.Environment[i];
             Equal(scenario.DeliveredNumbers.Single(value => value.Id == "env.gale.air_temperature.reference").Value, cell.TemperatureKelvin.Value);
             Equal(ice.Value, cell.WaterIce);
-            Equal(icePercent.Value, cell.WaterIceWtPercent);
+            Equal(icePercent.Value, cell.WaterIceWtPercent.Value);
             Assert.True(cell.UvRadiation.IsUnset);
             Assert.True(cell.SoilPorosity.IsUnset);
             Assert.True(cell.PerchlorateMassKg.IsUnset);
@@ -185,6 +185,8 @@ public sealed class PublishedMarsBaselineTests
         Assert.Null(view.Cells[0].SoilPorosity);
         Assert.Null(view.Cells[0].WaterVaporKg);
         Assert.Null(view.Cells[0].PerchlorateMassKg);
+        Assert.NotNull(view.Cells[0].PerchlorateWtPercent);
+        Assert.NotNull(view.Cells[0].WaterIceWtPercent);
         var seen = view.Cells[0].TemperatureKelvin;
         var abundance = Assert.Single(view.Populations).Abundance;
         engine.State.Environment[0].TemperatureKelvin = AssignedDouble.Set(10);

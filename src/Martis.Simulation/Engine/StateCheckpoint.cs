@@ -95,8 +95,8 @@ internal sealed class StateCheckpoint
         private readonly AssignedDouble _vapor;
         private readonly AssignedDouble _porosity;
         private readonly AssignedDouble _perchlorateMass;
-        private readonly double _perchloratePercent;
-        private readonly double _icePercent;
+        private readonly AssignedDouble _perchloratePercent;
+        private readonly AssignedDouble _icePercent;
         private readonly EnvironmentScope? _scope;
         private readonly double _carbonDioxide;
         private readonly double _water;
@@ -130,8 +130,8 @@ internal sealed class StateCheckpoint
             AssignedDouble vapor,
             AssignedDouble porosity,
             AssignedDouble perchlorateMass,
-            double perchloratePercent,
-            double icePercent,
+            AssignedDouble perchloratePercent,
+            AssignedDouble icePercent,
             EnvironmentScope? scope,
             double carbonDioxide,
             double water,
