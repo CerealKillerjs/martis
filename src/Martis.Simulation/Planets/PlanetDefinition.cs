@@ -24,6 +24,18 @@ public sealed record PlanetDefinition(string Id, string Name, double RadiusM, do
         => Sections.FirstOrDefault(section => string.Equals(section.Id, id, StringComparison.Ordinal))
             ?? throw new KeyNotFoundException($"Planet '{Id}' has no section '{id}'.");
 
+    /// <summary>The section next to <paramref name="section"/> in the mosaic, one step east (+x) or south (+y), or null.</summary>
+    public SectionDefinition? Neighbour(SectionDefinition section, int dx, int dy)
+    {
+        ArgumentNullException.ThrowIfNull(section);
+        if (section.Tile is not { } tile)
+        {
+            return null;
+        }
+
+        return Sections.FirstOrDefault(other => other.Tile is { } t && t.X == tile.X + dx && t.Y == tile.Y + dy);
+    }
+
     /// <summary>The relief of a section with data: its region plus its detail inserts.</summary>
     public RegionRelief LoadRelief(SectionDefinition section)
     {
@@ -98,6 +110,7 @@ public sealed record PlanetDefinition(string Id, string Name, double RadiusM, do
                         ? (arrival.GetProperty("lat").GetDouble(), arrival.GetProperty("lon").GetDouble(), arrival.GetProperty("name").GetString()!)
                         : null,
                     PlacesFile = section.TryGetProperty("places", out var places) ? places.GetString() : null,
+                    Tile = section.TryGetProperty("tile", out var tile) ? (tile[0].GetInt32(), tile[1].GetInt32()) : null,
                 });
             }
         }
@@ -158,6 +171,9 @@ public sealed record SectionDefinition(
     /// <summary>Where the AI's lander arrives in a new story game (latitude, longitude), if set.</summary>
     public (double Lat, double Lon, string Name)? Arrival { get; init; }
 
+    /// <summary>Position in the section mosaic (M4, ADR-038): x grows east, y grows south; null off the mosaic.</summary>
+    public (int X, int Y)? Tile { get; init; }
+
     /// <summary>The section's points of interest (a <c>martis.valley</c> file in data/expedition), if any.</summary>
     public string? PlacesFile { get; init; }
 }
@@ -183,6 +199,15 @@ public sealed record RegionDefinition(
 
     /// <summary>How much faster the rover goes on a move order (fast travel, M2).</summary>
     public double TravelFactor { get; init; } = 30.0;
+
+    /// <summary>
+    /// Latitude whose cosine scales longitude to metres. Sections of one mosaic share it (M4,
+    /// ADR-038) so their edges meet; a lone region uses its centre.
+    /// </summary>
+    public double ProjectionLat { get; init; } = double.NaN;
+
+    /// <summary><see cref="ProjectionLat"/>, or the centre latitude when none was set.</summary>
+    public double ScaleLat => double.IsNaN(ProjectionLat) ? CenterLat : ProjectionLat;
 
     /// <summary>Scientific cells per side of the region.</summary>
     public int Cells => (int)Math.Round(SizeM / CellM);
@@ -213,6 +238,11 @@ public sealed record RegionDefinition(
             albedo.GetProperty("pixels").GetInt32(),
             cellM,
             root.GetProperty("sources").EnumerateArray().Select(source => $"{source.GetProperty("name").GetString()} — {source.GetProperty("by").GetString()} ({source.GetProperty("license").GetString()})").ToArray());
+        if (root.TryGetProperty("projection_lat", out var projection))
+        {
+            definition = definition with { ProjectionLat = projection.GetDouble() };
+        }
+
         if (definition.SizeM <= 0 || definition.HeightPixels < 2 || definition.MaxHeightM <= definition.MinHeightM)
         {
             throw new InvalidDataException($"Region '{definition.Id}' has an invalid size or height range.");
@@ -286,7 +316,7 @@ public sealed class RegionRelief
     public (double X, double Y) LocalOf(double lat, double lon, double radiusM)
     {
         var half = Definition.SizeM / 2;
-        var x = half + ((lon - Definition.CenterLon) * Math.PI / 180.0 * radiusM * Math.Cos(Definition.CenterLat * Math.PI / 180.0));
+        var x = half + ((lon - Definition.CenterLon) * Math.PI / 180.0 * radiusM * Math.Cos(Definition.ScaleLat * Math.PI / 180.0));
         var y = half - ((lat - Definition.CenterLat) * Math.PI / 180.0 * radiusM);
         return (x, y);
     }
@@ -342,7 +372,7 @@ public sealed class RegionRelief
     {
         var half = Definition.SizeM / 2;
         var lat = Definition.CenterLat - ((yM - half) / radiusM * 180.0 / Math.PI);
-        var lon = Definition.CenterLon + ((xM - half) / (radiusM * Math.Cos(Definition.CenterLat * Math.PI / 180.0)) * 180.0 / Math.PI);
+        var lon = Definition.CenterLon + ((xM - half) / (radiusM * Math.Cos(Definition.ScaleLat * Math.PI / 180.0)) * 180.0 / Math.PI);
         return (lat, lon);
     }
 }

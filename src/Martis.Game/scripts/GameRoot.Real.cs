@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using Godot;
+using Martis.Simulation.Sessions;
 
 namespace Martis.Game;
 
@@ -10,7 +11,7 @@ namespace Martis.Game;
 /// swapped for <see cref="RealTerrain"/>, one unit per metre, streamed around the rover; the
 /// rover drives at the region's real speed (20 m/s) and a move order (G) travels 30× faster. The
 /// rover keeps living in cell units, so knowledge, samples, stations and saves are unchanged:
-/// only the view and the speed scale change. <c>--real-shot=x.png [--at=x,y] [--look=deg]</c>
+/// only the view and the speed scale change. <c>--real-shot=x.png [--at=x,y] [--look=deg] [--section=id]</c>
 /// renders the real view from a point of the region (metres from its north-west corner).
 /// </summary>
 public partial class GameRoot
@@ -138,6 +139,13 @@ public partial class GameRoot
             GD.PushError("--real-shot necesita el relieve real.");
             GetTree().Quit(1);
             return;
+        }
+
+        if (_options.TryGetValue("section", out var sectionId) && _planet is not null)
+        {
+            // M4: show another section of the mosaic (its relief and places), on a fresh session.
+            UseSection(_planet.Section(sectionId));
+            StartSession(GameSession.NewGame(_dataRoot, _session.Seed, withMission: false, _session.World));
         }
 
         _realShowcase = true;

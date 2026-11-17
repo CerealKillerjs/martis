@@ -139,4 +139,33 @@ public sealed class PlanetTests
         Assert.InRange(delta.FractionY, 0.53, 0.62);
         Assert.NotNull(start.Arrival);
     }
+
+    [Fact]
+    public void NeighbouringSectionsTileAndTheirEdgesMeet()
+    {
+        var mars = Mars();
+        var start = mars.StartSection;
+        var east = mars.Neighbour(start, 1, 0)!;
+        var north = mars.Neighbour(start, 0, -1)!;
+
+        Assert.Equal((1, 0), east.Tile);
+        Assert.Equal((0, -1), north.Tile);
+        Assert.Null(mars.Neighbour(start, 5, 5));
+        Assert.All(mars.Sections.Where(section => !section.Start), section => Assert.True(section.UnlockEra > 1));
+
+        // The same ground seen from both sides of a shared edge has the same height.
+        var a = mars.LoadRelief(start);
+        var b = mars.LoadRelief(east);
+        var size = a.Definition.SizeM;
+        foreach (var y in new[] { 50000.0, 200000.0, 350000.0 })
+        {
+            Assert.InRange(Math.Abs(a.BaseHeightAt(size, y) - b.BaseHeightAt(0, y)), 0, 60);
+        }
+
+        var (lat, lon) = a.LatLon(size, 200000, mars.RadiusM);
+        var (bx, by) = b.LocalOf(lat, lon, mars.RadiusM);
+        // Centres are stored to 1e-4° (~6 m), so the edges meet within a few metres.
+        Assert.InRange(bx, -10, 10);
+        Assert.InRange(by, 199990, 200010);
+    }
 }

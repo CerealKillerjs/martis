@@ -140,10 +140,7 @@ public partial class GameRoot
         var layer = _hud.GetParent();
         _planetary = new PlanetaryPanel { Name = "Planetary", Visible = false };
         layer.AddChild(_planetary);
-        if (Relief() is not null && _sectionMarks.Length > 0)
-        {
-            _planetary.SetSections(_sectionMarks, _planetRadiusM);
-        }
+        RefreshSectionMarks();
         layer.MoveChild(_planetary, 0); // behind the HUD: the top bar stays usable
         _modeBar = new ModeBar { Name = "ModeBar" };
         layer.AddChild(_modeBar);

@@ -108,6 +108,7 @@ public partial class GameRoot
         SyncReal(delta, (float)(driven * Math.Sign(throttle)));
         Glimpse();
         DeliverSamples();
+        CrossSectionEdge(throttle);
     }
 
     private void PoseRover(float drivenMetres)

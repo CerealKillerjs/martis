@@ -30,11 +30,17 @@ public sealed class SaveService
     /// <summary>Id of the save game this run writes to, created on the first save.</summary>
     public string? CurrentId { get; set; }
 
+    /// <summary>Event type of the section map (M4, ADR-038): which save holds each open section.</summary>
+    public const string WorldEventType = "section-world";
+
+    /// <summary>The section map stored with the snapshot the last load read, or null.</summary>
+    public string? LastWorld { get; private set; }
+
     /// <summary>
     /// Stores a snapshot and, for a campaign mission, its progress as a
     /// <see cref="MissionSaveRecord.EventType"/> event at the same tick (H-31).
     /// </summary>
-    public string Save(GameSession session, string? missionFile = null, string? expeditionJson = null)
+    public string Save(GameSession session, string? missionFile = null, string? expeditionJson = null, string? worldJson = null)
     {
         using var store = SaveGameStore.Open(_path);
         if (CurrentId is null || store.GetSaveGame(CurrentId) is null)
@@ -67,7 +73,20 @@ public sealed class SaveService
             store.RecordEvent(CurrentId, session.Tick, Martis.Simulation.Expedition.ExpeditionState.EventType, expeditionJson);
         }
 
+        if (worldJson is not null)
+        {
+            store.RecordEvent(CurrentId, session.Tick, WorldEventType, worldJson);
+        }
+
         return CurrentId;
+    }
+
+    /// <summary>Loads the newest valid snapshot of one save game (a section of the world, M4), or null.</summary>
+    public GameSession? LoadById(string id, out string message, out MissionSaveRecord? mission, Func<int, WorldOptions?>? worldFor, out string? expedition)
+    {
+        using var store = SaveGameStore.Open(_path);
+        var save = store.GetSaveGame(id);
+        return Load(store, save, out message, out mission, worldFor, out expedition);
     }
 
     /// <summary>Loads the newest valid snapshot of the most recent save, or null when there is none.</summary>
@@ -81,10 +100,16 @@ public sealed class SaveService
     /// <summary>As above, plus the expedition saved at the snapshot's tick (V5), or null for an older save.</summary>
     public GameSession? LoadLatest(out string message, out MissionSaveRecord? mission, Func<int, WorldOptions?>? worldFor, out string? expedition)
     {
-        mission = null;
-        expedition = null;
         using var store = SaveGameStore.Open(_path);
         var save = store.ListSaveGames().OrderByDescending(item => item.UpdatedAt).FirstOrDefault();
+        return Load(store, save, out message, out mission, worldFor, out expedition);
+    }
+
+    private GameSession? Load(SaveGameStore store, SaveGameRecord? save, out string message, out MissionSaveRecord? mission, Func<int, WorldOptions?>? worldFor, out string? expedition)
+    {
+        mission = null;
+        expedition = null;
+        LastWorld = null;
         if (save is null)
         {
             message = "No hay partidas guardadas.";
@@ -105,6 +130,7 @@ public sealed class SaveService
         var world = worldFor?.Invoke(snapshot.Configuration.MapWidth);
         var events = store.Events(save.Id, snapshot.Tick - 1).Where(item => item.Tick == snapshot.Tick).ToArray();
         expedition = events.LastOrDefault(item => item.EventType == Martis.Simulation.Expedition.ExpeditionState.EventType)?.Payload;
+        LastWorld = events.LastOrDefault(item => item.EventType == WorldEventType)?.Payload;
         var saved = events.LastOrDefault(item => item.EventType == MissionSaveRecord.EventType);
         if (saved is not null)
         {

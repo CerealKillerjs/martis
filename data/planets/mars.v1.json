@@ -27,6 +27,34 @@
         "cell_m": "isidis_west.cell",
         "rover_speed_m_s": "jezero.rover_speed",
         "travel_factor": "jezero.travel_factor"
+      },
+      {
+        "id": "nili_norte",
+        "folder": "mars/nili_norte",
+        "cell_m": "isidis_west.cell",
+        "rover_speed_m_s": "jezero.rover_speed",
+        "travel_factor": "jezero.travel_factor"
+      },
+      {
+        "id": "isidis_norte",
+        "folder": "mars/isidis_norte",
+        "cell_m": "isidis_west.cell",
+        "rover_speed_m_s": "jezero.rover_speed",
+        "travel_factor": "jezero.travel_factor"
+      },
+      {
+        "id": "syrtis_isidis",
+        "folder": "mars/syrtis_isidis",
+        "cell_m": "isidis_west.cell",
+        "rover_speed_m_s": "jezero.rover_speed",
+        "travel_factor": "jezero.travel_factor"
+      },
+      {
+        "id": "syrtis_norte",
+        "folder": "mars/syrtis_norte",
+        "cell_m": "isidis_west.cell",
+        "rover_speed_m_s": "jezero.rover_speed",
+        "travel_factor": "jezero.travel_factor"
       }
     ],
     "sections": [
@@ -49,47 +77,71 @@
           "lon": 77.451,
           "name": "Octavia E. Butler, lugar de aterrizaje de Perseverance (aprox.)"
         },
-        "places": "isidis_west.v1.json"
+        "places": "isidis_west.v1.json",
+        "tile": [
+          0,
+          0
+        ]
       },
       {
         "id": "nili_norte",
         "name": "Nili Fossae norte",
-        "lat": 25.5,
-        "lon": 77.0,
+        "lat": 25.7482,
+        "lon": 78.5,
         "size_km": 400,
+        "region": "nili_norte",
+        "tile": [
+          0,
+          -1
+        ],
         "unlock_era": 2,
         "unlock": "Era II · Ecosistemas",
-        "summary": "Las fosas de Nili continúan hacia el norte, con arcillas y carbonatos expuestos."
+        "summary": "Las fosas de Nili continúan hacia el norte, con arcillas y carbonatos expuestos, hasta el borde de Utopia."
       },
       {
-        "id": "isidis_planitia",
-        "name": "Llanura de Isidis",
-        "lat": 13.5,
-        "lon": 86.0,
+        "id": "isidis_norte",
+        "name": "Isidis norte",
+        "lat": 19.0,
+        "lon": 85.6371,
         "size_km": 400,
+        "region": "isidis_norte",
+        "tile": [
+          1,
+          0
+        ],
         "unlock_era": 2,
         "unlock": "Era II · Ecosistemas",
-        "summary": "El fondo llano de la gran cuenca de impacto de Isidis."
+        "summary": "El norte de la llanura de Isidis, el fondo de una gran cuenca de impacto."
       },
       {
-        "id": "syrtis_major",
-        "name": "Syrtis Major",
-        "lat": 12.0,
-        "lon": 71.5,
+        "id": "syrtis_isidis",
+        "name": "Syrtis–Isidis",
+        "lat": 12.2518,
+        "lon": 78.5,
         "size_km": 400,
+        "region": "syrtis_isidis",
+        "tile": [
+          0,
+          1
+        ],
         "unlock_era": 3,
         "unlock": "Era III · Inteligencia",
-        "summary": "La meseta volcánica oscura al suroeste de Jezero."
+        "summary": "La meseta volcánica oscura de Syrtis Major que baja hacia el borde de Isidis."
       },
       {
-        "id": "utopia_sur",
-        "name": "Utopia sur",
-        "lat": 30.0,
-        "lon": 90.0,
+        "id": "syrtis_norte",
+        "name": "Syrtis Major norte",
+        "lat": 19.0,
+        "lon": 71.3629,
         "size_km": 400,
-        "unlock_era": 4,
-        "unlock": "Era IV · Expansión",
-        "summary": "Las llanuras del norte, con hielo bajo la superficie a latitudes medias."
+        "region": "syrtis_norte",
+        "tile": [
+          -1,
+          0
+        ],
+        "unlock_era": 3,
+        "unlock": "Era III · Inteligencia",
+        "summary": "El extremo norte de la meseta de Syrtis Major, al oeste de Nili Fossae."
       }
     ]
   },

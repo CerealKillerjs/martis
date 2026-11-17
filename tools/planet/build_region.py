@@ -37,6 +37,8 @@ MARS_RADIUS_M = 3396190.0
 BASE_DEM = "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/HRSC_MOLA_Blend/Mars_HRSC_MOLA_BlendDEM_Global_200mp_v2.tif"
 CTX_INDEX = "https://astrogeo-ard.s3.us-west-2.amazonaws.com/collectionindices/mro_ctx_controlled_usgs_dtms.parquet"
 
+MC13 = "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars/Mars_MRO_CTX_Equi_Mosaics_Robbins/100mpp/MC13_100mpp.16bit.tif"
+
 REGIONS = {
     # Jezero crater: the river delta Perseverance explores. Centre of the crater floor.
     "jezero": {
@@ -64,6 +66,60 @@ REGIONS = {
         "albedo_name": "Global CTX mosaic, MC-13 Syrtis Major, 100 m (Robbins et al.)",
         "albedo_unsigned": True,  # stored as int16 but holds unsigned 16-bit brightness
         "ctx": False,
+        "projection_lat": 19.0,
+    },
+    # The neighbouring sections of the story mosaic (M4, ADR-038), tiled around isidis_west.
+    "nili_norte": {
+        "name": "Nili Fossae norte",
+        "lat": 25.7482,
+        "lon": 78.5000,
+        "projection_lat": 19.0,
+        "size_km": 400.0,
+        "height_px": 2049,
+        "albedo_px": 4096,
+        "albedo": MC13,
+        "albedo_name": "Global CTX mosaic, MC-13 Syrtis Major, 100 m (Robbins et al.)",
+        "albedo_unsigned": True,
+        "ctx": False,
+    },
+    "isidis_norte": {
+        "name": "Isidis norte",
+        "lat": 19.0000,
+        "lon": 85.6371,
+        "projection_lat": 19.0,
+        "size_km": 400.0,
+        "height_px": 2049,
+        "albedo_px": 4096,
+        "albedo": MC13,
+        "albedo_name": "Global CTX mosaic, MC-13 Syrtis Major, 100 m (Robbins et al.)",
+        "albedo_unsigned": True,
+        "ctx": False,
+    },
+    "syrtis_isidis": {
+        "name": "Syrtis–Isidis",
+        "lat": 12.2518,
+        "lon": 78.5000,
+        "projection_lat": 19.0,
+        "size_km": 400.0,
+        "height_px": 2049,
+        "albedo_px": 4096,
+        "albedo": MC13,
+        "albedo_name": "Global CTX mosaic, MC-13 Syrtis Major, 100 m (Robbins et al.)",
+        "albedo_unsigned": True,
+        "ctx": False,
+    },
+    "syrtis_norte": {
+        "name": "Syrtis Major norte",
+        "lat": 19.0000,
+        "lon": 71.3629,
+        "projection_lat": 19.0,
+        "size_km": 400.0,
+        "height_px": 2049,
+        "albedo_px": 4096,
+        "albedo": MC13,
+        "albedo_name": "Global CTX mosaic, MC-13 Syrtis Major, 100 m (Robbins et al.)",
+        "albedo_unsigned": True,
+        "ctx": False,
     },
 }
 
@@ -74,9 +130,13 @@ GEOGRAPHIC = CRS.from_wkt(
 
 
 def grid(region: dict, pixels: int):
-    """A lat/lon grid whose pixels are square on the ground at the region's latitude."""
+    """A lat/lon grid whose pixels are square on the ground at the region's projection latitude.
+
+    Sections of one mosaic (M4, ADR-038) share a projection latitude, so their edges meet
+    exactly in local metres; a lone region uses its own centre latitude.
+    """
     half_lat = math.degrees((region["size_km"] * 500.0) / MARS_RADIUS_M)
-    half_lon = half_lat / math.cos(math.radians(region["lat"]))
+    half_lon = half_lat / math.cos(math.radians(region.get("projection_lat", region["lat"])))
     west, north = region["lon"] - half_lon, region["lat"] + half_lat
     transform = from_origin(west, north, (2 * half_lon) / pixels, (2 * half_lat) / pixels)
     bounds = (west, region["lat"] - half_lat, region["lon"] + half_lon, north)
@@ -276,6 +336,7 @@ def main() -> int:
         "name": region["name"],
         "date": __import__("datetime").date.today().isoformat(),
         "center": {"lat": region["lat"], "lon": region["lon"]},
+        "projection_lat": region.get("projection_lat", region["lat"]),
         "size_m": region["size_km"] * 1000.0,
         "height": {"file": "height.png", "pixels": n, "spacing_m": spacing, "min_m": low, "max_m": high},
         "albedo": {"file": "albedo.jpg", "pixels": region["albedo_px"]},

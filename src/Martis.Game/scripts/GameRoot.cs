@@ -339,6 +339,7 @@ public partial class GameRoot : Node
 
     private Martis.Simulation.Planets.RegionRelief? _relief;
     private Martis.Simulation.Planets.SectionDefinition? _section;
+    private Martis.Simulation.Planets.PlanetDefinition? _planet;
     private double _planetRadiusM = 3396190.0;
     private SectionMark[] _sectionMarks = [];
     private bool _reliefTried;
@@ -357,14 +358,12 @@ public partial class GameRoot : Node
         _reliefTried = true;
         try
         {
-            var planet = Martis.Simulation.Planets.PlanetDefinition.LoadPublished(_dataRoot);
+            var planet = _planet = Martis.Simulation.Planets.PlanetDefinition.LoadPublished(_dataRoot);
             // The story mode's starting section (M3, ADR-036): Isidis west with Jezero as a detail insert.
             _section = planet.StartSection;
             _planetRadiusM = planet.RadiusM;
             _relief = planet.LoadRelief(_section);
-            _sectionMarks = planet.Sections
-                .Select(section => new SectionMark(section.Name, section.CenterLat, section.CenterLon, section.SizeM, section.UnlockEra <= 1, section.Unlock))
-                .ToArray();
+            RefreshSectionMarks();
         }
         catch (Exception exception) when (exception is System.IO.IOException or System.IO.InvalidDataException or KeyNotFoundException or System.Text.Json.JsonException or InvalidOperationException)
         {
@@ -388,9 +387,9 @@ public partial class GameRoot : Node
         _session = session;
         _seenEvents = 0;
         _celebrated = session.Mission?.IsComplete ?? false;
-        if (_world is not null && (_world.Ground.CellsX != session.Width || _world.Ground.CellsY != session.Height))
+        if (_world is not null && (_world.Ground.CellsX != session.Width || _world.Ground.CellsY != session.Height || _world.Ground.Relief != Relief()))
         {
-            // A chapter on another map size (H3): the 3D world is built again for it.
+            // A chapter on another map size (H3) or another section of Mars (M4): the 3D world is built again for it.
             var overlay = _world.Overlay;
             RemoveChild(_world);
             _world.QueueFree();
@@ -646,7 +645,7 @@ public partial class GameRoot : Node
     {
         try
         {
-            var id = _saves.Save(_session, _mission?.File, CaptureExpedition());
+            var id = SaveSection();
             SaveCampaign();
             _hud.Toast($"Partida guardada ({id}, sol {_session.Tick}).");
         }
@@ -670,6 +669,7 @@ public partial class GameRoot : Node
                 }
 
                 _hud.ClearEvents();
+                RestoreWorld(_saves.LastWorld, _saves.CurrentId);
                 StartSession(loaded);
                 RestoreExpedition(expedition);
                 _playing = true;
@@ -926,6 +926,24 @@ public partial class GameRoot : Node
         roverOk &= valleyOk;
         ok &= roverOk;
         GD.Print($"MARTIS smoke rover={roverOk} battery={_rover.Battery:0.##}");
+        // M4: driving over the east edge opens the next section and catches it up; driving back
+        // restores the first one from its save, with what was discovered there.
+        if (Relief() is not null && _planet is not null && _section == _planet.StartSection)
+        {
+            _era = 2;
+            var startSection = _section;
+            var sol = _session.Tick;
+            var discovered = _pois.Pois[0].State;
+            _rover.Restore(_session.Width - 0.55, _session.Height / 2.0, 0, 1.0, _rover.Wear, _rover.Lander);
+            CrossSectionEdge(1);
+            var crossed = _section != startSection && _section!.Tile == (1, 0) && _session.Tick == sol && _rover.X < 1;
+            _rover.Restore(0.55, _session.Height / 2.0, Math.PI, 1.0, _rover.Wear, _rover.Lander);
+            CrossSectionEdge(1);
+            var back = _section == startSection && _pois.Pois[0].State == discovered && _rover.X > _session.Width - 1;
+            GD.Print($"MARTIS smoke sections={crossed && back} crossed={crossed} back={back}");
+            ok &= crossed && back;
+            _era = 1;
+        }
         GD.Print($"MARTIS smoke ok={ok} save={id} tick={_session.Tick} biomass={biomass:0.######} {message} {error}");
         GetTree().Quit(ok ? 0 : 1);
     }

@@ -151,6 +151,12 @@ public partial class PlanetaryPanel : Control
     public void SetSections(System.Collections.Generic.IReadOnlyList<SectionMark> sections, double radiusM)
     {
         _sectionMarks?.QueueFree();
+        if (sections.Count > 0)
+        {
+            // Face the sections when the view opens; the globe keeps turning from there.
+            _globe.Rotation = new Vector3(0, -Mathf.DegToRad((float)sections[0].Lon), 0);
+        }
+
         _sectionMarks = new Node3D { Name = "Sections" };
         _globe.AddChild(_sectionMarks);
         var lines = new System.Collections.Generic.List<string> { "SECCIONES DE MARTE" };
