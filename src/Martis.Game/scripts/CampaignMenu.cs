@@ -53,7 +53,7 @@ public partial class CampaignMenu : Control
         title.AddThemeColorOverride("font_shadow_color", new Color(0, 0, 0, 0.8f));
         title.AddThemeConstantOverride("shadow_offset_y", 3);
         column.AddChild(title);
-        var subtitle = new Label { Text = "G É N E S I S   ·   de la primera bacteria a la primera mente", HorizontalAlignment = HorizontalAlignment.Center };
+        var subtitle = new Label { Text = "G É N E S I S   ·   de la primera bacteria a un Marte vivo", HorizontalAlignment = HorizontalAlignment.Center };
         subtitle.AddThemeFontSizeOverride("font_size", 17);
         subtitle.AddThemeColorOverride("font_color", new Color(1f, 0.93f, 0.85f, 0.85f));
         column.AddChild(subtitle);
@@ -123,7 +123,13 @@ public partial class CampaignMenu : Control
         foreach (var concept in progress.Campaign.Concepts)
         {
             var known = learned.Contains(concept.Id);
-            var name = new Label { Text = known ? concept.Title : "🔒  ???" };
+            var badge = concept.Epistemic switch
+            {
+                Epistemic.Science => "  ·  ciencia",
+                Epistemic.Model => "  ·  modelo simplificado",
+                _ => "  ·  especulativo",
+            };
+            var name = new Label { Text = known ? concept.Title + badge : "🔒  ???" };
             name.AddThemeFontSizeOverride("font_size", 17);
             name.AddThemeColorOverride("font_color", known ? Hud.Accent : Dim);
             _codexRows.AddChild(name);
@@ -189,7 +195,7 @@ public partial class CampaignMenu : Control
         var box = new VBoxContainer();
         box.AddThemeConstantOverride("separation", 8);
         panel.AddChild(box);
-        var number = new Label { Text = string.Create(CultureInfo.InvariantCulture, $"CAPÍTULO {chapter.Number}") };
+        var number = new Label { Text = string.Create(CultureInfo.InvariantCulture, $"ERA {Eras.Roman(chapter.Era)} · CAPÍTULO {chapter.Number}") };
         number.AddThemeFontSizeOverride("font_size", 12);
         number.AddThemeColorOverride("font_color", done ? Hud.Bio : Hud.Accent);
         box.AddChild(number);

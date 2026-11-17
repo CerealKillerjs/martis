@@ -9,19 +9,57 @@ namespace Martis.Simulation.Missions;
 /// One mission of the campaign, in play order. <see cref="File"/> is under <c>data/missions</c>.
 /// <see cref="Teaches"/> names the concepts (H8) the player learns by finishing it.
 /// </summary>
-public sealed record CampaignMission(string Id, string File, string ChapterId, int Number, IReadOnlyList<string>? Teaches = null)
+public sealed record CampaignMission(string Id, string File, string ChapterId, int Number, IReadOnlyList<string>? Teaches = null, MissionKind Kind = MissionKind.Colonization)
 {
     public IReadOnlyList<string> Concepts => Teaches ?? [];
 }
 
-/// <summary>A concept of the codex (H8): what a mission teaches, shown in its briefing and debrief.</summary>
-public sealed record CampaignConcept(string Id, string Title, string Text);
+/// <summary>
+/// A concept of the codex (H8): what a mission teaches, shown in its briefing and debrief.
+/// <see cref="Epistemic"/> labels how solid it is (master document v2.0, §2 and §36.1).
+/// </summary>
+public sealed record CampaignConcept(string Id, string Title, string Text, Epistemic Epistemic = Epistemic.Science);
+
+/// <summary>Mission types of the master document v2.0, §11.</summary>
+public enum MissionKind
+{
+    Reconnaissance,
+    Sampling,
+    Experiment,
+    Colonization,
+    Restoration,
+    Terraforming,
+    Expedition,
+}
+
+/// <summary>How a concept should be read (master document v2.0, §2: «rigor transparente»).</summary>
+public enum Epistemic
+{
+    /// <summary>Established science.</summary>
+    Science,
+
+    /// <summary>A simplified model of real science, tuned for play.</summary>
+    Model,
+
+    /// <summary>Speculative: a game hypothesis, labelled as such.</summary>
+    Speculative,
+}
+
+/// <summary>The eras of progression of the master document v2.0, §5.</summary>
+public static class Eras
+{
+    public static readonly IReadOnlyList<string> Names = ["Génesis", "Ecosistemas", "Inteligencia", "Expansión", "Biosferas múltiples"];
+
+    public static string Roman(int era) => era switch { 1 => "I", 2 => "II", 3 => "III", 4 => "IV", 5 => "V", _ => throw new ArgumentOutOfRangeException(nameof(era)) };
+
+    public static string Name(int era) => Names[era - 1];
+}
 
 /// <summary>
 /// One chapter. <see cref="GridSize"/> is the side of the map its missions use (64, 128 or
 /// 256, Daniel 2026-11-16). A chapter with no missions is announced but not playable yet.
 /// </summary>
-public sealed record CampaignChapter(string Id, int Number, string Title, string Summary, int GridSize, IReadOnlyList<CampaignMission> Missions, int? PopulationBudget = null, string? Gradient = null, string? Transitions = null, string? Trophic = null, GuidanceLevel Guidance = GuidanceLevel.Hints)
+public sealed record CampaignChapter(string Id, int Number, string Title, string Summary, int GridSize, IReadOnlyList<CampaignMission> Missions, int? PopulationBudget = null, string? Gradient = null, string? Transitions = null, string? Trophic = null, GuidanceLevel Guidance = GuidanceLevel.Hints, int Era = 1)
 {
     public bool Playable => Missions.Count > 0;
 
@@ -105,7 +143,8 @@ public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<Ca
                 IReadOnlyList<string>? teaches = mission.TryGetProperty("teaches", out var taught)
                     ? [.. taught.EnumerateArray().Select(concept => concept.GetString()!)]
                     : null;
-                missions.Add(new CampaignMission(id, mission.GetProperty("file").GetString()!, chapterId, missions.Count + 1, teaches));
+                var kind = mission.TryGetProperty("kind", out var kindItem) ? ParseKind(id, kindItem.GetString()) : MissionKind.Colonization;
+                missions.Add(new CampaignMission(id, mission.GetProperty("file").GetString()!, chapterId, missions.Count + 1, teaches, kind));
             }
 
             chapters.Add(new CampaignChapter(
@@ -119,7 +158,12 @@ public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<Ca
                 item.TryGetProperty("gradient", out var gradient) ? gradient.GetString() : null,
                 item.TryGetProperty("transitions", out var transitions) ? transitions.GetString() : null,
                 item.TryGetProperty("trophic", out var trophic) ? trophic.GetString() : null,
-                item.TryGetProperty("guidance", out var guidance) ? ParseGuidance(chapterId, guidance.GetString()) : GuidanceLevel.Hints));
+                item.TryGetProperty("guidance", out var guidance) ? ParseGuidance(chapterId, guidance.GetString()) : GuidanceLevel.Hints,
+                item.TryGetProperty("era", out var era) ? era.GetInt32() : 1));
+            if (chapters[^1].Era is < 1 or > 5 || (chapters.Count > 1 && chapters[^1].Era < chapters[^2].Era))
+            {
+                throw new InvalidDataException($"Chapter '{chapterId}' needs an era from 1 to 5 that does not go back.");
+            }
         }
 
         var concepts = new List<CampaignConcept>();
@@ -127,7 +171,14 @@ public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<Ca
         {
             foreach (var item in conceptItems.EnumerateArray())
             {
-                var concept = new CampaignConcept(item.GetProperty("id").GetString()!, item.GetProperty("title").GetString()!, item.GetProperty("text").GetString()!);
+                var epistemic = item.TryGetProperty("epistemic", out var label) ? label.GetString() switch
+                {
+                    "science" => Epistemic.Science,
+                    "model" => Epistemic.Model,
+                    "speculative" => Epistemic.Speculative,
+                    var other => throw new InvalidDataException($"Unknown epistemic label '{other}'; use science, model or speculative."),
+                } : Epistemic.Science;
+                var concept = new CampaignConcept(item.GetProperty("id").GetString()!, item.GetProperty("title").GetString()!, item.GetProperty("text").GetString()!, epistemic);
                 if (concepts.Any(other => other.Id == concept.Id) || string.IsNullOrWhiteSpace(concept.Title) || string.IsNullOrWhiteSpace(concept.Text))
                 {
                     throw new InvalidDataException($"Concept '{concept.Id}' is repeated or has no title or text.");
@@ -167,6 +218,18 @@ public sealed record CampaignDefinition(string Id, string Name, IReadOnlyList<Ca
 
         return new CampaignDefinition(meta.GetProperty("id").GetString()!, meta.GetProperty("name").GetString()!, chapters, concepts, policy);
     }
+
+    private static MissionKind ParseKind(string missionId, string? value) => value switch
+    {
+        "reconnaissance" => MissionKind.Reconnaissance,
+        "sampling" => MissionKind.Sampling,
+        "experiment" => MissionKind.Experiment,
+        "colonization" => MissionKind.Colonization,
+        "restoration" => MissionKind.Restoration,
+        "terraforming" => MissionKind.Terraforming,
+        "expedition" => MissionKind.Expedition,
+        _ => throw new InvalidDataException($"Mission '{missionId}' has unknown kind '{value}'."),
+    };
 
     private static GuidanceLevel ParseGuidance(string chapterId, string? value) => value switch
     {

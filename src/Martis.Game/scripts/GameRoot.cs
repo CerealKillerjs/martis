@@ -199,9 +199,21 @@ public partial class GameRoot : Node
         var first = _guidance?.ShowsHint ?? true ? definition.Objectives[0].Hint ?? definition.Objectives[0].Title : definition.Objectives[0].Title;
         _hud.Banner(
             definition.Name,
-            string.Create(CultureInfo.InvariantCulture, $"Capítulo {chapter.Number} · {chapter.Title} · {Guidance(chapter.Guidance)}\n\n{definition.Briefing}{learn}"),
+            string.Create(CultureInfo.InvariantCulture, $"Era {Eras.Roman(chapter.Era)} · {Eras.Name(chapter.Era)}  ·  Capítulo {chapter.Number} · {chapter.Title}\n{Kind(mission.Kind)} · {Guidance(chapter.Guidance)}\n\n{definition.Briefing}{learn}"),
             ("Empezar", () => _hud.Toast(first)));
     }
+
+    /// <summary>Mission types of the master document v2.0, §11, as the briefing names them.</summary>
+    internal static string Kind(MissionKind kind) => kind switch
+    {
+        MissionKind.Reconnaissance => "Reconocimiento",
+        MissionKind.Sampling => "Muestreo",
+        MissionKind.Experiment => "Experimento",
+        MissionKind.Colonization => "Colonización",
+        MissionKind.Restoration => "Restauración",
+        MissionKind.Terraforming => "Terraformación",
+        _ => "Expedición",
+    };
 
     /// <summary>How the briefing names the help of a chapter (H8).</summary>
     private static string Guidance(GuidanceLevel level) => level switch

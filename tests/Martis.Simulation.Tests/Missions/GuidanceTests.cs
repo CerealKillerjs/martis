@@ -161,6 +161,38 @@ public sealed class GuidanceTests
         Assert.Throws<InvalidDataException>(() => CampaignDefinition.Load(json.Replace(from, to, StringComparison.Ordinal)));
     }
 
+    [Fact]
+    public void TheCampaignFollowsTheErasOfTheMasterDocument()
+    {
+        Assert.Equal([1, 1, 2, 2, 3], Campaign.Chapters.Select(chapter => chapter.Era));
+        Assert.Equal("Génesis", Eras.Name(Campaign.Chapters[0].Era));
+        Assert.Equal(MissionKind.Reconnaissance, Campaign.Mission("awakening").Kind);
+        Assert.Equal(MissionKind.Colonization, Campaign.Mission("first_colony").Kind);
+        Assert.Equal(MissionKind.Terraforming, Campaign.Mission("oxygen").Kind);
+    }
+
+    [Fact]
+    public void SpeculativeConceptsAreLabelled()
+    {
+        Assert.Equal(Epistemic.Speculative, Campaign.Concept("socialidad").Epistemic);
+        Assert.Equal(Epistemic.Speculative, Campaign.Concept("inteligencia").Epistemic);
+        Assert.Equal(Epistemic.Science, Campaign.Concept("fotosintesis").Epistemic);
+        Assert.All(Campaign.Missions.Where(mission => Campaign.ChapterOf(mission.Id).Era == 1).SelectMany(mission => mission.Concepts),
+            concept => Assert.NotEqual(Epistemic.Speculative, Campaign.Concept(concept).Epistemic));
+    }
+
+    [Theory]
+    [InlineData("\"era\": 2", "\"era\": 0")]
+    [InlineData("\"kind\": \"reconnaissance\"", "\"kind\": \"party\"")]
+    [InlineData("\"epistemic\": \"speculative\"", "\"epistemic\": \"rumour\"")]
+    public void AnUnknownEraKindOrLabelIsRefused(string from, string to)
+    {
+        var json = File.ReadAllText(Path.Combine(Repo.Root(), "data", "campaign", "genesis.v1.json"));
+        Assert.Contains(from, json, StringComparison.Ordinal);
+
+        Assert.Throws<InvalidDataException>(() => CampaignDefinition.Load(json.Replace(from, to, StringComparison.Ordinal)));
+    }
+
     private static (GameSession Session, MissionGuidance Guidance) Start(GuidanceLevel level)
         => (GameSession.NewGame(Repo.Root(), 5UL, "awakening.v1.json"), new MissionGuidance(level, Campaign.Guidance));
 }

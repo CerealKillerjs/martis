@@ -135,7 +135,8 @@ Cada hito va en una rama y un PR propios, apilados.
 - **H5, capítulo 3 (Cooperación, [ADR-023](ADR/ADR-023-capitulo-3.md)):** eucariota y multicelular, transiciones por endosimbiosis y biopelícula, y misiones 3.1 a 3.3.
 - **H6, capítulo 4 (Cadenas tróficas, [ADR-024](ADR/ADR-024-capitulo-4.md)):** herbívoros y depredadores con respuesta de Holling y refugio, y misiones 4.1 a 4.3. La dispersión activa queda aplazada.
 - **H7, capítulo 5 (Mente, [ADR-025](ADR/ADR-025-capitulo-5.md)):** colonia social que nace de depredadores longevos, caza cooperativa, índice de inteligencia y misiones 5.1 y 5.2. La especie que transforma su mundo queda para después de H8.
-- **H8:** narrativa y equilibrado.
+- **H8, guía progresiva ([ADR-028](ADR/ADR-028-guia-progresiva.md)):** pistas que se retiran por capítulos, códice de conceptos con etiqueta epistémica, resumen al cerrar cada misión, eras y tipos de misión del documento maestro v2.0 y tutorial del rover.
+- **H9:** equilibrado jugando (H-32, H-33) y diagnóstico de fallos de misión (§30 del documento maestro).
 
 ### Expedición (jugabilidad abierta, elegida por Daniel el 2026-11-17)
 

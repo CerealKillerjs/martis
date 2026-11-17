@@ -26,5 +26,6 @@
 - [ADR-024 — Capítulo 4 «Cadenas tróficas»: herbivoría y depredación (H6)](ADR-024-capitulo-4.md) (Propuesto)
 - [ADR-025 — Capítulo 5 «Mente»: socialidad e índice de inteligencia (H7)](ADR-025-capitulo-5.md) (Propuesto)
 - [ADR-026 — «Expedición»: el rover sembrador (J1)](ADR-026-expedicion-rover.md) (Propuesto)
+- [ADR-028 — Guía progresiva, códice y eras de la campaña (H8)](ADR-028-guia-progresiva.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).
