@@ -40,7 +40,11 @@ public sealed record PlanetDefinition(string Id, string Name, double RadiusM, do
         foreach (var region in meta.GetProperty("regions").EnumerateArray())
         {
             var regionFolder = Path.Combine(folder, region.GetProperty("folder").GetString()!);
-            regions.Add(RegionDefinition.Load(File.ReadAllText(Path.Combine(regionFolder, "region.json")), regionFolder, Number(region, "cell_m")));
+            regions.Add(RegionDefinition.Load(File.ReadAllText(Path.Combine(regionFolder, "region.json")), regionFolder, Number(region, "cell_m")) with
+            {
+                RoverSpeedMs = Number(region, "rover_speed_m_s"),
+                TravelFactor = Number(region, "travel_factor"),
+            });
         }
 
         return new PlanetDefinition(
@@ -69,6 +73,12 @@ public sealed record RegionDefinition(
     double CellM,
     IReadOnlyList<string> Sources)
 {
+    /// <summary>Rover speed when driven at real scale (M2), metres per second.</summary>
+    public double RoverSpeedMs { get; init; } = 20.0;
+
+    /// <summary>How much faster the rover goes on a move order (fast travel, M2).</summary>
+    public double TravelFactor { get; init; } = 30.0;
+
     /// <summary>Scientific cells per side of the region.</summary>
     public int Cells => (int)Math.Round(SizeM / CellM);
 

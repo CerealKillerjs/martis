@@ -80,10 +80,14 @@ public partial class RoverModel : Node3D
 
     /// <summary>Places the rover on the ground, leaning with the slope under its wheels.</summary>
     public void Pose(Terrain ground, Vector3 position, float heading, float drivenMetres, bool lowBattery, bool charging)
+        => Pose(ground.HeightAt, position, heading, drivenMetres, lowBattery, charging);
+
+    /// <summary>Same, on any ground given by its height function (the real-scale terrain, M2).</summary>
+    public void Pose(Func<float, float, float> height, Vector3 position, float heading, float drivenMetres, bool lowBattery, bool charging)
     {
         var forward = new Vector3(MathF.Cos(heading), 0, MathF.Sin(heading));
         var right = new Vector3(-forward.Z, 0, forward.X);
-        float H(Vector3 p) => ground.HeightAt(p.X, p.Z);
+        float H(Vector3 p) => height(p.X, p.Z);
         var front = position + (forward * 1.2f);
         var back = position - (forward * 1.2f);
         var left = position - (right * 1f);

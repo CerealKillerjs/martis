@@ -45,6 +45,15 @@ public partial class World3D : Node3D
 
     public Terrain Ground { get; private set; } = null!;
 
+    /// <summary>The sun, copied by the real-scale view (M2).</summary>
+    public DirectionalLight3D Sun => _sun;
+
+    /// <summary>The lander model, duplicated by the real-scale view (M2).</summary>
+    public Node3D LanderNode => _lander;
+
+    /// <summary>The sky, fog and tone mapping, shared with the real-scale view (M2).</summary>
+    public Godot.Environment Environment3D => _environment;
+
     public OrbitCamera Camera { get; private set; } = null!;
 
     /// <summary>The seeding rover of the «Expedición» view (J1, ADR-026).</summary>

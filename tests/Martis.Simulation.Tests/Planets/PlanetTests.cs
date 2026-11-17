@@ -23,6 +23,8 @@ public sealed class PlanetTests
         Assert.Equal(256, jezero.Cells);
         Assert.NotEmpty(jezero.Sources);
         Assert.True(File.Exists(jezero.AlbedoFile));
+        Assert.Equal(20.0, jezero.RoverSpeedMs);
+        Assert.Equal(30.0, jezero.TravelFactor);
     }
 
     [Fact]

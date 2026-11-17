@@ -88,6 +88,7 @@ public partial class GameRoot
         }
 
         PoseRover((float)(driven * Terrain.CellSize * Math.Sign(throttle)));
+        SyncReal(delta, (float)(driven * Math.Sign(throttle)));
         Glimpse();
         DeliverSamples();
     }

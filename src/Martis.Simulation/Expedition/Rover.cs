@@ -167,6 +167,18 @@ public sealed class Rover
     /// <param name="throttle">-1 (full reverse) … 1 (full ahead).</param>
     /// <param name="steer">-1 … 1; positive turns towards +y.</param>
     /// <param name="seconds">Real time elapsed.</param>
+    /// <summary>
+    /// Multiplies the data speed: at real scale (M2, ADR-035) the game sets it so the rover drives
+    /// at metres per second whatever the size of a cell. 1 on the scaled map.
+    /// </summary>
+    public double SpeedScale
+    {
+        get => _speedScale;
+        set => _speedScale = value > 0 && double.IsFinite(value) ? value : throw new ArgumentOutOfRangeException(nameof(value), value, "The speed scale must be positive.");
+    }
+
+    private double _speedScale = 1.0;
+
     public double Drive(double throttle, double steer, double seconds)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(seconds);
@@ -174,7 +186,7 @@ public sealed class Rover
         steer = Math.Clamp(steer, -1.0, 1.0);
         Heading += steer * Definition.TurnRadiansPerSecond * seconds;
 
-        var speed = Definition.SpeedCellsPerSecond * SpeedFactor * Math.Abs(throttle) * (throttle < 0 ? Definition.ReverseFactor : 1.0);
+        var speed = Definition.SpeedCellsPerSecond * SpeedScale * SpeedFactor * Math.Abs(throttle) * (throttle < 0 ? Definition.ReverseFactor : 1.0);
         var wanted = MovableDistance(speed, seconds);
         var sign = throttle < 0 ? -1.0 : 1.0;
         var x = Math.Clamp(X + (Math.Cos(Heading) * wanted * sign), Margin, Width - Margin);

@@ -43,6 +43,18 @@ public sealed class RoverTests
     }
 
     [Fact]
+    public void SpeedScaleSlowsTheRoverForTheRealScaleView()
+    {
+        var rover = NewRover();
+        rover.SpeedScale = 0.5;
+
+        var driven = rover.Drive(throttle: 1, steer: 0, seconds: 1);
+
+        Assert.Equal(3.0, driven, 9);
+        Assert.Throws<ArgumentOutOfRangeException>(() => rover.SpeedScale = 0);
+    }
+
+    [Fact]
     public void ReverseIsSlowerAndSteeringTurnsTheHeading()
     {
         var rover = NewRover();

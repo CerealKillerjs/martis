@@ -17,7 +17,9 @@
       {
         "id": "jezero",
         "folder": "mars/jezero",
-        "cell_m": "jezero.cell"
+        "cell_m": "jezero.cell",
+        "rover_speed_m_s": "jezero.rover_speed",
+        "travel_factor": "jezero.travel_factor"
       }
     ]
   },
@@ -90,6 +92,28 @@
       "version": "1",
       "status": "OK",
       "note": "Lado de una celda científica en Jezero: 256 celdas cubren los 96 km de la región."
+    },
+    {
+      "id": "jezero.rover_speed",
+      "field": "rover_speed_m_s",
+      "value": 20.0,
+      "unit": "m/s",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "OK",
+      "note": "Velocidad del rover conducido a escala real. Elegida por Daniel (2026-11-17): 20 m/s, una celda de 375 m en unos 20 s; mucho más rápido que un rover real, a propósito."
+    },
+    {
+      "id": "jezero.travel_factor",
+      "field": "travel_factor",
+      "value": 30.0,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "OK",
+      "note": "Viaje rápido: con una orden de movimiento (G) el rover avanza 30 veces más deprisa, como si el tiempo se acelerara."
     }
   ]
 }

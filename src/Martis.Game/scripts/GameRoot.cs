@@ -68,6 +68,10 @@ public partial class GameRoot : Node
         {
             CallDeferred(MethodName.Smoke);
         }
+        else if (_options.TryGetValue("real-shot", out var realShot))
+        {
+            CallDeferred(MethodName.RealShowcase, realShot);
+        }
         else if (_options.TryGetValue("shot", out var shot))
         {
             _mission = _campaign.Campaign.Mission("first_colony");
@@ -245,7 +249,10 @@ public partial class GameRoot : Node
             Refresh();
         }
 
-        _world.TimeOfDay = (float)((_time.SolProgress + 0.25) % 1.0);
+        if (!_realShowcase)
+        {
+            _world.TimeOfDay = (float)((_time.SolProgress + 0.25) % 1.0);
+        }
         UpdatePlanetary();
         UpdateRover(delta);
         ShowKnowledge();
