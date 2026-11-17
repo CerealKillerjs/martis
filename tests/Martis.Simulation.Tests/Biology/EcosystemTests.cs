@@ -22,7 +22,7 @@ public sealed class EcosystemTests
         var catalog = Catalog();
 
         Assert.Equal(
-            new[] { "decomposer", "eukaryote", "extremophile", "multicellular", "phototroph" },
+            new[] { "decomposer", "eukaryote", "extremophile", "herbivore", "multicellular", "phototroph", "predator" },
             catalog.Organisms.Select(organism => organism.Definition.Category).Order(StringComparer.Ordinal));
         var decomposer = catalog.Organism("decomposer_d01");
         Assert.Equal("heterotrophic_assimilation", decomposer.GrowthReaction.Id);

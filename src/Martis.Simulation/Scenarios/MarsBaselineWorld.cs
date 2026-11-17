@@ -51,7 +51,8 @@ public static class MarsBaselineWorld
         int height = Height,
         int? populationBudget = null,
         EnvironmentGradient? gradient = null,
-        Biology.TransitionCatalog? transitions = null)
+        Biology.TransitionCatalog? transitions = null,
+        Biology.TrophicCatalog? trophic = null)
     {
         ArgumentNullException.ThrowIfNull(scenario);
         ArgumentNullException.ThrowIfNull(catalog);
@@ -65,7 +66,7 @@ public static class MarsBaselineWorld
             worldSeed,
             SimulationConfiguration.DefaultMaxVariantsPerSpeciesPerCell,
             true);
-        var workspace = new Biology.MetabolismWorkspace(catalog) { PopulationBudget = populationBudget, Transitions = transitions };
+        var workspace = new Biology.MetabolismWorkspace(catalog) { PopulationBudget = populationBudget, Transitions = transitions, Trophic = trophic };
         var engine = new SimulationEngine(
             state,
             configuration,

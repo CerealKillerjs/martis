@@ -62,7 +62,7 @@ public sealed record SessionEvent(long Tick, string Kind, string Text, int Cell 
 /// chapter its own: 64, 128 or 256 cells per side. <see cref="Gradient"/> names a file in
 /// <c>data/scenarios</c> laid over the uniform baseline (H4, H-30); null keeps it uniform.
 /// </summary>
-public sealed record WorldOptions(int GridSize = 64, int? PopulationBudget = null, string? Gradient = null, string? Transitions = null)
+public sealed record WorldOptions(int GridSize = 64, int? PopulationBudget = null, string? Gradient = null, string? Transitions = null, string? Trophic = null)
 {
     public static readonly WorldOptions Default = new();
 }
@@ -94,8 +94,9 @@ public sealed class GameSession
         Biology = biology;
         Seed = seed;
         Transitions = repositoryRoot is not null && world.Transitions is { } transitions ? TransitionCatalog.LoadPublished(repositoryRoot, transitions, biology) : null;
+        Trophic = repositoryRoot is not null && world.Trophic is { } trophic ? TrophicCatalog.LoadPublished(repositoryRoot, trophic, biology) : null;
         var gradient = resume is null && repositoryRoot is not null && world.Gradient is { } file ? EnvironmentGradient.LoadPublished(repositoryRoot, file) : null;
-        (Engine, Workspace) = MarsBaselineWorld.CreateWithBiology(scenario, biology, seed, width, height, world.PopulationBudget, gradient, Transitions);
+        (Engine, Workspace) = MarsBaselineWorld.CreateWithBiology(scenario, biology, seed, width, height, world.PopulationBudget, gradient, Transitions, Trophic);
         if (resume is not null)
         {
             resume.Restore(Engine);
@@ -139,6 +140,9 @@ public sealed class GameSession
 
     /// <summary>Major transitions of this world (H5); null when the chapter has none.</summary>
     public TransitionCatalog? Transitions { get; }
+
+    /// <summary>Feeding links of this world (H6); null when the chapter has none.</summary>
+    public TrophicCatalog? Trophic { get; }
 
     /// <summary>Map size (taken from the snapshot when resuming) and population budget of this run.</summary>
     public WorldOptions World { get; }
@@ -467,7 +471,7 @@ public sealed class GameSession
             return new ExperimentForecast(organismId, 0, [], false, "Hay un despliegue pendiente: avanza un sol antes de experimentar");
         }
 
-        var (lab, _) = MarsBaselineWorld.CreateWithBiology(Scenario, Biology, Seed, Width, Height, World.PopulationBudget, null, Transitions);
+        var (lab, _) = MarsBaselineWorld.CreateWithBiology(Scenario, Biology, Seed, Width, Height, World.PopulationBudget, null, Transitions, Trophic);
         Capture().Restore(lab);
         var cell = CellIndex(x, y);
         lab.ApplyCommand(new IntroducePopulationCommand(organismId, cell, biomassKg, genes));

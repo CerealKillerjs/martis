@@ -78,8 +78,12 @@ public sealed class TickTotals
     /// <summary>Variants folded into another one by tolerance or by the variant cap (ADR-006).</summary>
     public int Merges { get; set; }
 
+    /// <summary>Prey biomass eaten by consumers this tick (kg, H6).</summary>
+    public double BiomassEatenKg { get; set; }
+
     public void Reset()
     {
+        BiomassEatenKg = 0;
         ExternalInflowKg = 0;
         CarbonFixedMol = 0;
         CarbonRespiredMol = 0;
@@ -125,6 +129,9 @@ public sealed class MetabolismWorkspace
 
     /// <summary>Major transitions of this world (H5, ADR-023); null means none, and update-ecology does nothing.</summary>
     public TransitionCatalog? Transitions { get; set; }
+
+    /// <summary>Feeding links of this world (H6, ADR-024); null means no consumers eat.</summary>
+    public TrophicCatalog? Trophic { get; set; }
 
     /// <summary>Transitions that happened this tick, in order.</summary>
     public List<TransitionEvent> TransitionEvents { get; } = [];

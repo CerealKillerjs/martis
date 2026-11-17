@@ -162,6 +162,36 @@
             "organism": "multicellular_m01"
           }
         ]
+      },
+      {
+        "id": "grazer_culture",
+        "title": "Cría de herbívoros",
+        "description": "Permite desplegar el Herbívoro H01 desde el biorreactor.",
+        "cost": "eco.tech.grazer_culture.cost",
+        "requires": [
+          "eukaryote_culture"
+        ],
+        "effects": [
+          {
+            "type": "organism",
+            "organism": "grazer_h01"
+          }
+        ]
+      },
+      {
+        "id": "predator_culture",
+        "title": "Cría de depredadores",
+        "description": "Permite desplegar el Depredador P01 desde el biorreactor.",
+        "cost": "eco.tech.predator_culture.cost",
+        "requires": [
+          "grazer_culture"
+        ],
+        "effects": [
+          {
+            "type": "organism",
+            "organism": "predator_p01"
+          }
+        ]
       }
     ]
   },
@@ -632,6 +662,42 @@
       "source": null,
       "note": "Valor de juego propuesto para el capítulo 3 (H5); Dani debe ajustarlo jugando (H-33).",
       "rationale": "Coste de Cultivo multicelular.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.tech.grazer_culture.cost",
+      "field": "cost",
+      "value": 50.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el capítulo 4 (H6); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Coste de Cría de herbívoros.",
+      "range": [
+        0,
+        100000.0
+      ]
+    },
+    {
+      "id": "eco.tech.predator_culture.cost",
+      "field": "cost",
+      "value": 80.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el capítulo 4 (H6); Dani debe ajustarlo jugando (H-33).",
+      "rationale": "Coste de Cría de depredadores.",
       "range": [
         0,
         100000.0

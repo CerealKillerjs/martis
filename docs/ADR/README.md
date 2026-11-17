@@ -23,5 +23,6 @@
 - [ADR-021 — Mapas grandes: 64, 128 y 256 casillas (H3)](ADR-021-mapas-grandes.md) (Propuesto)
 - [ADR-022 — Capítulo 2 «Ciclo cerrado»: gradientes y nuevos objetivos (H4)](ADR-022-capitulo-2.md) (Propuesto)
 - [ADR-023 — Capítulo 3 «Cooperación»: endosimbiosis y multicelularidad (H5)](ADR-023-capitulo-3.md) (Propuesto)
+- [ADR-024 — Capítulo 4 «Cadenas tróficas»: herbivoría y depredación (H6)](ADR-024-capitulo-4.md) (Propuesto)
 
 Huecos del TDD: [docs/TDD_HUECOS.md](../TDD_HUECOS.md).

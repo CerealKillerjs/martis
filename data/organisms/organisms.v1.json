@@ -125,6 +125,52 @@
           "BIOFILM_PRODUCTION": 0.9
         },
         "genome_classification": "GAME_BALANCE"
+      },
+      {
+        "id": "grazer_h01",
+        "name": "Herbívoro H01",
+        "category": "herbivore",
+        "capabilities": [
+          "heterotrophy",
+          "aerobic_respiration",
+          "grazing"
+        ],
+        "growth_reaction": "heterotrophic_assimilation",
+        "energy_reaction": "aerobic_respiration",
+        "parameter_prefix": "org.grazer_h01",
+        "base_genome": {
+          "UV_PROTECTION": 0.6,
+          "THERMAL_TOLERANCE": 0.7,
+          "DESICCATION_TOLERANCE": 0.7,
+          "PHOTOSYNTHESIS": 0.0,
+          "REPAIR_CAPACITY": 0.7,
+          "REPRODUCTION_RATE": 0.35,
+          "BIOFILM_PRODUCTION": 0.3
+        },
+        "genome_classification": "GAME_BALANCE"
+      },
+      {
+        "id": "predator_p01",
+        "name": "Depredador P01",
+        "category": "predator",
+        "capabilities": [
+          "heterotrophy",
+          "aerobic_respiration",
+          "predation"
+        ],
+        "growth_reaction": "heterotrophic_assimilation",
+        "energy_reaction": "aerobic_respiration",
+        "parameter_prefix": "org.predator_p01",
+        "base_genome": {
+          "UV_PROTECTION": 0.6,
+          "THERMAL_TOLERANCE": 0.7,
+          "DESICCATION_TOLERANCE": 0.7,
+          "PHOTOSYNTHESIS": 0.0,
+          "REPAIR_CAPACITY": 0.7,
+          "REPRODUCTION_RATE": 0.25,
+          "BIOFILM_PRODUCTION": 0.2
+        },
+        "genome_classification": "GAME_BALANCE"
       }
     ]
   },
@@ -2502,6 +2548,942 @@
       "used_in_v0": true,
       "source": null,
       "note": "Organismo sintético hipotético de MARTIS (capítulo 3, H5). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Fracción de la energía liberada al respirar que queda en la reserva; el resto se disipa.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "org.grazer_h01.individual_mass",
+      "field": "individual_mass",
+      "value": 5e-10,
+      "unit": "kg",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Abundance = BiomassKg / individual_mass (ADR-012).",
+      "range": [
+        1e-18,
+        1e-09
+      ]
+    },
+    {
+      "id": "org.grazer_h01.vmax_carbon",
+      "field": "vmax_carbon",
+      "value": 1.0,
+      "unit": "mol C/(kg·sol)",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Velocidad máxima de asimilación y de respiración por kg de biomasa.",
+      "range": [
+        0,
+        100
+      ]
+    },
+    {
+      "id": "org.grazer_h01.temperature_optimum",
+      "field": "temperature_optimum",
+      "value": 235.0,
+      "unit": "K",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Óptimo térmico de la curva gaussiana f_T (TDD §3.3). Elegido frío a propósito para el juego.",
+      "range": [
+        150,
+        350
+      ]
+    },
+    {
+      "id": "org.grazer_h01.temperature_sigma",
+      "field": "temperature_sigma",
+      "value": 35.0,
+      "unit": "K",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Anchura σ_T de f_T. La tolerancia térmica del fenotipo la ensancha: σ·(1+ThermalTolerance).",
+      "range": [
+        1,
+        200
+      ]
+    },
+    {
+      "id": "org.grazer_h01.radiation_alpha",
+      "field": "radiation_alpha",
+      "value": 150.0,
+      "unit": "sol/Sv",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "α de f_R = 1/(1+α·R·(1−UvResistance)) con R la dosis equivalente por sol (TDD §3.3).",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "org.grazer_h01.water_half_saturation",
+      "field": "water_half_saturation",
+      "value": 0.1,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "K_W de f_W = W/(K_W+W). La tolerancia a la desecación lo reduce: K_W·(1−0,5·DesiccationTolerance).",
+      "range": [
+        1e-09,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.grazer_h01.half_saturation.Nitrogen",
+      "field": "half_saturation_Nitrogen",
+      "value": 0.01,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Constante de Monod del NH3.",
+      "range": [
+        1e-12,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.grazer_h01.half_saturation.Phosphorus",
+      "field": "half_saturation_Phosphorus",
+      "value": 0.005,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Constante de Monod del H3PO4.",
+      "range": [
+        1e-12,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.grazer_h01.reserve_gain",
+      "field": "reserve_gain",
+      "value": 0.0,
+      "unit": "J/mol C",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "El descomponedor no capta luz: su energía viene de la respiración.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "org.grazer_h01.maintenance_power",
+      "field": "maintenance_power",
+      "value": 3000.0,
+      "unit": "J/(kg·sol)",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Energía de mantenimiento por kg de biomasa y sol. Se paga de la reserva; lo que no se paga es inanición (T05).",
+      "range": [
+        0,
+        10000000.0
+      ]
+    },
+    {
+      "id": "org.grazer_h01.base_mortality",
+      "field": "base_mortality",
+      "value": 0.002,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Tasa de muerte de fondo, sin estrés.",
+      "range": [
+        0,
+        10
+      ]
+    },
+    {
+      "id": "org.grazer_h01.thermal_mortality",
+      "field": "thermal_mortality",
+      "value": 0.05,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Tasa de muerte con estrés térmico pleno: se multiplica por (1 − f_T).",
+      "range": [
+        0,
+        10
+      ]
+    },
+    {
+      "id": "org.grazer_h01.desiccation_mortality",
+      "field": "desiccation_mortality",
+      "value": 0.01,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Tasa de muerte con sequía plena: se multiplica por (1 − f_W).",
+      "range": [
+        0,
+        10
+      ]
+    },
+    {
+      "id": "org.grazer_h01.radiation_mortality",
+      "field": "radiation_mortality",
+      "value": 5.0,
+      "unit": "1/Sv",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Muerte por dosis equivalente, atenuada por UvResistance.",
+      "range": [
+        0,
+        10000.0
+      ]
+    },
+    {
+      "id": "org.grazer_h01.starvation_mortality",
+      "field": "starvation_mortality",
+      "value": 0.2,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Tasa de muerte cuando no se paga nada del mantenimiento: se multiplica por la fracción impagada.",
+      "range": [
+        0,
+        10
+      ]
+    },
+    {
+      "id": "org.grazer_h01.carrying_capacity",
+      "field": "carrying_capacity",
+      "value": 4.0,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Biomasa máxima por celda por espacio (K_space). La capacidad total es el mínimo con las cotas de nutrientes y no crea recursos.",
+      "range": [
+        1e-12,
+        1000000000.0
+      ]
+    },
+    {
+      "id": "org.grazer_h01.mutation.event_rate",
+      "field": "mutation_event_rate",
+      "value": 0.2,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Probabilidad de un evento de mutación por tick: 1 − exp(−tasa · fracción de recién nacidos). No es una tasa molecular (TDD §4.2).",
+      "range": [
+        0,
+        100
+      ]
+    },
+    {
+      "id": "org.grazer_h01.mutation.trait_probability",
+      "field": "mutation_trait_probability",
+      "value": 0.3,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "μ: probabilidad de que cada gen mute en un evento.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "org.grazer_h01.mutation.sigma",
+      "field": "mutation_sigma",
+      "value": 0.05,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "σ del cambio gaussiano de la expresión génica.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "org.grazer_h01.mutation.founder_fraction",
+      "field": "mutation_founder_fraction",
+      "value": 0.05,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Fracción de la biomasa recién nacida que funda la variante nueva.",
+      "range": [
+        1e-09,
+        0.999
+      ]
+    },
+    {
+      "id": "org.grazer_h01.drift.effective_size",
+      "field": "drift_effective_size",
+      "value": 100000.0,
+      "unit": "individuos",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Nₑ de la deriva por tick, separado de la abundancia agregada (TDD §4.3).",
+      "range": [
+        1,
+        1000000000000.0
+      ]
+    },
+    {
+      "id": "org.grazer_h01.variant.merge_tolerance",
+      "field": "variant_merge_tolerance",
+      "value": 0.005,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Diferencia máxima de expresión entre genes para considerar dos variantes equivalentes y fusionarlas (TDD §4.4).",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "org.grazer_h01.half_saturation.OrganicCarbon",
+      "field": "half_saturation_OrganicCarbon",
+      "value": 0.05,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Constante de Monod del CH2O.",
+      "range": [
+        1e-12,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.grazer_h01.half_saturation.Oxygen",
+      "field": "half_saturation_Oxygen",
+      "value": 0.02,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Constante de Monod del O2 para respirar.",
+      "range": [
+        1e-12,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.grazer_h01.assimilation_cost",
+      "field": "assimilation_cost",
+      "value": 100000.0,
+      "unit": "J/mol C",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Energía de la reserva que cuesta asimilar un mol de C.",
+      "range": [
+        0,
+        10000000.0
+      ]
+    },
+    {
+      "id": "org.grazer_h01.respiration_efficiency",
+      "field": "respiration_efficiency",
+      "value": 0.4,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Fracción de la energía liberada al respirar que queda en la reserva; el resto se disipa.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "org.predator_p01.individual_mass",
+      "field": "individual_mass",
+      "value": 1e-09,
+      "unit": "kg",
+      "classification": "MODEL_ASSUMPTION",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Abundance = BiomassKg / individual_mass (ADR-012).",
+      "range": [
+        1e-18,
+        1e-09
+      ]
+    },
+    {
+      "id": "org.predator_p01.vmax_carbon",
+      "field": "vmax_carbon",
+      "value": 0.5,
+      "unit": "mol C/(kg·sol)",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Velocidad máxima de asimilación y de respiración por kg de biomasa.",
+      "range": [
+        0,
+        100
+      ]
+    },
+    {
+      "id": "org.predator_p01.temperature_optimum",
+      "field": "temperature_optimum",
+      "value": 235.0,
+      "unit": "K",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Óptimo térmico de la curva gaussiana f_T (TDD §3.3). Elegido frío a propósito para el juego.",
+      "range": [
+        150,
+        350
+      ]
+    },
+    {
+      "id": "org.predator_p01.temperature_sigma",
+      "field": "temperature_sigma",
+      "value": 35.0,
+      "unit": "K",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Anchura σ_T de f_T. La tolerancia térmica del fenotipo la ensancha: σ·(1+ThermalTolerance).",
+      "range": [
+        1,
+        200
+      ]
+    },
+    {
+      "id": "org.predator_p01.radiation_alpha",
+      "field": "radiation_alpha",
+      "value": 150.0,
+      "unit": "sol/Sv",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "α de f_R = 1/(1+α·R·(1−UvResistance)) con R la dosis equivalente por sol (TDD §3.3).",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "org.predator_p01.water_half_saturation",
+      "field": "water_half_saturation",
+      "value": 0.1,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "K_W de f_W = W/(K_W+W). La tolerancia a la desecación lo reduce: K_W·(1−0,5·DesiccationTolerance).",
+      "range": [
+        1e-09,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.predator_p01.half_saturation.Nitrogen",
+      "field": "half_saturation_Nitrogen",
+      "value": 0.01,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Constante de Monod del NH3.",
+      "range": [
+        1e-12,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.predator_p01.half_saturation.Phosphorus",
+      "field": "half_saturation_Phosphorus",
+      "value": 0.005,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Constante de Monod del H3PO4.",
+      "range": [
+        1e-12,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.predator_p01.reserve_gain",
+      "field": "reserve_gain",
+      "value": 0.0,
+      "unit": "J/mol C",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "El descomponedor no capta luz: su energía viene de la respiración.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "org.predator_p01.maintenance_power",
+      "field": "maintenance_power",
+      "value": 3000.0,
+      "unit": "J/(kg·sol)",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Energía de mantenimiento por kg de biomasa y sol. Se paga de la reserva; lo que no se paga es inanición (T05).",
+      "range": [
+        0,
+        10000000.0
+      ]
+    },
+    {
+      "id": "org.predator_p01.base_mortality",
+      "field": "base_mortality",
+      "value": 0.002,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Tasa de muerte de fondo, sin estrés.",
+      "range": [
+        0,
+        10
+      ]
+    },
+    {
+      "id": "org.predator_p01.thermal_mortality",
+      "field": "thermal_mortality",
+      "value": 0.05,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Tasa de muerte con estrés térmico pleno: se multiplica por (1 − f_T).",
+      "range": [
+        0,
+        10
+      ]
+    },
+    {
+      "id": "org.predator_p01.desiccation_mortality",
+      "field": "desiccation_mortality",
+      "value": 0.01,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Tasa de muerte con sequía plena: se multiplica por (1 − f_W).",
+      "range": [
+        0,
+        10
+      ]
+    },
+    {
+      "id": "org.predator_p01.radiation_mortality",
+      "field": "radiation_mortality",
+      "value": 5.0,
+      "unit": "1/Sv",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Muerte por dosis equivalente, atenuada por UvResistance.",
+      "range": [
+        0,
+        10000.0
+      ]
+    },
+    {
+      "id": "org.predator_p01.starvation_mortality",
+      "field": "starvation_mortality",
+      "value": 0.2,
+      "unit": "1/sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Tasa de muerte cuando no se paga nada del mantenimiento: se multiplica por la fracción impagada.",
+      "range": [
+        0,
+        10
+      ]
+    },
+    {
+      "id": "org.predator_p01.carrying_capacity",
+      "field": "carrying_capacity",
+      "value": 2.0,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Biomasa máxima por celda por espacio (K_space). La capacidad total es el mínimo con las cotas de nutrientes y no crea recursos.",
+      "range": [
+        1e-12,
+        1000000000.0
+      ]
+    },
+    {
+      "id": "org.predator_p01.mutation.event_rate",
+      "field": "mutation_event_rate",
+      "value": 0.1,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Probabilidad de un evento de mutación por tick: 1 − exp(−tasa · fracción de recién nacidos). No es una tasa molecular (TDD §4.2).",
+      "range": [
+        0,
+        100
+      ]
+    },
+    {
+      "id": "org.predator_p01.mutation.trait_probability",
+      "field": "mutation_trait_probability",
+      "value": 0.3,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "μ: probabilidad de que cada gen mute en un evento.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "org.predator_p01.mutation.sigma",
+      "field": "mutation_sigma",
+      "value": 0.05,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "σ del cambio gaussiano de la expresión génica.",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "org.predator_p01.mutation.founder_fraction",
+      "field": "mutation_founder_fraction",
+      "value": 0.05,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Fracción de la biomasa recién nacida que funda la variante nueva.",
+      "range": [
+        1e-09,
+        0.999
+      ]
+    },
+    {
+      "id": "org.predator_p01.drift.effective_size",
+      "field": "drift_effective_size",
+      "value": 100000.0,
+      "unit": "individuos",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Nₑ de la deriva por tick, separado de la abundancia agregada (TDD §4.3).",
+      "range": [
+        1,
+        1000000000000.0
+      ]
+    },
+    {
+      "id": "org.predator_p01.variant.merge_tolerance",
+      "field": "variant_merge_tolerance",
+      "value": 0.005,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Diferencia máxima de expresión entre genes para considerar dos variantes equivalentes y fusionarlas (TDD §4.4).",
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "org.predator_p01.half_saturation.OrganicCarbon",
+      "field": "half_saturation_OrganicCarbon",
+      "value": 0.05,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Constante de Monod del CH2O.",
+      "range": [
+        1e-12,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.predator_p01.half_saturation.Oxygen",
+      "field": "half_saturation_Oxygen",
+      "value": 0.02,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Constante de Monod del O2 para respirar.",
+      "range": [
+        1e-12,
+        1000.0
+      ]
+    },
+    {
+      "id": "org.predator_p01.assimilation_cost",
+      "field": "assimilation_cost",
+      "value": 100000.0,
+      "unit": "J/mol C",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
+      "rationale": "Energía de la reserva que cuesta asimilar un mol de C.",
+      "range": [
+        0,
+        10000000.0
+      ]
+    },
+    {
+      "id": "org.predator_p01.respiration_efficiency",
+      "field": "respiration_efficiency",
+      "value": 0.4,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "ACCEPTED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Organismo sintético hipotético de MARTIS (capítulo 4, H6). Valor GAME_BALANCE propuesto, derivado del descomponedor D01.",
       "rationale": "Fracción de la energía liberada al respirar que queda en la reserva; el resto se disipa.",
       "range": [
         0,

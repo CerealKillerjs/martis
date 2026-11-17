@@ -91,7 +91,7 @@ public sealed record TransitionCatalog(string Id, IReadOnlyList<TransitionRule> 
 }
 
 /// <summary>
-/// update-ecology (H5): major transitions. Without a <see cref="MetabolismWorkspace.Transitions"/>
+/// update-ecology (H5, H6): feeding links first (<see cref="Feeding"/>), then major transitions. Without a <see cref="MetabolismWorkspace.Transitions"/>
 /// catalog it does nothing and draws nothing, so worlds without transitions run exactly as
 /// before. It draws from the Events stream (ADR-003), which no other step uses: cells
 /// ascending, rules in file order, one draw per eligible (cell, rule).
@@ -103,6 +103,7 @@ public sealed class TransitionSystem(MetabolismWorkspace workspace) : ISimulatio
     public void Execute(SimulationContext context, double deltaTimeSols)
     {
         ArgumentNullException.ThrowIfNull(context);
+        Feeding.Apply(context.State, workspace, deltaTimeSols);
         if (workspace.Transitions is not { Rules.Count: > 0 } transitions)
         {
             return;

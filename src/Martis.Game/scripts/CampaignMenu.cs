@@ -192,6 +192,9 @@ public partial class CampaignMenu : Control
         "symbiosis" => "Simbiosis",
         "complex_cells" => "Células complejas",
         "multicellular" => "Multicelularidad",
+        "grazers" => "Herbívoros",
+        "food_web" => "Red trófica",
+        "predators" => "Depredadores",
         _ => mission.Id.Replace('_', ' '),
     };
 

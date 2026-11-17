@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "schema": "martis.mission",
+    "id": "predators",
+    "name": "DEPREDADORES — 4.3",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (campaña H6)",
+    "review": "Misión del capítulo 4 de la campaña «Génesis» (ADR-024). Umbrales GAME_BALANCE propuestos.",
+    "sequential": false,
+    "briefing": "El último escalón: depredadores que cazan herbívoros. Son pocos, crecen despacio y dependen de todo lo que hay debajo. Si sobreviven, el ecosistema tiene tres niveles completos.",
+    "objectives": [
+      {
+        "id": "first_predators",
+        "type": "occupy",
+        "organism": "predator_p01",
+        "count": "mission.predators.cells",
+        "title": "Introduce depredadores",
+        "hint": "Investiga «Cría de depredadores» y suéltalos donde ya haya muchos herbívoros."
+      },
+      {
+        "id": "sustain_predators",
+        "type": "sustain",
+        "organism": "predator_p01",
+        "min_biomass": "mission.predators.min_biomass_kg",
+        "sols": "mission.predators.sustain_sols",
+        "title": "Mantén a los depredadores",
+        "hint": "Pocos depredadores y muchos herbívoros: la cadena se sostiene desde abajo."
+      }
+    ]
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "mission.predators.cells",
+      "field": "count",
+      "value": 1.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 4 (H6); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Casillas con depredadores.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.predators.min_biomass_kg",
+      "field": "min_biomass",
+      "value": 0.05,
+      "unit": "kg",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 4 (H6); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Biomasa mínima de depredadores.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    },
+    {
+      "id": "mission.predators.sustain_sols",
+      "field": "sols",
+      "value": 60.0,
+      "unit": "sol",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Umbral de juego propuesto para el capítulo 4 (H6); Dani/Ciencia deben confirmarlo.",
+      "rationale": "Soles seguidos por encima del mínimo.",
+      "range": [
+        0,
+        1000000.0
+      ]
+    }
+  ]
+}

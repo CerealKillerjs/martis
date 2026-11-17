@@ -84,10 +84,24 @@
       "title": "Cadenas tróficas",
       "summary": "Herbívoros, depredadores y el equilibrio de un ecosistema complejo.",
       "grid": 256,
-      "missions": [],
+      "missions": [
+        {
+          "id": "grazers",
+          "file": "grazers.v1.json"
+        },
+        {
+          "id": "food_web",
+          "file": "food_web.v1.json"
+        },
+        {
+          "id": "predators",
+          "file": "predators.v1.json"
+        }
+      ],
       "population_budget": "campaign.population_budget.grid_256",
       "gradient": "gradients.v1.json",
-      "transitions": "transitions.v1.json"
+      "transitions": "transitions.v1.json",
+      "trophic": "trophic.v1.json"
     },
     {
       "id": "ch5",
@@ -97,7 +111,8 @@
       "missions": [],
       "population_budget": "campaign.population_budget.grid_256",
       "gradient": "gradients.v1.json",
-      "transitions": "transitions.v1.json"
+      "transitions": "transitions.v1.json",
+      "trophic": "trophic.v1.json"
     }
   ],
   "location": {

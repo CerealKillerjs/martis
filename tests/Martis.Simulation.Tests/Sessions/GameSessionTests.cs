@@ -79,7 +79,7 @@ public sealed class GameSessionTests
         Assert.Equal(7, report.Populations[0].Genome.Count);
         Assert.Contains(session.Events, item => item.Kind == "deploy" && item.Cell == cell);
         Assert.Equal(session.Events.Count, session.TotalEvents);
-        Assert.Equal(5, session.Organisms.Count);
+        Assert.Equal(7, session.Organisms.Count);
         Assert.All(session.Organisms, organism => Assert.All(organism.BaseGenome, gene => Assert.InRange(gene.Value, 0.0, 1.0)));
     }
 
