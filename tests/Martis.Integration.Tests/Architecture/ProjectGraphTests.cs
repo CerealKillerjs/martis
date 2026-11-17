@@ -40,11 +40,15 @@ public sealed class ProjectGraphTests
         ["Martis.Integration.Tests"] = ["Martis.Simulation", "Martis.Persistence", "Martis.Contracts"],
 
         // T08: the Godot game sits on the same layer as the CLI (ADR-017).
-        ["Martis.Game"] = ["Martis.Application", "Martis.Simulation", "Martis.Persistence"],
+        ["Martis.Game"] = ["Martis.Application", "Martis.Simulation", "Martis.Persistence", "Martis.Audio"],
 
         // V1 (Documento Maestro v2.0 §16): orchestration between the game and the engine.
         ["Martis.Application"] = ["Martis.Simulation"],
         ["Martis.Application.Tests"] = ["Martis.Application"],
+
+        // ADR-018: procedural audio, a leaf library with its own tests.
+        ["Martis.Audio"] = [],
+        ["Martis.Audio.Tests"] = ["Martis.Audio"],
 
         // T10 / S1-35: BenchmarkDotNet suite, in the solution under benchmarks/.
         ["Martis.Benchmarks"] = ["Martis.Simulation", "Martis.Contracts"],
@@ -97,6 +101,8 @@ public sealed class ProjectGraphTests
             ["Martis.Persistence.Tests"] = TestPackages,
             ["Martis.Integration.Tests"] = TestPackages,
             ["Martis.Game"] = [],
+            ["Martis.Audio"] = [],
+            ["Martis.Audio.Tests"] = TestPackages,
             ["Martis.Benchmarks"] = ["BenchmarkDotNet"],
         };
 

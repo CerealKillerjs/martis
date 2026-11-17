@@ -18,6 +18,7 @@
 - [ADR-015 — Guardado en SQLite, formato binario y recuperación (T07)](ADR-015-guardado-sqlite.md) (Propuesto)
 - [ADR-016 — Ecosistema MVP y misión FIRST COLONY (T09)](ADR-016-ecosistema-y-first-colony.md) (Propuesto)
 - [ADR-017 — Juego 3D en Godot 4.7.2 sobre `GameSession` (T08)](ADR-017-juego-3d-godot.md) (Propuesto)
+- [ADR-018 — Audio procedural: efectos, banda sonora generativa y viento](ADR-018-audio-procedural.md) (Propuesto)
 - [ADR-019 — Modo historia: campaña «Génesis» (H1)](ADR-019-modo-historia.md) (Propuesto)
 - [ADR-020 — Economía: investigación y carga del módulo (H2)](ADR-020-economia.md) (Propuesto)
 - [ADR-021 — Mapas grandes: 64, 128 y 256 casillas (H3)](ADR-021-mapas-grandes.md) (Propuesto)
@@ -36,6 +37,7 @@
 - [ADR-034 — Marte real: relieve de Jezero y PlanetDefinition (M1)](ADR-034-marte-real-jezero.md) (Propuesto)
 - [ADR-035 — Jezero a escala real, cargado por trozos (M2)](ADR-035-escala-real-por-trozos.md) (Propuesto)
 - [ADR-036 — Secciones de Marte y sección inicial del modo historia (M3)](ADR-036-secciones-modo-historia.md) (Propuesto)
+- [ADR-037 — Pantalla de inicio y menú Esc](ADR-037-menu-inicio-y-menu-esc.md) (Propuesto)
 - [ADR-038 — El mundo crece por secciones (M4)](ADR-038-mundo-por-secciones.md) (Propuesto)
 - [ADR-039 — El modo historia en una sola partida (M5)](ADR-039-modo-historia-una-partida.md) (Propuesto)
 

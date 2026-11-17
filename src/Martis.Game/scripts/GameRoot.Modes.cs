@@ -11,14 +11,15 @@ namespace Martis.Game;
 /// V1 (Documento Maestro v2.0 §3): the AI is present in one world through several modes:
 /// exploration (the rover, F1 or Tab), strategic (layers and orders, F2), laboratory (F3) and
 /// planetary (F4). Switching only changes camera and panels; the simulation, the selection and
-/// the layer stay as they are. Esc goes back to the previous mode. Orders go to a register.
+/// the layer stay as they are. Esc opens the menu (PauseMenu) with one button per mode. Orders
+/// go to a register.
 /// </summary>
 public partial class GameRoot
 {
     private readonly ModeController _modes = new();
     private readonly TimeController _time = new();
     private readonly OrderBook _orders = new();
-    private ModeBar? _modeBar;
+    private bool _modeUiReady;
     private PlanetaryPanel? _planetary;
     private double _planetaryClock;
 
@@ -30,6 +31,12 @@ public partial class GameRoot
         if (@event is not InputEventKey { Pressed: true, Echo: false } key || _session is null || _menu.Visible)
         {
             return;
+        }
+
+        if (_pause.IsOpen && key.Keycode is Key.F1 or Key.F2 or Key.F3 or Key.F4 or Key.Tab)
+        {
+            // A mode key inside the Esc menu closes it and goes to that mode.
+            _pause.Close();
         }
 
         GameMode? target = key.Keycode switch
@@ -53,14 +60,6 @@ public partial class GameRoot
     }
 
     private void SwitchMode(GameMode mode) => Changed(_modes.Switch(mode));
-
-    private void BackFromMode()
-    {
-        if (_modes.Current is GameMode.Laboratory or GameMode.Planetary)
-        {
-            Changed(_modes.Back());
-        }
-    }
 
     private void Changed(ModeChange? change)
     {
@@ -86,7 +85,6 @@ public partial class GameRoot
         var mode = _modes.Current;
         _time.Cap(ModeController.MaxSpeed(mode));
         _hud.SetSpeed(_time.EffectiveSpeed);
-        _modeBar!.Show(mode);
         _hud.SetSamplesVisible(mode == GameMode.Laboratory);
         _planetary!.Visible = mode == GameMode.Planetary;
         if (_gauge is not null)
@@ -132,30 +130,28 @@ public partial class GameRoot
 
     private void EnsureModeUi()
     {
-        if (_modeBar is not null)
+        if (_modeUiReady)
         {
             return;
         }
 
+        _modeUiReady = true;
         var layer = _hud.GetParent();
         _planetary = new PlanetaryPanel { Name = "Planetary", Visible = false };
         layer.AddChild(_planetary);
         RefreshSectionMarks();
         layer.MoveChild(_planetary, 0); // behind the HUD: the top bar stays usable
-        _modeBar = new ModeBar { Name = "ModeBar" };
-        layer.AddChild(_modeBar);
-        _modeBar.ModeChosen += SwitchMode;
+        // The F1–F4 buttons live in the Esc menu (PauseMenu) so the top bar stays clean.
     }
 
-    /// <summary>The campaign menu covers the mode bar, the rover gauge and the planetary view.</summary>
+    /// <summary>The campaign menu covers the rover gauge, the samples and the planetary view.</summary>
     private void SetModeUiVisible(bool visible)
     {
-        if (_modeBar is null)
+        if (!_modeUiReady)
         {
             return;
         }
 
-        _modeBar.Visible = visible;
         if (visible)
         {
             ApplyMode();

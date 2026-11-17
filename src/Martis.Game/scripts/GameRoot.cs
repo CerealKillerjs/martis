@@ -5,6 +5,7 @@ using System.Linq;
 using Godot;
 using Martis.Simulation.Economy;
 using Martis.Simulation.Missions;
+using Martis.Audio;
 using Martis.Simulation.Sessions;
 
 namespace Martis.Game;
@@ -24,6 +25,8 @@ public partial class GameRoot : Node
     private GameSession _session = null!;
     private World3D _world = null!;
     private Hud _hud = null!;
+    private PauseMenu _pause = null!;
+    private int _speedBeforePause = 1;
     private SaveService _saves = null!;
     private long _seenEvents;
     private (int X, int Y) _selected = (-1, -1);
@@ -110,7 +113,8 @@ public partial class GameRoot : Node
                 FreePlay();
                 return;
             case "Load":
-                Load();
+                var saveId = launch?.Get("SaveId").AsString() ?? string.Empty;
+                Load(saveId.Length > 0 ? saveId : null);
                 if (!_playing)
                 {
                     OpenMenu();
@@ -305,23 +309,45 @@ public partial class GameRoot : Node
         UpdateRover(delta);
         ShowKnowledge();
         _hud.ShowStatus(_view ?? _session.View(), _world.TimeOfDay);
+        GameAudio.Instance?.Observe(new MusicContext
+        {
+            TimeOfDay = _world.TimeOfDay,
+            BiomassKg = (_view ?? _session.View()).TotalBiomassKg,
+            BiomassGrowthPerSol = _growth,
+            SecondsPerSol = Martis.Application.TimeController.RealSecondsPerSol(_time.EffectiveSpeed),
+            Failure = _session.Failure is not null,
+        });
     }
 
     private WorldView? _view;
 
+    /// <summary>Smoothed relative biomass change per sol, for the music director (ADR-018).</summary>
+    private double _growth;
+
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (_pause is not null && _pause.IsOpen)
+        {
+            // The Esc menu owns the keyboard while it is open: the world does not react.
+            if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape })
+            {
+                _pause.Back();
+            }
+
+            return;
+        }
+
         if (@event is InputEventKey { Pressed: true, Echo: false } key)
         {
             switch (key.Keycode)
             {
                 case Key.Space:
+                    GameAudio.Instance?.Play(_time.Paused ? Sfx.Resume : Sfx.Pause);
                     _time.TogglePause();
                     _hud.SetSpeed(_time.EffectiveSpeed);
                     break;
                 case Key.Escape:
-                    _hud.EndDeploy();
-                    BackFromMode();
+                    EscapePressed();
                     break;
                 case Key.F when Exploring:
                     SeedHere();
@@ -452,10 +478,6 @@ public partial class GameRoot : Node
             layer.AddChild(_hud);
             _hud.SpeedChanged += SetSpeed;
             _hud.OverlayChanged += SetOverlay;
-            _hud.SaveRequested += Save;
-            _hud.LoadRequested += Load;
-            _hud.NewGameRequested += NewGame;
-            _hud.MenuRequested += OpenMenu;
             _hud.ResearchRequested += () => _hud.ToggleResearch(_session.Research);
             _hud.ResearchChosen += Research;
             _menu = new CampaignMenu { Name = "CampaignMenu", Visible = false };
@@ -477,7 +499,30 @@ public partial class GameRoot : Node
             _hud.ExperimentRequested += Experiment;
             _hud.DeployToggled += on => _hud.Toast(on ? "Elige una celda para la colonia." : "Despliegue cancelado.");
             _hud.SetOrganisms(session.Organisms);
+            _pause = new PauseMenu { Name = "Pause", Theme = _hud.Theme, SavePath = _saves.Path };
+            layer.AddChild(_pause);
+            _pause.Toggled += open =>
+            {
+                if (open)
+                {
+                    _speedBeforePause = _time.RequestedSpeed;
+                    SetSpeed(0);
+                }
+                else
+                {
+                    SetSpeed(_speedBeforePause);
+                }
+            };
+            _pause.ModeChosen += SwitchMode;
+            _pause.SaveChosen += Save;
+            _pause.LoadChosen += id => Load(id);
+            _pause.NewGameChosen += NewGame;
+            _pause.CampaignChosen += OpenMenu;
             SetSpeed(1);
+            if (!GameLaunch.ScriptedRun())
+            {
+                _hud.CallDeferred(Hud.MethodName.Entrance);
+            }
         }
 
         _hud.SetLimits(session.Research);
@@ -504,7 +549,14 @@ public partial class GameRoot : Node
 
     private void Refresh()
     {
+        var previous = _view;
         _view = _session.View();
+        if (previous is not null && _view.Tick > previous.Tick)
+        {
+            var growth = MusicDirector.Growth(previous.TotalBiomassKg, _view.TotalBiomassKg, (int)(_view.Tick - previous.Tick));
+            _growth += 0.2 * (growth - _growth);
+        }
+
         _world.Show(_view);
         if (_session.Mission is { } tracked)
         {
@@ -544,6 +596,8 @@ public partial class GameRoot : Node
             }
         }
 
+        PlayEventSound(events);
+
         if (_session.Failure is not null)
         {
             SetSpeed(0);
@@ -560,6 +614,8 @@ public partial class GameRoot : Node
     private void Celebrate(MissionTracker mission)
     {
         SetSpeed(0);
+        GameAudio.Instance?.Play(Sfx.Victory);
+        GameAudio.Instance?.Celebrate();
         if (_mission is null)
         {
             _hud.Banner("¡MISIÓN COMPLETADA!", $"{mission.Definition.Name} completada en el sol {_session.Tick}.");
@@ -674,6 +730,7 @@ public partial class GameRoot : Node
         }
 
         _session.RecordAction("analyze-region");
+        GameAudio.Instance?.Play(Sfx.Analyze);
         var (x, y) = _selected;
         var report = _session.Inspect(x, y);
         var neighbours = Enumerable.Range(-2, 5)
@@ -707,6 +764,7 @@ public partial class GameRoot : Node
         {
             var id = SaveSection();
             SaveCampaign();
+            GameAudio.Instance?.Play(Sfx.Save);
             _hud.Toast($"Partida guardada ({id}, sol {_session.Tick}).");
         }
         catch (Exception exception) when (exception is System.Data.Common.DbException or System.IO.IOException or InvalidOperationException)
@@ -715,14 +773,45 @@ public partial class GameRoot : Node
         }
     }
 
-    private void Load()
+    /// <summary>
+    /// Esc: closes the campaign menu (back to the game, or to the title when nothing is being
+    /// played), cancels a deployment, or opens the Esc menu with the modes and the game options.
+    /// </summary>
+    private void EscapePressed()
+    {
+        if (_menu.Visible)
+        {
+            if (_playing)
+            {
+                CloseMenu();
+            }
+            else
+            {
+                GameLaunch.Instance?.ToTitle();
+            }
+        }
+        else if (_hud.DeployMode)
+        {
+            _hud.EndDeploy();
+        }
+        else
+        {
+            _pause.Open(_modes.Current);
+        }
+    }
+
+    private void Load() => Load(null);
+
+    /// <summary>Loads save <paramref name="saveId"/>, or the most recent one when null.</summary>
+    private void Load(string? saveId)
     {
         try
         {
             _saves.MissionWorld = MissionWorld;
-            var loaded = _saves.LoadLatest(out var message, out var record, _campaign.Campaign.WorldFor, out var expedition);
+            var loaded = _saves.Load(saveId, out var message, out var record, _campaign.Campaign.WorldFor, out var expedition);
             if (loaded is not null)
             {
+                GameAudio.Instance?.Play(Sfx.Load);
                 _mission = _campaign.Campaign.Missions.FirstOrDefault(item => item.File == record?.MissionFile);
                 if (_mission is not null)
                 {
@@ -817,6 +906,21 @@ public partial class GameRoot : Node
         GetTree().Quit(error == Error.Ok ? 0 : 1);
     }
 
+    /// <summary>One sound per refresh: the most important event of the batch (ADR-018).</summary>
+    private static void PlayEventSound(IEnumerable<SessionEvent> events)
+    {
+        Sfx[] priority = [Sfx.Mission, Sfx.Extinction, Sfx.Error, Sfx.Mutation, Sfx.Deploy, Sfx.Experiment];
+        var sounds = events.Select(item => SfxSynth.ForEvent(item.Kind)).OfType<Sfx>().ToHashSet();
+        foreach (var sfx in priority)
+        {
+            if (sounds.Contains(sfx))
+            {
+                GameAudio.Instance?.Play(sfx);
+                return;
+            }
+        }
+    }
+
     /// <summary>Scripted showcase used for screenshots: a thriving colony at dusk.</summary>
     private async void Showcase(string path)
     {
@@ -892,6 +996,11 @@ public partial class GameRoot : Node
         if (_options.TryGetValue("mode", out var modeName) && Enum.TryParse<Martis.Application.GameMode>(modeName, ignoreCase: true, out var shotMode))
         {
             SwitchMode(shotMode);
+        }
+
+        if (_options.ContainsKey("esc-menu"))
+        {
+            _pause.Open(_modes.Current);
         }
 
         for (var i = 0; i < 30; i++)
@@ -1002,6 +1111,18 @@ public partial class GameRoot : Node
             && _climate.Heaters.Count == 1 && System.Math.Abs(_climate.Anomaly(hx, hy) - (warm - cold)) < 1e-3;
         GD.Print($"MARTIS smoke valley={valleyOk} places={_pois.Pois.Count(poi => poi.State != Martis.Simulation.Expedition.PoiState.Hidden)} bytes={expedition.Length}");
         roverOk &= valleyOk;
+        // Esc menu: modes F1–F4 and the game options live there; it stops time and a mode button switches mode.
+        SetSpeed(2);
+        EscapePressed();
+        var items = _pause.Items();
+        var paused = _pause.IsOpen && _time.Paused;
+        _pause.Back();
+        var menuOk = paused && !_pause.IsOpen && _time.EffectiveSpeed > 0
+            && items.Take(4).SequenceEqual(PauseMenu.Modes.Select(item => $"{item.Label}  {item.Key}"))
+            && items.Contains("Guardar partida  (F5)") && items.Contains("Cargar partida") && items.Contains("Nueva partida")
+            && SaveService.List(_saves.Path).Any(save => save.Id == _saves.CurrentId);
+        GD.Print($"MARTIS smoke escmenu={menuOk} items={string.Join("|", items)}");
+        roverOk &= menuOk;
         ok &= roverOk;
         GD.Print($"MARTIS smoke rover={roverOk} battery={_rover.Battery:0.##}");
         // M4: driving over the east edge opens the next section and catches it up; driving back

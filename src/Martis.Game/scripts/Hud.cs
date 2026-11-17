@@ -62,14 +62,6 @@ public partial class Hud : Control
 
     public event Action<Overlay>? OverlayChanged;
 
-    public event Action? SaveRequested;
-
-    public event Action? LoadRequested;
-
-    public event Action? NewGameRequested;
-
-    public event Action? MenuRequested;
-
     public event Action? AnalyzeRequested;
 
     /// <summary>The player pressed «Pista» (H8): the host asks the mission guidance and refreshes.</summary>
@@ -453,6 +445,8 @@ public partial class Hud : Control
         _toast.AddThemeColorOverride("font_color", bad ? new Color(1f, 0.5f, 0.45f) : new Color(1f, 0.93f, 0.85f));
         _toast.Visible = true;
         _toastTime = 4.0;
+        GameAudio.Instance?.Play(bad ? Martis.Audio.Sfx.Error : Martis.Audio.Sfx.Toast, -5f);
+        AnimateToast(bad);
     }
 
     public bool BannerVisible => _banner.Visible;
@@ -487,6 +481,7 @@ public partial class Hud : Control
         }
 
         _banner.Visible = true;
+        AnimateBanner();
     }
 
     public override void _Process(double delta)
@@ -553,10 +548,7 @@ public partial class Hud : Control
         row.AddChild(_overlay);
         _researchButton = Action("Investigación", () => ResearchRequested?.Invoke(), "Árbol tecnológico (R)");
         row.AddChild(_researchButton);
-        row.AddChild(Action("Guardar", () => SaveRequested?.Invoke(), "Guarda la partida (F5)"));
-        row.AddChild(Action("Cargar", () => LoadRequested?.Invoke(), "Carga la última partida (F9)"));
-        row.AddChild(Action("Nueva", () => NewGameRequested?.Invoke(), "Reinicia la misión con otra semilla"));
-        row.AddChild(Action("Menú", () => MenuRequested?.Invoke(), "Campaña: capítulos y misiones"));
+        // Guardar, Cargar, Nueva and Menú live in the Esc menu (PauseMenu), with the F1–F4 modes.
         AddChild(bar);
     }
 

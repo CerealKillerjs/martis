@@ -72,6 +72,9 @@
           "Martis.Simulation": "[0.1.0, )"
         }
       },
+      "martis.audio": {
+        "type": "Project"
+      },
       "martis.contracts": {
         "type": "Project",
         "dependencies": {

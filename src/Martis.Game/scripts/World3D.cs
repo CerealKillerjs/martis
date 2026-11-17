@@ -43,6 +43,9 @@ public partial class World3D : Node3D
     private float _clock;
     private float _scanAge = 99f;
 
+    /// <summary>World clock when each cell's colony appeared, or -1 (dome grow-in animation).</summary>
+    private float[] _born = [];
+
     public Terrain Ground { get; private set; } = null!;
 
     /// <summary>The sun, copied by the real-scale view (M2).</summary>
@@ -158,6 +161,12 @@ public partial class World3D : Node3D
         var water = Range(view.WaterKg);
         var multimesh = _domes.Multimesh;
         var visible = 0;
+        if (_born.Length != cells)
+        {
+            _born = new float[cells];
+            Array.Fill(_born, -1f);
+        }
+
         for (var i = 0; i < cells; i++)
         {
             var photo = LogScale(view.PhototrophBiomassKg[i]);
@@ -174,7 +183,13 @@ public partial class World3D : Node3D
 
             if (view.BiomassKg[i] <= 1e-7f)
             {
+                _born[i] = -1f;
                 continue;
+            }
+
+            if (_born[i] < 0f)
+            {
+                _born[i] = _clock;
             }
 
             var total = view.BiomassKg[i];
@@ -196,6 +211,7 @@ public partial class World3D : Node3D
                 var basis = Basis.Identity.Scaled(new Vector3(size, size * 0.75f, size));
                 multimesh.SetInstanceTransform(visible, new Transform3D(basis, position));
                 multimesh.SetInstanceColor(visible, colour);
+                multimesh.SetInstanceCustomData(visible, new Color(_born[i] + (d * 0.25f), 0, 0, 0));
                 visible++;
             }
         }
@@ -244,6 +260,7 @@ public partial class World3D : Node3D
             _scanAge += dt;
             _terrainMaterial.SetShaderParameter("scan_age", _scanAge);
         }
+        _colonyMaterial.SetShaderParameter("clock", _clock);
         UpdateSun();
         for (var i = _pulses.Count - 1; i >= 0; i--)
         {
@@ -389,6 +406,7 @@ public partial class World3D : Node3D
         {
             TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
             UseColors = true,
+            UseCustomData = true,
             Mesh = mesh,
             InstanceCount = cells * MaxDomesPerCell,
             VisibleInstanceCount = 0,
