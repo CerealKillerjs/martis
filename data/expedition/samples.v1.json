@@ -1,0 +1,133 @@
+{
+  "metadata": {
+    "schema": "martis.samples",
+    "id": "muestreo_valle",
+    "name": "Muestreo con el rover y análisis en el laboratorio",
+    "version": "1",
+    "status": "PROPOSED",
+    "date": "2026-11-17",
+    "author": "MARTIS Motor (V3)",
+    "review": "Documento Maestro v2.0 §3.1, §4, §6.1 y §32. Valores GAME_BALANCE pendientes de ajuste.",
+    "samples": {
+      "capacity": "samples.capacity",
+      "battery_cost": "samples.battery",
+      "analysis_sols": "samples.analysis_sols",
+      "delivery_radius_cells": "samples.delivery_radius",
+      "research_regolith": "samples.research_regolith",
+      "research_biological": "samples.research_biological"
+    }
+  },
+  "location": {
+    "site": "model"
+  },
+  "parameters": [
+    {
+      "id": "samples.capacity",
+      "field": "capacity",
+      "value": 4,
+      "unit": "muestras",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el muestreo (V3); Daniel debe ajustarlo jugando.",
+      "rationale": "Muestras que caben en el contenedor del rover.",
+      "range": [
+        1,
+        20
+      ]
+    },
+    {
+      "id": "samples.battery",
+      "field": "battery_cost",
+      "value": 0.02,
+      "unit": "1",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el muestreo (V3); Daniel debe ajustarlo jugando.",
+      "rationale": "Batería que gasta tomar una muestra.",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "samples.analysis_sols",
+      "field": "analysis_sols",
+      "value": 2,
+      "unit": "soles",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el muestreo (V3); Daniel debe ajustarlo jugando.",
+      "rationale": "Soles que tarda el laboratorio en analizar una muestra; las muestras esperan en cola.",
+      "range": [
+        1,
+        30
+      ]
+    },
+    {
+      "id": "samples.delivery_radius",
+      "field": "delivery_radius_cells",
+      "value": 4.0,
+      "unit": "casillas",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el muestreo (V3); Daniel debe ajustarlo jugando.",
+      "rationale": "Distancia al módulo a la que el rover entrega las muestras al laboratorio.",
+      "range": [
+        0.5,
+        12.0
+      ]
+    },
+    {
+      "id": "samples.research_regolith",
+      "field": "research_regolith",
+      "value": 2.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el muestreo (V3); Daniel debe ajustarlo jugando.",
+      "rationale": "Puntos de investigación por una muestra de regolito analizada.",
+      "range": [
+        0.0,
+        50.0
+      ]
+    },
+    {
+      "id": "samples.research_biological",
+      "field": "research_biological",
+      "value": 5.0,
+      "unit": "PI",
+      "classification": "GAME_BALANCE",
+      "scope": "model",
+      "version": "1",
+      "status": "PROPOSED",
+      "used_in_v0": true,
+      "source": null,
+      "note": "Valor de juego propuesto para el muestreo (V3); Daniel debe ajustarlo jugando.",
+      "rationale": "Puntos de investigación por una muestra biológica analizada.",
+      "range": [
+        0.0,
+        50.0
+      ]
+    }
+  ]
+}

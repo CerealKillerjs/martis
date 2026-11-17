@@ -239,6 +239,7 @@ public partial class GameRoot : Node
         {
             _session.Advance(1);
             OrbitalPass();
+            AnalyzeSamples();
             Refresh();
         }
 
@@ -270,6 +271,9 @@ public partial class GameRoot : Node
                     break;
                 case Key.C when Exploring:
                     ScanHere();
+                    break;
+                case Key.M when Exploring:
+                    CollectHere();
                     break;
                 case Key.F5:
                     Save();
@@ -353,6 +357,7 @@ public partial class GameRoot : Node
             _menu.LoadChosen += Load;
             _menu.ResumeChosen += CloseMenu;
             _hud.AnalyzeRequested += Analyze;
+            _hud.GenomeRequested += DesignFromSample;
             _hud.ExperimentRequested += Experiment;
             _hud.DeployToggled += on => _hud.Toast(on ? "Elige una celda para la colonia." : "Despliegue cancelado.");
             _hud.SetOrganisms(session.Organisms);
@@ -366,6 +371,7 @@ public partial class GameRoot : Node
         }
 
         ResetKnowledge();
+        ResetSamples();
         Select(session.Width / 2, session.Height / 2);
         Refresh();
         var colony = Array.FindIndex(_view!.BiomassKg, kg => kg > 0f);
@@ -691,6 +697,11 @@ public partial class GameRoot : Node
         _session.Advance(sols);
         _world.PlaceLander(32 + o, 32 + o);
         ShowcaseKnowledge(o);
+        if (_options.ContainsKey("samples"))
+        {
+            ShowcaseSamples(o);
+        }
+
         Select(32 + o, 32 + o);
         Refresh();
         _hud.ShowForecast(_session.Experiment("phototroph_a01", 32 + o, 32 + o, 0.5, design, 40));
@@ -775,6 +786,14 @@ public partial class GameRoot : Node
         var knowledgeOk = blindRefused && _knowledge.Level(rx, ry) == Martis.Simulation.Expedition.KnowledgeLevel.Measured && _orders.All.Count == 3;
         GD.Print($"MARTIS smoke knowledge={knowledgeOk} estimated={_knowledge.Coverage(Martis.Simulation.Expedition.KnowledgeLevel.Estimated):0.###}");
         roverOk &= knowledgeOk;
+        // V3: a sample of measured ground is analysed in the lab after a few sols.
+        CollectHere();
+        var collected = _samples.All.Count == 1 && _samples.All[0].State == Martis.Simulation.Expedition.SampleState.Analyzing;
+        _session.Advance(_samples.Definition.AnalysisSols);
+        AnalyzeSamples();
+        var samplesOk = collected && _samples.All[0].State == Martis.Simulation.Expedition.SampleState.Analyzed;
+        GD.Print($"MARTIS smoke samples={samplesOk} kind={_samples.All.FirstOrDefault()?.Kind}");
+        roverOk &= samplesOk;
         ok &= roverOk;
         GD.Print($"MARTIS smoke rover={roverOk} battery={_rover.Battery:0.##}");
         GD.Print($"MARTIS smoke ok={ok} save={id} tick={_session.Tick} biomass={biomass:0.######} {message} {error}");

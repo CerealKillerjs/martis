@@ -90,6 +90,9 @@ public sealed class Rover
     /// <summary>Charge from 0 (empty, crawling) to 1 (full).</summary>
     public double Battery { get; private set; } = 1.0;
 
+    /// <summary>The lander's cell once it is down, else <c>null</c>.</summary>
+    public (int X, int Y)? Lander => _lander;
+
     /// <summary>True while parked within the lander's charging radius.</summary>
     public bool Charging { get; private set; }
 

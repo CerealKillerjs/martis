@@ -87,6 +87,7 @@ public partial class GameRoot
         _time.Cap(ModeController.MaxSpeed(mode));
         _hud.SetSpeed(_time.EffectiveSpeed);
         _modeBar!.Show(mode);
+        _hud.SetSamplesVisible(mode == GameMode.Laboratory);
         _planetary!.Visible = mode == GameMode.Planetary;
         if (_gauge is not null)
         {
@@ -161,6 +162,7 @@ public partial class GameRoot
         else
         {
             _planetary!.Visible = false;
+            _hud.SetSamplesVisible(false);
             if (_gauge is not null)
             {
                 _gauge.Visible = false;
@@ -184,6 +186,7 @@ public partial class GameRoot
             "deploy" => "Siembra",
             "analyze" => "Análisis",
             "scan" => "Escaneo",
+            "sample" => "Muestreo",
             _ => order.Kind,
         };
         var state = order.Status == OrderStatus.Done ? "✓" : "✗";
