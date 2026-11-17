@@ -20,6 +20,7 @@ public sealed class MusicEngine
     private const int PianoVoices = 32;
     private const int StringPlayers = 18;
     private const int MaxNotesPerPhrase = 96;
+    private const int ScoreChord = -2;
     private const float StringAttack = 2.8f;
     private const float StringRelease = 3f;
 
@@ -32,6 +33,8 @@ public sealed class MusicEngine
     private readonly MasterBus _bus = new(SampleRate, reverbSeconds: 2.2f);
     private readonly Section _sectionLeft = new(SampleRate);
     private readonly Section _sectionRight = new(SampleRate);
+    private readonly Organ _organ = new(SampleRate);
+    private int _titleStep;
     private MusicStyle _style;
     private MusicStyle _next;
     private long _clock;
@@ -153,7 +156,11 @@ public sealed class MusicEngine
         while (_phraseCursor < _phraseLength && _phrase[_phraseCursor].At <= _clock)
         {
             var note = _phrase[_phraseCursor++];
-            if (note.Midi < 0)
+            if (note.Midi == ScoreChord)
+            {
+                PlayScoreChord(note.Degree);
+            }
+            else if (note.Midi < 0)
             {
                 ChangeChord(note.Degree);
             }
@@ -211,6 +218,9 @@ public sealed class MusicEngine
         stringsL = _sectionLeft.Process(stringsL, _cutoff) * _padLevel;
         stringsR = _sectionRight.Process(stringsR, _cutoff * 1.04f) * _padLevel;
 
+        // Organ (title theme only).
+        _organ.Next(out var organL, out var organR);
+
         // Drone: a low sine and its fifth, breathing slowly.
         _dronePhase = Wrap(_dronePhase + (_droneHz / SampleRate));
         _fifthPhase = Wrap(_fifthPhase + (_droneHz * 1.5 / SampleRate));
@@ -232,10 +242,10 @@ public sealed class MusicEngine
         _master = MathF.Min(1f, _master + (dt / 2f));
         var fade = _master * _master;
         _bus.Process(
-            (pianoL + stringsL + drone + beat) * fade,
-            (pianoR + stringsR + drone + beat) * fade,
-            (pianoL + (stringsL * 0.8f)) * fade,
-            (pianoR + (stringsR * 0.8f)) * fade,
+            (pianoL + stringsL + organL + drone + beat) * fade,
+            (pianoR + stringsR + organR + drone + beat) * fade,
+            (pianoL + (stringsL * 0.8f) + (organL * 1.3f)) * fade,
+            (pianoR + (stringsR * 0.8f) + (organR * 1.3f)) * fade,
             out left,
             out right);
         _clock++;
@@ -252,6 +262,14 @@ public sealed class MusicEngine
         var style = _style;
         _phraseLength = 0;
         _phraseCursor = 0;
+        if (style.Scored)
+        {
+            ComposeTitleSection();
+            return;
+        }
+
+        _organ.Release();
+        _titleStep = 0;
         var bars = 2 + _random.Next(3);
         var start = _clock;
         for (var bar = 0; bar < bars; bar++)
@@ -324,6 +342,72 @@ public sealed class MusicEngine
         Array.Sort(_phrase, 0, _phraseLength, NoteOrder.Instance);
         _phraseEnd = end + Beats(2);
         _nextPhrase = _phraseEnd + (long)(style.RestSeconds * _random.Range(0.7f, 1.4f) * SampleRate);
+    }
+
+    /// <summary>
+    /// The title screen plays the written theme (<see cref="TitleTheme"/>) one section at a
+    /// time, so a change of mood still waits at most one section.
+    /// </summary>
+    private void ComposeTitleSection()
+    {
+        var number = TitleTheme.Order[_titleStep % TitleTheme.Order.Length];
+        var section = TitleTheme.Sections[number];
+        var shift = _style.Root - TitleTheme.Home;
+        var start = _clock;
+        for (var bar = 0; bar < section.Bars.Length; bar++)
+        {
+            var barStart = start + Beats(4 * bar);
+            var chord = section.Bars[bar];
+            Add(barStart, ScoreChord, 0f, (number * 16) + bar);
+            if (section.Bass)
+            {
+                Add(barStart, chord.Organ[1] - 12 + shift, 0.34f);
+            }
+
+            if (section.Ostinato)
+            {
+                for (var step = 0; step < 8; step++)
+                {
+                    var velocity = (step % 2 == 0 ? 0.30f : 0.22f) + (step == 0 ? 0.04f : 0f);
+                    Add(barStart + Beats(step * 0.5), chord.Cell[step % 4] + shift, velocity);
+                }
+            }
+        }
+
+        foreach (var note in section.Melody)
+        {
+            Add(start + Beats((4 * note.Bar) + note.Beat), note.Midi + shift, note.Velocity);
+        }
+
+        Array.Sort(_phrase, 0, _phraseLength, NoteOrder.Instance);
+        var end = start + Beats(4 * section.Bars.Length);
+        _titleStep++;
+        var loops = _titleStep % TitleTheme.Order.Length == 0;
+        _phraseEnd = end;
+        _nextPhrase = end + (loops ? (long)(TitleTheme.LoopRestSeconds * SampleRate) : 0);
+        if (loops)
+        {
+            Add(end, ScoreChord, 0f, -1);
+        }
+    }
+
+    private void PlayScoreChord(int code)
+    {
+        for (var v = 0; v < _piano.Length; v++)
+        {
+            _piano[v].Damp();
+        }
+
+        if (code < 0)
+        {
+            _organ.Release();
+            return;
+        }
+
+        var section = TitleTheme.Sections[code / 16];
+        var shift = _style.Root - TitleTheme.Home;
+        var organ = section.Bars[code % 16].Organ.Select(m => m + shift).ToArray();
+        _organ.SetChord(organ, section.Registration, section.Swell);
     }
 
     private void Add(long at, int midi, float velocity, int degree = 0)
@@ -416,7 +500,7 @@ public sealed class MusicEngine
     /// </summary>
     private static float CueTrim(MusicMood mood) => mood switch
     {
-        MusicMood.Title => Gain(18.9f),
+        MusicMood.Title => Gain(15.6f),
         MusicMood.Day => Gain(19f),
         MusicMood.Night => Gain(19.4f),
         MusicMood.Thriving => Gain(17.1f),
