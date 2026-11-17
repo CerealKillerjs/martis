@@ -46,3 +46,5 @@ Cada misión tiene un test que la completa con la investigación del capítulo 4
 ### Fuera de alcance
 
 La especie que transforma su mundo (herramientas, construcción, terraformación) queda para después de H8. Necesita acciones de los organismos sobre el entorno que el motor todavía no modela.
+
+![Briefing de la misión 5.2 «Mente» con la barra del índice de inteligencia](../images/h7-capitulo5.png)
