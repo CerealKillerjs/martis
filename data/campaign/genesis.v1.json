@@ -90,6 +90,14 @@
           "kind": "restoration"
         },
         {
+          "id": "first_heat",
+          "file": "first_heat.v1.json",
+          "teaches": [
+            "calentamiento_regional"
+          ],
+          "kind": "terraforming"
+        },
+        {
           "id": "cold_frontier",
           "file": "cold_frontier.v1.json",
           "teaches": [
@@ -354,6 +362,12 @@
       "title": "Ciclo cerrado",
       "text": "Los descomponedores devuelven al suelo el carbono y el agua de la biomasa muerta. Sin ellos, una colonia agota su entorno y muere. Un Marte terraformado necesita ciclos cerrados.",
       "epistemic": "science"
+    },
+    {
+      "id": "calentamiento_regional",
+      "title": "Calentamiento regional",
+      "text": "Un calefactor templa el suelo de su entorno, pero el calor tarda en llegar y en irse, cuesta energía y mantenimiento, y favorece a unos organismos mientras perjudica a los adaptados al frío.",
+      "epistemic": "model"
     },
     {
       "id": "extremofilos",

@@ -249,6 +249,7 @@ public partial class CampaignMenu : Control
         "awakening" => "Despertar",
         "sampling" => "Primeras muestras",
         "stations" => "Ojos en el terreno",
+        "first_heat" => "Primer calor",
         "first_colony" => "Primera colonia",
         "selection" => "Presión selectiva",
         "gradients" => "Gradientes",

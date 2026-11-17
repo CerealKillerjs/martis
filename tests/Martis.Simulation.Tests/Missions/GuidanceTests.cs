@@ -158,6 +158,16 @@ public sealed class GuidanceTests
     }
 
     [Fact]
+    public void FirstHeatTeachesToBuildAndKeepAHeater()
+    {
+        var heat = MissionDefinition.LoadPublished(Repo.Root(), "first_heat.v1.json");
+
+        Assert.Equal(["build-heater", "repair-heater"], heat.Objectives.Select(objective => objective.Action));
+        Assert.Equal(MissionKind.Terraforming, Campaign.Mission("first_heat").Kind);
+        Assert.Equal(["calentamiento_regional"], Campaign.Mission("first_heat").Concepts);
+    }
+
+    [Fact]
     public void TheCodexFillsAsMissionsAreFinished()
     {
         var progress = new CampaignProgress(Campaign);
