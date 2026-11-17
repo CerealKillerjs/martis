@@ -152,7 +152,7 @@ public sealed class GuidanceTests
         var stations = MissionDefinition.LoadPublished(Repo.Root(), "stations.v1.json");
 
         Assert.True(stations.Sequential);
-        Assert.Equal(["send-rover", "rover-arrived", "build-station"], stations.Objectives.Select(objective => objective.Action));
+        Assert.Equal(["send-rover", "rover-arrived", "build-station", "discover-poi"], stations.Objectives.Select(objective => objective.Action));
         Assert.Equal(MissionKind.Reconnaissance, Campaign.Mission("stations").Kind);
         Assert.Equal(["red_de_medida"], Campaign.Mission("stations").Concepts);
     }

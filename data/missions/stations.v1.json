@@ -9,7 +9,7 @@
     "author": "MARTIS Motor (campaña H8)",
     "review": "Misión de reconocimiento de la Era I (documento maestro v2.0, §11; ADR-028 y ADR-031). Sin umbrales numéricos.",
     "sequential": true,
-    "briefing": "Un solo rover no puede medirlo todo. Mándalo lejos con el piloto automático y deja estaciones fijas que midan el terreno por ti cada sol.",
+    "briefing": "Un solo rover no puede medirlo todo. Mándalo lejos con el piloto automático y deja estaciones fijas que midan el terreno por ti cada sol. Busca las anomalías del valle: alguna esconde hielo, salmuera o un buen abrigo.",
     "debrief": "Ya tienes una red de medida: el rover explora y las estaciones vigilan. Recuerda que el rover se desgasta y que las estaciones se averían; mantenerlas es parte del trabajo.",
     "objectives": [
       {
@@ -32,6 +32,13 @@
         "action": "build-station",
         "title": "Monta una estación",
         "hint": "En Exploración (F1), sobre terreno medido, pulsa B. Mide un radio de 3 celdas cada sol."
+      },
+      {
+        "id": "discover_poi",
+        "type": "action",
+        "action": "discover-poi",
+        "title": "Descubre un lugar del valle",
+        "hint": "Las «? anomalía» del mapa son lugares sin confirmar. Mídelas de cerca con C o con una estación para descubrirlas."
       }
     ]
   },
