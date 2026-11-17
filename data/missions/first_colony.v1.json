@@ -22,7 +22,7 @@
         "type": "design",
         "capability": "photoautotrophy",
         "title": "Diseñar un fotótrofo",
-        "hint": "En el laboratorio, cambia al menos un gen del fotótrofo (por ejemplo, sube UV_PROTECTION). Se cumple cuando tu diseño vive en el mapa."
+        "hint": "En el laboratorio (F3), cambia al menos un gen del fotótrofo (por ejemplo, sube UV_PROTECTION). Se cumple cuando tu diseño vive en el mapa."
       },
       {
         "id": "run_experiment",
@@ -36,7 +36,7 @@
         "type": "deploy",
         "capability": "photoautotrophy",
         "title": "Desplegar la colonia",
-        "hint": "Pulsa «Desplegar» y haz clic en el terreno. Un descomponedor cerca recicla el agua y el carbono."
+        "hint": "Lleva el rover al sitio (F1 y WASD) y pulsa F para sembrar donde está, o pulsa «Desplegar» y haz clic dentro de su alcance. Un descomponedor cerca recicla el agua y el carbono."
       },
       {
         "id": "sustain_generations",

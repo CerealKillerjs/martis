@@ -132,7 +132,7 @@ public sealed class GuidanceTests
         var awakening = MissionDefinition.LoadPublished(Repo.Root(), "awakening.v1.json");
 
         Assert.Contains("rover", Campaign.Mission("awakening").Concepts);
-        Assert.Equal(["rover-view", "drive-rover", "orbital-view"], awakening.Objectives.Where(objective => objective.Action is "rover-view" or "drive-rover" or "orbital-view").Select(objective => objective.Action));
+        Assert.Equal(["rover-view", "drive-rover", "orbital-view", "laboratory-view", "planetary-view"], awakening.Objectives.Where(objective => objective.Action is "rover-view" or "drive-rover" or "orbital-view" or "laboratory-view" or "planetary-view").Select(objective => objective.Action));
     }
 
     [Fact]

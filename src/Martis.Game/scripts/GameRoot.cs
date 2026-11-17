@@ -15,20 +15,16 @@ namespace Martis.Game;
 /// and wires the 3D world and the HUD. Command-line options after <c>--</c>:
 /// <c>--seed=N</c>, <c>--shot=path.png</c> (scripted demo, screenshot, quit),
 /// <c>--smoke</c> (headless check: play 30 sols, save, load, quit with code 0/1),
-/// <c>--shot=path.png --rover</c> (the same demo seen from the rover's chase camera, J1).
+/// <c>--shot=path.png --rover</c> (the same demo seen from the rover's chase camera, J1),
+/// <c>--shot=path.png --mode=planetary|laboratory|strategic|exploration</c> (V1 modes).
 /// </summary>
 public partial class GameRoot : Node
 {
-    /// <summary>Real seconds per sol for each speed button.</summary>
-    private static readonly double[] SecondsPerSol = [double.PositiveInfinity, 2.0, 0.5, 0.125];
-
     private string _dataRoot = string.Empty;
     private GameSession _session = null!;
     private World3D _world = null!;
     private Hud _hud = null!;
     private SaveService _saves = null!;
-    private int _speed = 1;
-    private double _solProgress;
     private long _seenEvents;
     private (int X, int Y) _selected = (-1, -1);
     private bool _celebrated;
@@ -167,6 +163,7 @@ public partial class GameRoot : Node
     {
         SetSpeed(0);
         _hud.Visible = false;
+        SetModeUiVisible(false);
         _world.Camera.Idle = true;
         _menu.Show(_campaign, _playing);
     }
@@ -175,6 +172,7 @@ public partial class GameRoot : Node
     {
         _menu.Visible = false;
         _hud.Visible = true;
+        SetModeUiVisible(true);
         _world.Camera.Idle = false;
     }
 
@@ -265,21 +263,14 @@ public partial class GameRoot : Node
             return;
         }
 
-        var seconds = SecondsPerSol[_speed];
-        if (_session.Failure is null && !double.IsInfinity(seconds))
+        if (_session.Failure is null && _time.Advance(delta) > 0)
         {
-            _solProgress += delta / seconds;
-            if (_solProgress >= 1.0)
-            {
-                _solProgress -= 1.0;
-                _session.Advance(1);
-                Refresh();
-            }
-
-            _solProgress = Math.Min(_solProgress, 1.0);
+            _session.Advance(1);
+            Refresh();
         }
 
-        _world.TimeOfDay = (float)((_solProgress + 0.25) % 1.0);
+        _world.TimeOfDay = (float)((_time.SolProgress + 0.25) % 1.0);
+        UpdatePlanetary();
         UpdateRover(delta);
         _hud.ShowStatus(_view ?? _session.View(), _world.TimeOfDay);
     }
@@ -293,10 +284,15 @@ public partial class GameRoot : Node
             switch (key.Keycode)
             {
                 case Key.Space:
-                    SetSpeed(_speed == 0 ? 1 : 0);
+                    _time.TogglePause();
+                    _hud.SetSpeed(_time.EffectiveSpeed);
                     break;
                 case Key.Escape:
                     _hud.EndDeploy();
+                    BackFromMode();
+                    break;
+                case Key.F when Exploring:
+                    SeedHere();
                     break;
                 case Key.F5:
                     Save();
@@ -515,8 +511,8 @@ public partial class GameRoot : Node
 
     private void SetSpeed(int index)
     {
-        _speed = index;
-        _hud.SetSpeed(index);
+        _time.Request(index);
+        _hud.SetSpeed(_time.EffectiveSpeed);
     }
 
     private void SetOverlay(Overlay overlay)
@@ -542,8 +538,10 @@ public partial class GameRoot : Node
 
     private void Deploy(int x, int y)
     {
+        var order = _orders.Issue("deploy", FormattableString.Invariant($"({x}, {y})"), Exploring ? "rover" : "estación", _session.Tick, _hud.BiomassKg);
         if (_session.Introduce(_hud.SelectedOrganism, x, y, _hud.BiomassKg, _hud.Design(), out var error))
         {
+            Resolve(_orders.Complete(order.Id, _session.Tick, FormattableString.Invariant($"{_hud.BiomassKg:0.###} kg programados")));
             _hud.EndDeploy();
             _hud.Toast($"Inoculación programada en ({x}, {y}). Llegará al empezar el próximo sol.");
             if (!_world.HasLander)
@@ -557,6 +555,7 @@ public partial class GameRoot : Node
         }
         else
         {
+            Resolve(_orders.Fail(order.Id, _session.Tick, error ?? "Despliegue rechazado"));
             _hud.Toast(error ?? "Despliegue rechazado.", bad: true);
         }
     }
@@ -741,7 +740,7 @@ public partial class GameRoot : Node
         }
 
         var hour = _options.TryGetValue("hour", out var h) ? float.Parse(h, CultureInfo.InvariantCulture) : 0.7f;
-        _solProgress = (hour - 0.25 + 1.0) % 1.0;
+        _time.SetProgress(hour - 0.25 + 1.0);
         var centre = _world.Ground.CellCenter(32 + o, 32 + o);
         var distance = _options.TryGetValue("distance", out var d) ? float.Parse(d, CultureInfo.InvariantCulture) : 48f;
         var yaw = _options.TryGetValue("yaw", out var w) ? float.Parse(w, CultureInfo.InvariantCulture) : 0.9f;
@@ -758,9 +757,14 @@ public partial class GameRoot : Node
             var at = _world.CellPoint(_rover.X, _rover.Y);
             var behind = MathF.Atan2(-MathF.Cos(heading), -MathF.Sin(heading));
             _world.Camera.Frame(at + (Vector3.Up * 0.8f), 12f, behind + 0.5f, 0.3f, snap: true);
-            _world.Camera.BeginChase();
+            SwitchMode(Martis.Application.GameMode.Exploration);
             _hud.Toast("Expedición · conduce el rover y siembra dentro del anillo");
         }
+        if (_options.TryGetValue("mode", out var modeName) && Enum.TryParse<Martis.Application.GameMode>(modeName, ignoreCase: true, out var shotMode))
+        {
+            SwitchMode(shotMode);
+        }
+
         for (var i = 0; i < 30; i++)
         {
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -791,6 +795,16 @@ public partial class GameRoot : Node
         // Expedición (J1): the rover loaded its data, drives, and gates deployments by reach.
         var start = _rover.X;
         var roverOk = _rover.CanReach(_session.Width / 2, _session.Height / 2) && !_rover.CanReach(0, 0) && _rover.Drive(1, 0, 0.5) > 0 && _rover.X > start;
+        // V1: switching modes never touches the simulation; orders are registered.
+        var tick = _session.Tick;
+        foreach (var mode in Enum.GetValues<Martis.Application.GameMode>())
+        {
+            SwitchMode(mode);
+        }
+
+        SwitchMode(Martis.Application.GameMode.Strategic);
+        Deploy(_session.Width / 2, _session.Height / 2);
+        roverOk &= _session.Tick == tick && _orders.All.Count == 1;
         ok &= roverOk;
         GD.Print($"MARTIS smoke rover={roverOk} battery={_rover.Battery:0.##}");
         GD.Print($"MARTIS smoke ok={ok} save={id} tick={_session.Tick} biomass={biomass:0.######} {message} {error}");

@@ -66,6 +66,12 @@
           "SQLitePCLRaw.core": "3.0.5"
         }
       },
+      "martis.application": {
+        "type": "Project",
+        "dependencies": {
+          "Martis.Simulation": "[0.1.0, )"
+        }
+      },
       "martis.contracts": {
         "type": "Project",
         "dependencies": {

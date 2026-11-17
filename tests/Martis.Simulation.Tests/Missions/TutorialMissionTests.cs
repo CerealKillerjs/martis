@@ -18,7 +18,7 @@ public sealed class TutorialMissionTests
 
         Assert.True(mission.Sequential);
         Assert.Equal(
-            ["orbit_camera", "zoom_camera", "select_overlay", "inspect_cell", "rover_view", "drive_rover", "orbital_view", "analyze_region", "run_time"],
+            ["orbit_camera", "zoom_camera", "select_overlay", "inspect_cell", "rover_view", "drive_rover", "orbital_view", "laboratory_view", "planetary_view", "analyze_region", "run_time"],
             mission.Objectives.Select(objective => objective.Id));
         Assert.Equal(ObjectiveKind.Elapsed, mission.Objectives[^1].Kind);
     }
@@ -52,7 +52,7 @@ public sealed class TutorialMissionTests
         var waiting = session.Mission!.Status().Single(status => status.Id == "run_time");
         Assert.Equal(0, waiting.Progress);
 
-        foreach (var action in new[] { "orbit-camera", "zoom-camera", "select-overlay", "inspect-cell", "rover-view", "drive-rover", "orbital-view", "analyze-region" })
+        foreach (var action in new[] { "orbit-camera", "zoom-camera", "select-overlay", "inspect-cell", "rover-view", "drive-rover", "orbital-view", "laboratory-view", "planetary-view", "analyze-region" })
         {
             session.RecordAction(action);
         }

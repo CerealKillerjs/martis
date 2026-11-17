@@ -2,7 +2,7 @@
 
 - **Estado:** Propuesto, 2026-11-17. Los umbrales son GAME_BALANCE.
 - **Fuente:** petición de Daniel del 2026-11-17 («ir guiando al jugador durante la campaña para que vaya aprendiendo los conceptos y a ser autónomo») y el documento maestro v2.0 (§2, §5, §11, §30, §32 y §36).
-- **Numeración:** el ADR-027 queda reservado para el rediseño del documento maestro.
+- **Base:** va sobre los modos de juego de V1 ([ADR-027](ADR-027-modos-sobre-un-estado.md)).
 
 ## Decisiones
 
@@ -35,7 +35,7 @@
 
 ### El capítulo 1 enseña el rover
 
-La misión 1.1 añade tres pasos con las acciones del rover de J1 ([ADR-026](ADR-026-expedicion-rover.md)): subir al rover (Tab), conducirlo (WASD) y volver a la vista orbital. Desde J1 solo se siembra cerca del rover. Las acciones `scan-site` y `collect-sample` de V2 y V3 podrán entrar en la guía cuando existan.
+La misión 1.1 añade cinco pasos con las acciones de J1 ([ADR-026](ADR-026-expedicion-rover.md)) y V1 ([ADR-027](ADR-027-modos-sobre-un-estado.md)): modo Exploración (F1 o Tab), conducir el rover (WASD), modo Estratégico (F2), Laboratorio (F3) y Planetario (F4). La pista de despliegue de 1.2 enseña a sembrar con F donde está el rover. Las acciones `scan-site` y `collect-sample` de V2 y V3 podrán entrar en la guía cuando existan.
 
 ## Fuera de alcance
 

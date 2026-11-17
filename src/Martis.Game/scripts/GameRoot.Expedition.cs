@@ -18,18 +18,8 @@ public partial class GameRoot
     private bool _landed;
     private bool _droveOnce;
 
-    /// <summary>True while the chase camera follows the rover.</summary>
-    private bool Driving => _world.Camera.Chasing;
-
-    /// <summary>Tab is read before the interface so a focused button cannot swallow it.</summary>
-    public override void _Input(InputEvent @event)
-    {
-        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Tab } && _session is not null && !_menu.Visible)
-        {
-            ToggleDriving();
-            GetViewport().SetInputAsHandled();
-        }
-    }
+    /// <summary>True while the chase camera follows the rover (exploration mode).</summary>
+    private bool Driving => Exploring;
 
     /// <summary>A new session gets a fresh rover: at the lander when colonies exist, else at the map centre.</summary>
     private void ResetRover(int landerCell)
@@ -51,7 +41,7 @@ public partial class GameRoot
             _hud.GetParent().AddChild(_gauge);
         }
 
-        _world.Camera.EndChase();
+        ApplyMode();
         PoseRover(0f);
     }
 
@@ -59,21 +49,6 @@ public partial class GameRoot
     {
         _landed = true;
         _rover.Landed(x, y);
-    }
-
-    private void ToggleDriving()
-    {
-        if (Driving)
-        {
-            _world.Camera.EndChase();
-            _world.Camera.FocusOn(_world.Rover.Position);
-            Act("orbital-view");
-        }
-        else
-        {
-            _world.Camera.BeginChase();
-            Act("rover-view");
-        }
     }
 
     /// <summary>A click in deploy mode becomes a deployment only within the rover's reach.</summary>
@@ -86,7 +61,7 @@ public partial class GameRoot
 
         var distance = _rover.DistanceTo(x, y);
         _hud.Toast(
-            FormattableString.Invariant($"Fuera del alcance del rover ({distance:0} casillas, alcance {_rover.Definition.ReachCells:0}). Pulsa Tab y acércate con WASD."),
+            FormattableString.Invariant($"Fuera del alcance del rover ({distance:0} casillas, alcance {_rover.Definition.ReachCells:0}). Pulsa Tab, acércate con WASD y siembra con F."),
             bad: true);
         return false;
     }

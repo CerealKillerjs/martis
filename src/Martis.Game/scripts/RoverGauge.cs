@@ -59,7 +59,7 @@ public partial class RoverGauge : PanelContainer
                     : $"Batería {percent} %";
         _state.AddThemeColorOverride("font_color", landed && rover.Battery <= 0 ? new Color(1f, 0.55f, 0.4f) : new Color(1, 1, 1, 0.85f));
         _keys.Text = driving
-            ? "WASD conducir · Q/E o clic der. mirar · Tab vista orbital"
-            : "Tab conducir el rover · siembra dentro del anillo";
+            ? "WASD conducir · F sembrar aquí · Q/E mirar · Tab estratégico"
+            : "Tab o F1 conducir el rover · siembra dentro del anillo";
     }
 }

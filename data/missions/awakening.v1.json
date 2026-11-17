@@ -9,7 +9,7 @@
     "author": "MARTIS Motor (campaña H1)",
     "review": "Misión de la campaña «Génesis» (ADR-019). Umbrales GAME_BALANCE propuestos.",
     "sequential": true,
-    "briefing": "Sol 0. La sonda MARTIS acaba de posarse en el cráter Gale. Antes de sembrar vida, aprende a leer el planeta: mueve la cámara, consulta las capas de datos, inspecciona el terreno y prueba el rover sembrador.",
+    "briefing": "Sol 0. La sonda MARTIS acaba de posarse en el cráter Gale. Antes de sembrar vida, aprende a leer el planeta: mueve la cámara, consulta las capas de datos, inspecciona el terreno y recorre los cuatro modos de la misión: Exploración, Estratégico, Laboratorio y Planetario.",
     "objectives": [
       {
         "id": "orbit_camera",
@@ -43,8 +43,8 @@
         "id": "rover_view",
         "type": "action",
         "action": "rover-view",
-        "title": "Sube al rover",
-        "hint": "Pulsa Tab para pasar a la cámara del rover sembrador."
+        "title": "Pasa al modo Exploración",
+        "hint": "Pulsa F1 (o Tab) para bajar al rover sembrador en tercera persona."
       },
       {
         "id": "drive_rover",
@@ -57,8 +57,22 @@
         "id": "orbital_view",
         "type": "action",
         "action": "orbital-view",
-        "title": "Vuelve a la vista orbital",
-        "hint": "Pulsa Tab otra vez para ver la región desde arriba."
+        "title": "Pasa al modo Estratégico",
+        "hint": "Pulsa F2 (o Tab otra vez) para ver la región desde arriba con sus capas de datos."
+      },
+      {
+        "id": "laboratory_view",
+        "type": "action",
+        "action": "laboratory-view",
+        "title": "Abre el laboratorio",
+        "hint": "Pulsa F3: aquí diseñarás organismos y harás experimentos antes de desplegarlos."
+      },
+      {
+        "id": "planetary_view",
+        "type": "action",
+        "action": "planetary-view",
+        "title": "Consulta la vista planetaria",
+        "hint": "Pulsa F4 para ver los balances globales del planeta. Esc te devuelve al modo anterior."
       },
       {
         "id": "analyze_region",

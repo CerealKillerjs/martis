@@ -141,10 +141,16 @@ Cada hito va en una rama y un PR propios, apilados.
 ### Expedición (jugabilidad abierta, elegida por Daniel el 2026-11-17)
 
 - **J1, rover sembrador ([ADR-026](ADR/ADR-026-expedicion-rover.md)):** rover en tercera persona (Tab cambia de vista, WASD conduce), siembra solo dentro de su alcance y batería que se recarga junto al módulo.
-- **J2:** un solo Marte persistente de 256×256 con biomas, niebla y puntos de interés; cada capítulo abre una zona. Va después de H8.
-- **J3:** eventos en tiempo real (tormentas de polvo, impactos, salmueras) y misiones secundarias.
-- **J4:** muestreo de mutantes salvajes y editor visual de rasgos.
-- **J5:** criaturas visibles en los capítulos 4 y 5, y balance.
+- **J2–J5:** descartados el 2026-11-17 al adoptar el Documento Maestro v2.0.
+
+### Corte vertical del Documento Maestro v2.0 (§32)
+
+- **V1, modos sobre un mismo estado ([ADR-027](ADR/ADR-027-modos-sobre-un-estado.md)):** Exploración, Estratégico, Laboratorio y Planetario (F1–F4), control de tiempo con tope por modo y libro de órdenes.
+- **V2:** conocimiento y escaneo (niebla de conocimiento, escáner del rover, sonda orbital).
+- **V3:** muestras y análisis de laboratorio.
+- **V4:** robots e instalaciones (energía, desgaste, órdenes con retraso y fallo).
+- **V5:** valle parametrizado con puntos de interés, FIRST COLONY como misión del corte y guardado/carga repetible.
+- **Después:** fase E (terraformación regional) y `PlanetDefinition` (ARC-003).
 
 ## Fuera de alcance del MVP (TDD §0, B.5)
 
